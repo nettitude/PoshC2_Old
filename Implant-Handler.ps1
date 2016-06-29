@@ -82,7 +82,7 @@ function Implant-Handler
                 }
             }
 
-            $global:implantid = Read-Host -Prompt `n'Select ImplantID or ALL or Comma Seperated List (Enter to refresh):'
+            $global:implantid = Read-Host -Prompt `n'Select ImplantID or ALL or Comma Separated List (Enter to refresh):'
             Write-Host -Object ""
             if (!$global:implantid) 
             {
