@@ -1011,12 +1011,14 @@ $message =[Convert]::ToBase64String($Bytes)
 
         # send the actual command to the client 
         if (($request.Url -match "/$ranuri") -and ($request.HttpMethod -eq 'GET') -and ($taskid))
-        {     
-            Write-Host "Command issued against host: $hostname" -ForegroundColor Yellow
-            if  ($taskid.ToLower().startswith('upload-file')) {
-            Write-Host -Object "Uploading File" -ForegroundColor Yellow
-            } else {
-            Write-Host -Object $taskid -ForegroundColor Yellow
+        {   
+            if (!$taskid.ToLower().startswith('fvdsghfdsyyh')) {
+                Write-Host "Command issued against host: $hostname" -ForegroundColor Yellow
+                if  ($taskid.ToLower().startswith('upload-file')) {
+                Write-Host -Object "Uploading File" -ForegroundColor Yellow
+                } else {
+                Write-Host -Object $taskid -ForegroundColor Yellow
+                }
             }
             if ($taskid.ToLower().StartsWith("loadmodule")) 
             {

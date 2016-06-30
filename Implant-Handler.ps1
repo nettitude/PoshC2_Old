@@ -114,13 +114,12 @@ function Implant-Handler
         write-host " Start-Sleep <time in seconds>"-ForegroundColor Green 
         write-host " Kill-Implant"-ForegroundColor Green 
         write-host " Hide-Implant"-ForegroundColor Green 
+        write-host " Unhide-Implant"-ForegroundColor Green 
         write-host " Output-To-HTML"-ForegroundColor Green 
         write-host " Get-Proxy"-ForegroundColor Green 
         write-host " Unzip <source file> <destination folder>"-ForegroundColor Green 
         #write-host " Zip <destination zip file> <source folder>"-ForegroundColor Green 
         write-host " Get-System | Get-System-WithProxy" -ForegroundColor Green 
-        write-host " Change-Implant-To-Dead"-ForegroundColor Green 
-        write-host " Change-Implant-To-Alive"-ForegroundColor Green 
         write-host " Get-ImplantWorkingDirectory"-ForegroundColor Green
         write-host " Get-Pid " -ForegroundColor Green 
         write-host " ListModules " -ForegroundColor Green
@@ -543,12 +542,14 @@ param
             if ($pscommand -eq 'get-pid') 
             {
                 $pscommand = 'fvdsghfdsyyh'
-                Invoke-SqliteQuery -DataSource $Database -Query "SELECT Output FROM CompletedTasks WHERE Command='pid' and RandomURI='$psrandomuri'" -As SingleValue
+                $dbresult = Invoke-SqliteQuery -DataSource $Database -Query "SELECT PID FROM Implants WHERE RandomURI='$psrandomuri'" -As SingleValue
+                Write-Host $dbresult
             }
             if ($pscommand -eq 'Get-ImplantWorkingDirectory') 
             {
                 $pscommand = 'fvdsghfdsyyh'
-                Invoke-SqliteQuery -DataSource $Database -Query "SELECT Prompt FROM CompletedTasks WHERE RandomURI='$psrandomuri' ORDER BY CompletedTaskID DESC LIMIT 1" -As SingleValue
+                $dbresult = Invoke-SqliteQuery -DataSource $Database -Query "SELECT FolderPath FROM C2Server" -As SingleValue
+                Write-Host $dbresult
             }
             if ($pscommand -eq 'ListModules') 
             {
@@ -874,16 +875,12 @@ $error.clear()
                     write-host "Need to run CreateProxyPayload first"
                     $pscommand = 'fvdsghfdsyyh'
                 }
-            }           
+            }                   
             if ($pscommand -eq 'Hide-Implant') 
             {
                 $pscommand = "Hide"
-            }            
-            if ($pscommand -eq 'Change-Implant-To-Dead') 
-            {
-                $pscommand = "Hide"
             }
-            if ($pscommand -eq 'change-implant-to-alive' ) {
+            if ($pscommand -eq 'Unhide-Implant' ) {
                Invoke-SqliteQuery -DataSource $Database -Query "UPDATE Implants SET Alive='Yes' WHERE RandomURI='$psrandomuri'" | Out-Null
             }
             if ($pscommand -eq 'output-to-html' ) {
