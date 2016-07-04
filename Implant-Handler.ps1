@@ -644,6 +644,10 @@ Write-Output "Error removing persistence, remove registry keys manually!"
 $error.clear()
 }'            
             }
+            if ($pscommand.ToLower().StartsWith('test-adcredential'))
+            { 
+                CheckModuleLoaded "Brute-ad.ps1" $psrandomuri
+            }
             if ($pscommand.ToLower().StartsWith('invoke-allchecks'))
             { 
                 CheckModuleLoaded "Powerup.ps1" $psrandomuri
