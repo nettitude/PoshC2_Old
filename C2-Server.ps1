@@ -1124,8 +1124,9 @@ $message =[Convert]::ToBase64String($Bytes)
             {
                 try {
                 $file = split-path $cookieplaintext -leaf
+                $file = $file.split('\.')[-1]
                 $ramdomfileext = Get-RandomURI -Length 15
-                $targetfile = "$global:newdir\$ramdomfileext-$file"   
+                $targetfile = "$global:newdir\$ramdomfileext.$file"   
                 $backToPlainText = $backToPlainText -replace '123456(.+?)654321', ''        
                 $fileBytes = [Convert]::FromBase64String($backToPlainText)
                 [io.file]::WriteAllBytes($targetfile, $fileBytes)
