@@ -7,7 +7,7 @@
     PS C:\> Pass-Pol
     Output the default domain password policy
 #>
-function Get-PassPol  
+function Get-PassPol
 {
 	$domain = [ADSI]"WinNT://$env:userdomain"
 	$Name = @{Name='DomainName';Expression={$_.Name}}

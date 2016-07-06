@@ -195,21 +195,8 @@ function Invoke-Hostscan
          [Object]
          $IPList,
          [Object]
-         $Threads,
-         [Object]
-         $Command,
-         [Object]
-         $username,
-         [Object]
-         $password
+         $Threads
      )
-    
-    if ($username) { 
-        $PSS = ConvertTo-SecureString $password -AsPlainText -Force
-        $getcreds = new-object system.management.automation.PSCredential $username,$PSS
-    } else {
-        $getcreds = Get-Credential
-    }
 
     if ($IPList) {$iprangefull = Get-Content $IPList}
     if ($IPRangeCIDR) {$iprangefull = New-IPv4RangeFromCIDR $IPRangeCIDR}

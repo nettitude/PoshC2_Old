@@ -18,11 +18,6 @@ Supply a custom command line.
 .PARAMETER ComputerName
 
 Optional, an array of computernames to run the script on.
-	
-.EXAMPLE
-
-Execute mimikatz on the local computer to dump certificates.
-Invoke-MS16-032 -Command cmd.exe
 
 #>
 
