@@ -357,11 +357,12 @@ http://www.exploit-monday.com
             # Determine is the process specified is 32 or 64 bit
             $IsWow64Process.Invoke($hProcess, [Ref] $IsWow64) | Out-Null
             
-            if ((!$IsWow64) -and $PowerShell32bit)
-            {
-                Throw 'Unable to inject 64-bit shellcode from within 32-bit Powershell. Use the 64-bit version of Powershell if you want this to work.'
-            }
-            elseif ($IsWow64) # 32-bit Wow64 process
+            #if ((!$IsWow64) -and $PowerShell32bit)
+            #{
+            #    Throw 'Unable to inject 64-bit shellcode from within 32-bit Powershell. Use the 64-bit version of Powershell if you want this to work.'
+            #}
+            #elseif ($IsWow64) # 32-bit Wow64 process
+            if ($IsWow64) # 32-bit Wow64 process
             {
                 if ($Shellcode32.Length -eq 0)
                 {
