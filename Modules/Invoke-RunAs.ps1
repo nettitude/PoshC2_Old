@@ -1,14 +1,16 @@
 <#
 .Synopsis
-    Starts a new process locally with alternative credentials
+    Starts a new process locally with alternative domain or local credentials
 .DESCRIPTION
-	Allows a 'RunAs' locally with alternative credentials, WMI allows a this on remote systems, but does not allow locally
+	Allows a 'RunAs' locally with alternative credentials, arguments and domain options are not mandatory. 
 .EXAMPLE
-    PS C:\> Invoke-RunAs -Cmd 'winrm.cmd' -Args 'quickconfig -quiet -force' -Domain testdomain -Username 'administrator' -Password '$Pa55w0rd$'
+    PS C:\> Invoke-RunAs -Cmd 'c:\temp\runme.bat' -Domain 'testdomain' -Username 'administrator' -Password '$Pa55w0rd$'
     Start a new process locally with alternate creds
-
 .EXAMPLE
-    PS C:\> Invoke-RunAs -cmd 'powershell.exe' -args 'start-service -name WinRM' -Domain testdomain -Username 'administrator' -Password '$Pa55w0rd$'
+    PS C:\> Invoke-RunAs -cmd 'powershell' -args '-c get-process' -Domain 'testdomain' -Username 'administrator' -Password '$Pa55w0rd$'
+    Start a new process locally with alternate creds
+.EXAMPLE
+    PS C:\> Invoke-RunAs -cmd 'powershell' -args '-c get-process' -Username 'administrator' -Password '$Pa55w0rd$'
     Start a new process locally with alternate creds
 #>
 Function Invoke-RunAs
@@ -18,10 +20,9 @@ Function Invoke-RunAs
 Param(
   [Parameter(Mandatory=$True)]
    [string]$Cmd,
-	
-   [Parameter(Mandatory=$False)]
+  [Parameter(Mandatory=$False)]
    [string]$Args,
-      [Parameter(Mandatory=$True)]
+   [Parameter(Mandatory=$False)]
    [string]$Domain,
       [Parameter(Mandatory=$True)]
    [string]$Username,
@@ -41,26 +42,29 @@ $errmsg3 = '*Error*'
 $PSS = ConvertTo-SecureString $Password -AsPlainText -Force
 $creds = new-object system.management.automation.PSCredential $Username,$PSS
 $procstartinfo = New-Object System.Diagnostics.ProcessStartInfo
-$procstartinfo.FileName = $Cmd
+$procstartinfo.WindowStyle = 'Hidden'
+$procstartinfo.UseShellExecute = $False
+$procstartinfo.CreateNoWindow = $True
+$procstartinfo.Verb = 'runAs'
+$procstartinfo.FileName = $cmd
 $procstartinfo.UserName = $creds.UserName
 $procstartinfo.Password = $creds.Password
-$procstartinfo.Domain = $Domain
-$procstartinfo.Arguments = $Args
-$procstartinfo.UseShellExecute = $false
-$procstartinfo.RedirectStandardInput = $False
-$procstartinfo.RedirectStandardOutput = $False
-$procstartinfo.RedirectStandardError = $True
-$procstartinfo.Verb = 'runAs'
-$procstartinfo.CreateNoWindow = $true
-$procstartinfo.WindowStyle = 'hidden'
-$procstartinfo.LoadUserProfile = $false
+If ($Domain)
+{
+    $procstartinfo.Domain = $Domain
+}
+If ($Args)
+{
+    $procstartinfo.Arguments = $args
+} 
+$procstartinfo.CreateNoWindow = $True
+$procstartinfo.LoadUserProfile = $False
 $procstartinfo.WorkingDirectory = 'c:\'
 
 $output = "Starting"
 Try
 {
 $process = [System.Diagnostics.Process]::Start($procstartinfo)
-$process.WaitForExit()
 $argerr = $process.StandardError.ReadToEnd()
 If($argerr -like $errmsg3)
     {
@@ -97,7 +101,4 @@ Finally
 Write-Output $output
 }
 }
-
-
-
 
