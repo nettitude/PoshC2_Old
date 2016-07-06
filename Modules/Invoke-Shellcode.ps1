@@ -229,8 +229,11 @@ http://www.exploit-monday.com
             $pst.WindowStyle = 'Hidden'
             $pst.UseShellExecute = $False
             $pst.CreateNoWindow = $True
+            if ($env:PROCESSOR_ARCHITECTURE -eq "x86"){
+            $pst.FileName = "C:\Windows\System32\netsh.exe"
+            } else {
             $pst.FileName = "C:\Windows\Syswow64\netsh.exe"
-
+            }
             $Process = [System.Diagnostics.Process]::Start($pst)
             [UInt16]$NewProcID = ($Process.Id).tostring()
             $ProcessID = $NewProcID
