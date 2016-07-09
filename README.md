@@ -6,7 +6,8 @@ Developed and maintained by @benpturner & @davehardy20
 
 Requires only Powershell v2 on both server and client
 
-[[images/C2-server-1.PNG]]
+![alt tag](https://github.com/nettitude/PoshC2/wiki/images/C2-server-1.PNG)
+
 
 Install:
 ================
