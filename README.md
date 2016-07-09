@@ -6,6 +6,8 @@ Developed and maintained by @benpturner & @davehardy20
 
 Requires only Powershell v2 on both server and client
 
+[[images/C2-server-1.PNG]]
+
 Install:
 ================
 powershell -exec bypass -c "IEX (New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/nettitude/PoshC2/master/C2-Installer.ps1')"
