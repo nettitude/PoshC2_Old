@@ -13,7 +13,7 @@
 	Brute-Ad -Password 'OnePasswordAttempt'
 	Brute-forces active directory user accounts based on the password lockout threshold but stops on a sucessful attempt
 #>
-function Brute-Ad 
+function Brute-Ad ($Password)
 {
     if ($Password) {
         $allpasswords = @("$Password")
