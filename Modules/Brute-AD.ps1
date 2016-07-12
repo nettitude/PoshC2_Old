@@ -15,8 +15,6 @@
 #>
 function Brute-Ad 
 {
-	param($ShowOnlyTrue='True', $Password)
-
     if ($Password) {
         $allpasswords = @("$Password")
     } else {
