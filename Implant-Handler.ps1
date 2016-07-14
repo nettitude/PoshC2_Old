@@ -155,9 +155,7 @@ function Implant-Handler
         write-host "==================" -ForegroundColor Red
         write-host " Get-ExternalIP" -ForegroundColor Green
         write-host " Test-ADCredential -Domain test -User ben -Password Password1" -ForegroundColor Green  
-        write-host " Net View | Net Users | Whoami /groups | Net localgroup administrators" -ForegroundColor Green  
-        write-host " Invoke-ShareFinder -hostlist hosts.txt" -ForegroundColor Green
-        write-host " Nltest /dclist:<domain> | Nltest /domain_trusts" -ForegroundColor Green 
+        write-host " Net View | Net Users | Whoami /groups | Net localgroup administrators | Net Accounts /dom" -ForegroundColor Green  
         write-host ' Get-NetUser -Filter "(userprincipalname=*@testdomain.com)" | Select-Object samaccountname,userprincipalname' -ForegroundColor Green 
         write-host ' Get-NetGroup -GroupName "Domain Admins" | %{ Get-NetUser $_.membername } | %{ $a=$_.displayname.split(" ")[0..1] -join " "; Get-NetUser -Filter "(displayname=*$a*)" } | Select-Object -Property displayname,samaccountname' -ForegroundColor Green 
         write-host " Get-NetDomain | Get-NetDomainController | Get-NetDomainTrust" -ForegroundColor Green 
@@ -165,7 +163,8 @@ function Implant-Handler
         write-host ' Get-NetComputer | Select-String -pattern "Citrix" ' -ForegroundColor Green 
         write-host ' Get-NetGroup | Select-String -pattern "Internet" ' -ForegroundColor Green
         write-host " Invoke-Hostscan -IPRangeCIDR 172.16.0.0/24 (Provides list of hosts with 445 open)" -ForegroundColor Green
-        write-host " Invoke-ShareFinder -CheckShareAccess" -ForegroundColor Green
+        write-host " Invoke-ShareFinder -hostlist hosts.txt" -ForegroundColor Green
+        write-host " Get-NetFileServer -Domain testdomain.com" -ForegroundColor Green
         write-host " Find-InterestingFile -Path \\SERVER\Share -OfficeDocs -LastAccessTime (Get-Date).AddDays(-7)" -ForegroundColor Green
         write-host " Brute-AD" -ForegroundColor Green 
         write-host " Brute-LocAdmin -Username administrator" -ForegroundColor Green 
