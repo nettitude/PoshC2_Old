@@ -895,7 +895,6 @@ $error.clear()
             { 
                 if (Test-Path "$FolderPath\proxypayload.bat"){ 
                 $proxypayload = Get-Content -Path "$FolderPath\proxypayload.bat"               
-                CheckModuleLoaded "Invoke-MS16-032.ps1" $psrandomuri
                 $query = "INSERT INTO NewTasks (RandomURI, Command)
                 VALUES (@RandomURI, @Command)"
                 Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
