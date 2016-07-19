@@ -344,7 +344,7 @@ function CreateMacroPayload
     $payloadbits = $null
     While ($payload)
     { 
-        $y = $payload[0..75] -join ''
+        $y = $payload[0..500] -join ''
         $payload = $payload -replace $y,''
         $payloadbits = $payloadbits +'str = str + "'+$y+'"'+"`r`n"
     }
