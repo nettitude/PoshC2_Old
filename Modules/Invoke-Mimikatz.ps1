@@ -2762,7 +2762,7 @@ param(
                         $password = $line.split(":")[1].trim()
                     }
                 }
-                if ($password -and $($password -ne "(null)")){
+                if ($password -and $($password -ne "(null)") -and (!$username.Contains('$'))){
                     $domain+"\"+$username+":"+$password
                 }
             }
@@ -2784,7 +2784,7 @@ param(
                         $password = $line.split(":")[1].trim()
                     }
                 }
-                if ($password -and $($password -ne "(null)")){
+                if ($password -and $($password -ne "(null)") -and (!$username.Contains('$'))){
                     $domain+"\"+$username+":"+$password
                 }
             }
@@ -2806,7 +2806,7 @@ param(
                         $password = $line.split(":")[1].trim()
                     }
                 }
-                if ($password -and $($password -ne "(null)")){
+                if ($password -and $($password -ne "(null)") -and (!$username.Contains('$'))){
                     $domain+"\"+$username+":"+$password
                 }
             }
@@ -2828,7 +2828,7 @@ param(
                         $password = $line.split(":")[1].trim()
                     }
                 }
-                if ($password -and $($password -ne "(null)")){
+                if ($password -and $($password -ne "(null)") -and (!$username.Contains('$'))){
                     $domain+"\"+$username+":"+$password
                 }
             }
