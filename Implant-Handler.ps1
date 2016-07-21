@@ -196,6 +196,7 @@ function Implant-Handler
         write-host " Invoke-DCSync -PWDumpFormat" -ForegroundColor Green
         write-host `n "Useful Modules: " -ForegroundColor Green
         write-host "====================" -ForegroundColor Red
+        write-host " Show-ServerInfo" -ForegroundColor Green 
         write-host " Get-Screenshot" -ForegroundColor Green 
         write-host " Get-RecentFiles" -ForegroundColor Green
         write-host " Cred-Popper" -ForegroundColor Green 
@@ -550,6 +551,12 @@ param
             {
                 $pscommand = 'exit'
                 Invoke-SqliteQuery -DataSource $Database -Query "UPDATE Implants SET Alive='No' WHERE RandomURI='$psrandomuri'"|Out-Null
+            }
+            if ($pscommand -eq 'Show-ServerInfo') 
+            {
+                $pscommand = 'fvdsghfdsyyh'
+                $dbresult = Invoke-SqliteQuery -DataSource $Database -Query "SELECT * FROM C2Server" -As PSObject
+                Write-Host $dbresult
             }
             if ($pscommand -eq 'get-pid') 
             {
