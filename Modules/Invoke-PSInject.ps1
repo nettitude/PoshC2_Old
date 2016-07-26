@@ -1168,7 +1168,7 @@ $RemoteScriptBlock = {
         $PEInfo | Add-Member -MemberType NoteProperty -Name 'OriginalImageBase' -Value ($NtHeadersInfo.IMAGE_NT_HEADERS.OptionalHeader.ImageBase)
         $PEInfo | Add-Member -MemberType NoteProperty -Name 'SizeOfImage' -Value ($NtHeadersInfo.IMAGE_NT_HEADERS.OptionalHeader.SizeOfImage)
         $PEInfo | Add-Member -MemberType NoteProperty -Name 'SizeOfHeaders' -Value ($NtHeadersInfo.IMAGE_NT_HEADERS.OptionalHeader.SizeOfHeaders)
-        $PEInfo | Add-Member -MemberType NoteProperty -Name 'DllCharacteristics' -Value ($NtHeadersInfo.IMAGE_NT_HEADERS.OptionalHeader.DllCharacteristics)
+        $PEInfo | Add-Member -MemberType NoteProperty -Name 'DllCharacteristics' -Value ([Int32]$NtHeadersInfo.IMAGE_NT_HEADERS.OptionalHeader.DllCharacteristics)
         
         #Free the memory allocated above, this isn't where we allocate the PE to memory
         [System.Runtime.InteropServices.Marshal]::FreeHGlobal($UnmanagedPEBytes)
