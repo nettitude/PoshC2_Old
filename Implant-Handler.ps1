@@ -529,7 +529,7 @@ param
             }  
             if ($pscommand -eq 'ps') 
             {
-                $pscommand = 'get-process'
+                $pscommand = 'get-processfull'
             }
             if ($pscommand -eq 'id') 
             {

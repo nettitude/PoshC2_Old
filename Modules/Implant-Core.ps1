@@ -181,3 +181,41 @@ $PSS = ConvertTo-SecureString $password -AsPlainText -Force
 $getcreds = new-object system.management.automation.PSCredential $username,$PSS
 Invoke-WmiMethod -Path Win32_process -Name create -ComputerName $computer -Credential $getcreds -ArgumentList $command
 }
+
+Function Get-ProcessFull {
+
+[System.Diagnostics.Process[]] $processes64bit = @()
+[System.Diagnostics.Process[]] $processes32bit = @()
+
+$AllProcesses = @()
+
+foreach($process in get-process) {
+    $modules = $process.modules
+    foreach($module in $modules) {
+        $file = [System.IO.Path]::GetFileName($module.FileName).ToLower()
+        if($file -eq "wow64.dll") {
+            $processes32bit += $process
+            $pobject = New-Object PSObject | Select ID, StartTime, Name, Arch
+            $pobject.Id = $process.Id
+            $pobject.StartTime = $process.starttime
+            $pobject.Name = $process.Name
+            $pobject.Arch = "x86"
+            $AllProcesses += $pobject
+            break
+        }
+    }
+
+    if(!($processes32bit -contains $process)) {
+        $processes64bit += $process
+        $pobject = New-Object PSObject | Select ID, StartTime, Name, Arch
+        $pobject.Id = $process.Id
+        $pobject.StartTime = $process.starttime
+        $pobject.Name = $process.Name
+        $pobject.Arch = "x64"
+        $AllProcesses += $pobject
+    }
+}
+
+$AllProcesses|Select ID, Arch, Name, StartTime | format-table -wrap
+
+}
