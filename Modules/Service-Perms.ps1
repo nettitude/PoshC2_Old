@@ -1,6 +1,14 @@
 ﻿# Service Permission Checker
 # Ben Turner @benpturner
 
+<#
+.Synopsis
+    Service Permission Checker
+.DESCRIPTION
+	Service Permission Checker
+.EXAMPLE
+    PS C:\> Get-ServicePerms
+#>
 Function Get-ServicePerms {
 
 $csharp= @"
@@ -79,16 +87,12 @@ public static class ServicePerms
             String hostName = Dns.GetHostName();
             string contents = ConvertDataTableToHtml(ds.Tables["services"]);
             string contentsfolders = ConvertDataTableToHtml2(ds.Tables["folders"]);
-            Console.WriteLine("");
-            Console.WriteLine("[+] Writing output to Report-" + hostName + ".html");
             File.WriteAllText("Report-" + hostName + ".html", contents + contentsfolders);
         }
 
         public static void dumpservices()
         {
             String hostName = Dns.GetHostName();
-            Console.WriteLine("Performing Service Enumeration on " + hostName);
-            Console.WriteLine("=====================================================");
             List<string> list = new List<string>();
             List<string> folderlist = new List<string>();
             DataSet ds = new DataSet();
@@ -331,5 +335,8 @@ $Assem = "System.Data",
 Add-Type -TypeDefinition $csharp -Language CSharpVersion3 -IgnoreWarnings -ReferencedAssemblies $Assem
 
 [ServicePerms]::dumpservices()
+$complete = "[+] Writing output to Report-" + $env:COMPUTERNAME + ".html"
+echo "[+] Completed Service Permissions Review"
+echo "$complete" -ForegroundColor Green
 
 }
