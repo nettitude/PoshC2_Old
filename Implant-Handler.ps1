@@ -351,12 +351,10 @@ function Implant-Handler
     # create proxypayloads
     function CreateProxyPayload 
     {
-        param
-        (
-            $username,
-            $password,
-            $proxyurl
-        )
+    $username = Read-Host -Prompt 'Please enter the domain\username: '
+    $password = Read-Host -Prompt 'Enter the password to use: '
+    $proxyurl = Read-Host -Prompt 'Enter the Proxy Server URL, eg HTTP://10.0.0.10:8080: '
+
         $command = '
             function Get-Webclient 
             {

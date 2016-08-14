@@ -727,7 +727,7 @@ primer | iex }'
 # add as many images to the images directory as long as the images are less than 1500 bytes in size
 $imageArray = @()
 $imageFilesUsed = @()
-$imageFiles = Get-ChildItem "C:\Temp\PowershellC2\Images" | Select-Object -ExpandProperty FullName
+$imageFiles = Get-ChildItem "C:\Temp\PowershellC2\Images" | Select-Object FullName
 $count = 0 
 
 while ($count -lt 5) {
