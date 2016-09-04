@@ -822,9 +822,9 @@ while ($listener.IsListening)
         # if ($im_domain -ne "safenet") { do something }
         #
         ## add anti-ir and implant safety mechanisms here!
-        $sound = new-Object System.Media.SoundPlayer;
-        $sound.SoundLocation="C:\Temp\PowershellC2\Sounds\pwned.wav";
-        $sound.Play()
+        #$sound = new-Object System.Media.SoundPlayer;
+        #$sound.SoundLocation="C:\Temp\PowershellC2\Sounds\pwned.wav";
+        #$sound.Play()
         Write-Host "New host connected: (uri=$randomuri, key=$key)" -ForegroundColor Green
         Write-Host "$endpointip | PID:$im_pid | Sleep:$defaultbeacon | $im_computername $im_domain ($im_arch) "`n -ForegroundColor Green
 
