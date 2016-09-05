@@ -13,7 +13,7 @@ function Invoke-Sniffer
 
 .EXAMPLE
 
-    Invoke-Sniffer -OutputFile C:\Temp\Output.txt
+    Invoke-Sniffer -OutputFile C:\Temp\Output.txt -MaxSize 500MB
 
 .LINK
 
@@ -22,7 +22,7 @@ function Invoke-Sniffer
 #>
 
 param( [String]$LocalIP = "NotSpecified", [String]$ScanIP="all", [String]$Protocol = "all", `
-		[String]$Port="all", [Int]$Seconds = 0, [switch]$ResolveHosts, [switch]$Help, $OutputFile)
+		[String]$Port="all", [Int]$Seconds = 0, [switch]$ResolveHosts, [switch]$Help, [String]$OutputFile, $MaxSize)
 
 # Help / display usage
 if( $Help )
@@ -38,6 +38,11 @@ if (!$OutputFile){
         New-Item C:\Temp -type directory
     }
     $OutputFile = "C:\Temp\Dump.txt"
+}
+
+if (!$MaxSize)
+{
+    $MaxSize = 100MB
 }
 
 $starttime = Get-Date
@@ -394,6 +399,10 @@ while( $running )
 			if( ($ScanIP -eq "all") -or ($ScanIP -eq $SourceIp) -or ($ScanIP -eq $DestinationIP) )
 			#if( $ScanIP -eq $SourceIp -and $ScanIP -eq $DestinationIP )
 			{
+                if ((get-item $outputfile).length -gt $MaxSize)
+                {
+                    $running = $false
+                }
 				Write-Output "Time:`t`t$(get-date)" | Out-File $outputfile -Append
 				Write-Output "Version:`t$ipVersion`t`t`tProtocol:`t$ProtocolNumber = $ProtocolDesc" | Out-File $outputfile -Append
 				Write-Output "Destination:`t$DestinationIP`t`tSource:`t`t$SourceIP" | Out-File $outputfile -Append
@@ -436,6 +445,8 @@ while( $running )
 				Write-Output "Data: $Data" | Out-File $outputfile -Append
                 "Data: $Data" |select-string -Pattern "username="
 				Write-Output "----------------------------------------------------------------------" | Out-File $outputfile -Append
+
+
 			}
 		}
 	}
