@@ -699,7 +699,7 @@ primer | iex }'
     
     #launch a new powershell session with the implant handler running
     Start-Process -FilePath powershell.exe -ArgumentList " -NoP -Command import-module C:\Temp\PowershellC2\Implant-Handler.ps1; Implant-Handler -FolderPath '$global:newdir'"
-    Write-Host `n"To re-open the Impland-Handler or C2Server, use the following shortcuts in this directory: "
+    Write-Host `n"To re-open the Implant-Handler or C2Server, use the following shortcuts in this directory: "
     Write-Host "$global:newdir" `n  -ForegroundColor Green
     $SourceExe = "powershell.exe"
     $ArgumentsToSourceExe = "-exec bypass c:\temp\powershellc2\c2-server.ps1 $global:newdir"

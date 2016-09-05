@@ -171,6 +171,8 @@ function Implant-Handler
         Write-Host " Get-PassPol" -ForegroundColor Green
         Write-Host " Get-PassNotExp" -ForegroundColor Green
         Write-Host " Get-LocAdm" -ForegroundColor Green
+        Write-Host " Invoke-Inveigh -IP 10.0.0.1 -OutputFile C:\Temp\Output.txt" -ForegroundColor Green
+        Write-Host " Invoke-Sniffer -OutputFile C:\Temp\Output.txt" -ForegroundColor Green
         Write-Host " Invoke-SqlQuery -sqlServer 10.0.0.1 -User sa -Pass sa -Query 'SELECT @@VERSION'" -ForegroundColor Green
         Write-Host " Invoke-RunAs -cmd 'powershell.exe' -args 'start-service -name WinRM' -Domain testdomain -Username 'test' -Password fdsfdsfds" -ForegroundColor Green
         Write-Host " Invoke-RunAsPayload -Domain testdomain -Username 'test' -Password fdsfdsfds" -ForegroundColor Green
@@ -686,6 +688,14 @@ $error.clear()
                 write-host "Need to run CreateProxyPayload first"
                 $pscommand = 'fvdsghfdsyyh'
                 }
+            }
+            if ($pscommand.ToLower().StartsWith('invoke-inveigh'))
+            { 
+                CheckModuleLoaded "inveigh.ps1" $psrandomuri
+            }
+            if ($pscommand.ToLower().StartsWith('invoke-sniffer'))
+            { 
+                CheckModuleLoaded "invoke-sniffer.ps1" $psrandomuri
             }
             if ($pscommand.ToLower().StartsWith('test-adcredential'))
             { 
