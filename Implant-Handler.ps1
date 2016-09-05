@@ -460,6 +460,20 @@ function CheckModuleLoaded {
     }
 }
 
+function Add-Creds {
+    param
+    (
+    [string] $Username,
+    [string] $Password,
+    [string] $Hash
+    )
+    if (($Username) -or ($Password)){
+        Invoke-SqliteQuery -DataSource $Database -Query "INSERT INTO Creds (username, password, hash) VALUES ('$username','$password','$hash')"|Out-Null
+    } else {
+        Write-Host "No username or password specified. Please complete both arguments."
+    }
+}
+
 $head = '
 <style>
 
@@ -676,6 +690,14 @@ $error.clear()
                 $psargs = $pscommand -replace 'invoke-psinject-payload',''
                 $pscommand = "invoke-psinject -payloadtype normal $($psargs)"
             }
+            if ($pscommand.ToLower().StartsWith('invoke-inveigh'))
+            { 
+                CheckModuleLoaded "inveigh.ps1" $psrandomuri
+            }
+            if ($pscommand.ToLower().StartsWith('invoke-sniffer'))
+            { 
+                CheckModuleLoaded "invoke-sniffer.ps1" $psrandomuri
+            }
             if ($pscommand.ToLower().StartsWith('invoke-psinject-proxypayload'))
             { 
                 if (Test-Path "$FolderPath\proxypayload.bat"){ 
@@ -688,14 +710,6 @@ $error.clear()
                 write-host "Need to run CreateProxyPayload first"
                 $pscommand = 'fvdsghfdsyyh'
                 }
-            }
-            if ($pscommand.ToLower().StartsWith('invoke-inveigh'))
-            { 
-                CheckModuleLoaded "inveigh.ps1" $psrandomuri
-            }
-            if ($pscommand.ToLower().StartsWith('invoke-sniffer'))
-            { 
-                CheckModuleLoaded "invoke-sniffer.ps1" $psrandomuri
             }
             if ($pscommand.ToLower().StartsWith('test-adcredential'))
             { 
@@ -875,6 +889,15 @@ $error.clear()
                     RandomURI = $psrandomuri
                 } | Out-Null
             }
+            if ($pscommand.tolower().startswith('add-creds')){
+                $pscommand|Invoke-Expression
+                $pscommand = 'fvdsghfdsyyh'
+            }
+            if ($pscommand -eq 'dump-creds'){
+                $dbResult = Invoke-SqliteQuery -DataSource $Database -Query "SELECT * FROM Creds" -As PSObject
+                Write-Output -InputObject $dbResult | ft -AutoSize | out-host
+                $pscommand = 'fvdsghfdsyyh'
+            }
             if ($pscommand -eq 'invoke-ms16-032')
             { 
                 CheckModuleLoaded "NamedPipe.ps1" $psrandomuri
@@ -947,6 +970,18 @@ $error.clear()
                Invoke-SqliteQuery -DataSource $Database -Query "UPDATE Implants SET Alive='Yes' WHERE RandomURI='$psrandomuri'" | Out-Null
             }
             if ($pscommand -eq 'output-to-html' ) {
+                $allcreds = Invoke-SqliteQuery -Datasource $Database -Query "SELECT * FROM Creds" -As PSObject
+                $CredsArray = @()
+                foreach ($cred in $allcreds) {
+                    $CredLog = New-object PSObject | Select  CredsID, Username, Password, Hash
+                    $CredLog.CredsID = $cred.CredsID;
+                    $Credlog.Username = $cred.Username;
+                    $CredLog.Password = $cred.Password;
+                    $CredLog.Hash = $cred.Hash;
+                    $CredsArray += $CredLog
+                }
+                $CredsArray | ConvertTo-Html -title "<title>Credential List from PoshC2</title>" -Head $head -pre $header -post "<h3>For details, contact X<br>Created by X</h3>" | Out-File "$FolderPath\Creds.html"
+
                $allresults = Invoke-SqliteQuery -DataSource $Database -Query "SELECT * FROM Implants" -As PSObject
                $ImplantsArray = @()
                foreach ($implantres in $allresults) {                  
@@ -964,7 +999,6 @@ $error.clear()
                     $ImplantLog.Sleep = $implantres.Sleep;
                     $ImplantsArray += $ImplantLog
                }
-               #$ImplantsArray | ConvertTo-HTML -Property ImplantID, RandomURI, User, Hostname, IPAddress, FirstSeen, LastSeen, PID, Arch, Domain, Sleep | Out-File "$FolderPath\Implants.html"
 
                $ImplantsArray | ConvertTo-Html -title "<title>Implant List from PoshC2</title>" -Head $head -pre $header -post "<h3>For details, contact X<br>Created by X</h3>" | Out-File "$FolderPath\Implants.html"
 
@@ -1068,8 +1102,7 @@ while($true)
                 {
                     Invoke-SqliteQuery -DataSource $Database -Query "UPDATE Implants SET Alive='No' WHERE RandomURI='$global:randomuri'"|Out-Null
                 }
-                $query = "INSERT INTO NewTasks (RandomURI, Command)
-                VALUES (@RandomURI, @Command)"
+                $query = "INSERT INTO NewTasks (RandomURI, Command) VALUES (@RandomURI, @Command)"
 
                 Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
                     RandomURI = $global:randomuri

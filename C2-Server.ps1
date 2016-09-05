@@ -623,6 +623,15 @@ else
 
     Invoke-SqliteQuery -Query $Query -DataSource $Database | Out-Null
 
+    $Query = 'CREATE TABLE Creds (
+        credsID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
+        Username TEXT,
+        Password TEXT,
+        Hash TEXT)'
+
+    Invoke-SqliteQuery -Query $Query -DataSource $Database | Out-Null
+
+
     $Query = 'CREATE TABLE C2Server (
         ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
         HostnameIP TEXT,
