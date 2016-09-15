@@ -35,17 +35,29 @@ $downloadpath = "https://github.com/nettitude/PoshC2/archive/master.zip"
 $installpath = "C:\Temp\"
     
 $pathexists = Test-Path $installpath
+
 if (!$pathexists) {
-New-Item $installpath -Type Directory 
+    New-Item $installpath -Type Directory 
 }
 
 Download-File -From $downloadpath -To "$($installpath)PoshC2-master.zip"
-Unzip-File "$($installpath)PoshC2-master.zip" $installpath
-Remove-Item "$($installpath)PoshC2-master.zip"
-$pathexists = Test-Path "$($installpath)PowershellC2"
-if (!$pathexists) {
-Move-Item "$($installpath)PoshC2-master" "$($installpath)PowershellC2"
+$downloaded = Test-Path "$($installpath)PoshC2-master.zip"
+
+if ($downloaded) {
+
+    Unzip-File "$($installpath)PoshC2-master.zip" $installpath
+    Remove-Item "$($installpath)PoshC2-master.zip"
+    $pathexists = Test-Path "$($installpath)PowershellC2"
+
+    if (!$pathexists) {
+    Move-Item "$($installpath)PoshC2-master" "$($installpath)PowershellC2"
+    } else {
+    Remove-Item "$($installpath)PowershellC2" -Recurse
+    Move-Item "$($installpath)PoshC2-master" "$($installpath)PowershellC2"
+    }
+
 } else {
-Remove-Item "$($installpath)PowershellC2" -Recurse
-Move-Item "$($installpath)PoshC2-master" "$($installpath)PowershellC2"
+    Write-Host "Could not download file"
+    Start-Sleep 3
 }
+
