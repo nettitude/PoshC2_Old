@@ -459,7 +459,7 @@ UpdateMacro'
     $WordPage = $WordApp.Documents.Add()
     $WordVBA = $WordPage.VBProject.VBComponents.Add(1)
     $WordVBA.CodeModule.AddFromString($macrodoc)
-    $WordPage.SaveAs("$global:newdir\payloads\WordMacro", [Microsoft.Office.Interop.Word.WdSaveFormat]::wdFormatDocument97)
+    $WordPage.SaveAs([ref]"$global:newdir\payloads\WordMacro", [ref][Microsoft.Office.Interop.Word.WdSaveFormat]::wdFormatDocument97)
     Write-Host -Object "Weaponised Microsoft Word Document written to: $global:newdir\payloads\WordMacro.doc"  -ForegroundColor Green
     $WordApp.Quit()
 
