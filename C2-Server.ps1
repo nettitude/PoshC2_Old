@@ -422,7 +422,7 @@ UpdateMacro'
 
     [IO.File]::WriteAllLines("$global:newdir\payloads\macro.txt", $macrodoc)
     [IO.File]::WriteAllLines("$global:newdir\payloads\wscript.vbs", $wscript)
-
+    try {
     Write-Host -Object "Macro Payload written to: $global:newdir\payloads\macro.txt"  -ForegroundColor Green
     Write-Host -Object "Wscript Payload written to: $global:newdir\payloads\wscript.vbs"  -ForegroundColor Green
 
@@ -488,7 +488,10 @@ UpdateMacro'
 
     Remove-ItemProperty -Path "HKCU:\Software\Microsoft\Office\$PPTVersion\Powerpoint\Security" -Name AccessVBOM | Out-Null
     Remove-ItemProperty -Path "HKCU:\Software\Microsoft\Office\$PPTVersion\Powerpoint\Security" -Name VBAWarnings | Out-Null
-
+    }
+    catch{
+    
+    }
 }
 
 # taken from nishang Out-Java
