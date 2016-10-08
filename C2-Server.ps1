@@ -903,7 +903,7 @@ else
     write-host ""
     # call back command
     $command = 'function Get-Webclient ($Cookie) {
-    $wc = $wc = ([net.webclient]::new()); 
+    $wc = ([net.webclient]::new()); 
     $wc.UseDefaultCredentials = $true; 
     $wc.Proxy.Credentials = $wc.Credentials;
     if ($cookie) {
