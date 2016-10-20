@@ -16,7 +16,7 @@ Function Remove-Persistence
     Remove-ItemProperty -Path "Registry::HKCU\Software\Microsoft\Windows\currentversion\run\" IEUpdate
     $registrykey = get-ItemProperty -Path "Registry::HKCU\Software\Microsoft\Windows\currentversion\run\" IEUpdate
     $registrykey2 = get-ItemProperty -Path "Registry::HKCU\Software\Microsoft\Windows\currentversion\themes\" Wallpaper777
-    if (($registrykey == $null) -and ($registrykey2 == $null)) {
+    if (($registrykey -eq $null) -and ($registrykey2 -eq $null)) {
     Write-Output "Successfully removed persistence from registry!"
     $error.clear()
     } else {
