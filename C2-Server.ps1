@@ -1289,6 +1289,10 @@ $message =[Convert]::ToBase64String($Bytes)
         $taskidtime = $dbresults.TaskID
         $currenttime = (Get-Date)
 
+        # if the commands dont include all get-screenshot, download-file, upload-file, loadmodule then do x
+        # if more than one command do the following again and again
+        # if more than one command, each command is split by some delimeter
+
         # send the actual command to the client 
         if (($request.Url -match "/$ranuri") -and ($request.HttpMethod -eq 'GET') -and ($taskid))
         {   
