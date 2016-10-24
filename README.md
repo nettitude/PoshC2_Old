@@ -1,6 +1,6 @@
 Powershell C2:
 ================
-Released as an open source project by Nettitude UK Limited - http://www.nettitude.com
+Released as an open source project by Ben Turner and Dave Hardy
 
 Developed and maintained by @benpturner & @davehardy20
 
