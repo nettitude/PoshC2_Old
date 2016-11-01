@@ -959,6 +959,7 @@ else
     $Shortcut = $WshShell.CreateShortcut($DestinationPath)
     $Shortcut.TargetPath = $SourceExe
     $Shortcut.Arguments = $ArgumentsToSourceExe
+    $Shortcut.WindowStyle = 7
     $Shortcut.Save()
 
     $SourceExe = "powershell.exe"
@@ -968,6 +969,7 @@ else
     $Shortcut = $WshShell.CreateShortcut($DestinationPath)
     $Shortcut.TargetPath = $SourceExe
     $Shortcut.Arguments = $ArgumentsToSourceExe
+    $Shortcut.WindowStyle = 7
     $Shortcut.Save()
 
     $SourceExe = "powershell.exe"
@@ -977,6 +979,7 @@ else
     $Shortcut = $WshShell.CreateShortcut($DestinationPath)
     $Shortcut.TargetPath = $SourceExe
     $Shortcut.Arguments = $ArgumentsToSourceExe
+    $Shortcut.WindowStyle = 7
     $Shortcut.Save()
 }
 
