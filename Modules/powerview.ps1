@@ -1,23 +1,3 @@
-#requires -version 2
-
-<#
-
-    PowerSploit File: PowerView.ps1
-    Author: Will Schroeder (@harmj0y)
-    License: BSD 3-Clause
-    Required Dependencies: None
-    Optional Dependencies: None
-
-#>
-
-########################################################
-#
-# PSReflect code for Windows API access
-# Author: @mattifestation
-#   https://raw.githubusercontent.com/mattifestation/PSReflect/master/PSReflect.psm1
-#
-########################################################
-
 function New-InMemoryModule
 {
 <#
