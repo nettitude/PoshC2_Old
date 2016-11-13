@@ -186,7 +186,9 @@ $runme =
         } else {
             Write-Output "WMI Command Failed - Could be due to permissions or UAC is enabled on the remote host, Try mounting the C$ share to check administrative access to the host"
         } 
-    }   
+    } else {
+        Write-Output "TCP Port 135 not available on host: $IPAddress"  
+    }
     return $endpointResult
 }
 <#
