@@ -1080,7 +1080,7 @@ while ($listener.IsListening)
         #$sound = new-Object System.Media.SoundPlayer;
         #$sound.SoundLocation="C:\Temp\PowershellC2\Sounds\pwned.wav";
         #$sound.Play()
-        Write-Host "New host connected: (uri=$randomuri, key=$key)" -ForegroundColor Green
+        Write-Host "New Daisy chain implant connected: (uri=$randomuri, key=$key)" -ForegroundColor Green
         Write-Host "$endpointip | PID:$im_pid | Sleep:$defaultbeacon | $im_computername $im_domain ($im_arch) "`n -ForegroundColor Green
 
         $Query = 'INSERT INTO Implants (RandomURI, User, Hostname, IpAddress, Key, FirstSeen, LastSeen, PID, Arch, Domain, Alive, Sleep, ModsLoaded)
@@ -1316,7 +1316,7 @@ $message =[Convert]::ToBase64String($Bytes)
         #$sound = new-Object System.Media.SoundPlayer;
         #$sound.SoundLocation="C:\Temp\PowershellC2\Sounds\pwned.wav";
         #$sound.Play()
-        Write-Host "New Daisy chain implant connected: (uri=$randomuri, key=$key)" -ForegroundColor Green
+        Write-Host "New host connected: (uri=$randomuri, key=$key)" -ForegroundColor Green
         Write-Host "$endpointip | PID:$im_pid | Sleep:$defaultbeacon | $im_computername $im_domain ($im_arch) "`n -ForegroundColor Green
 
         $Query = 'INSERT INTO Implants (RandomURI, User, Hostname, IpAddress, Key, FirstSeen, LastSeen, PID, Arch, Domain, Alive, Sleep, ModsLoaded)
