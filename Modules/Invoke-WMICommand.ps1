@@ -180,7 +180,12 @@ $runme =
     if ($endpointResult.PortOpen -eq 'Open')
     {
         # run a command of my choice
-        Invoke-WmiMethod -Path Win32_process -Name create -ComputerName $IPAddress -Credential $getcreds -ArgumentList $Command
+        $WMIResult = Invoke-WmiMethod -Path Win32_process -Name create -ComputerName $IPAddress -Credential $getcreds -ArgumentList $Command
+        If ($WMIResult.Returnvalue -eq 0) {
+            Write-Output "Executed WMI Command with Sucess: $Command `n" 
+        } else {
+            Write-Output "WMI Command Failed - Could be due to permissions or UAC is enabled on the remote host, Try mounting the C$ share to check administrative access to the host"
+        } 
     }   
     return $endpointResult
 }
@@ -238,12 +243,12 @@ function Invoke-WMICommand
     if ($IPList) {$iprangefull = Get-Content $IPList}
     if ($IPRangeCIDR) {$iprangefull = New-IPv4RangeFromCIDR $IPRangeCIDR}
     if ($IPAddress) {$iprangefull = $IPAddress}
-    write-host ''
-    write-host $iprangefull.count Total hosts read from file
+    Write-Output ''
+    Write-Output $iprangefull.count + "Total hosts read from file"
      
     $jobs = @()
     $start = get-date
-    write-host `n"Begin Scanning at $start" -ForegroundColor Red
+    Write-Output "Begin Scanning at $start"
 
     #Multithreading setup
     # create a pool of maxThread runspaces
@@ -283,7 +288,7 @@ function Invoke-WMICommand
         $i++
     }
      
-    write-host 'Waiting for scanning threads to finish...' -ForegroundColor Cyan
+    Write-Output 'Waiting for scanning threads to finish...'
 
     $waitTimeout = get-date
 
@@ -315,6 +320,6 @@ function Invoke-WMICommand
     $end = get-date
     $totaltime = $end - $start
 
-    write-host "We scanned $($iprangefull.count) endpoints in $($totaltime.totalseconds) seconds" -ForegroundColor green
+    Write-Output "We scanned $($iprangefull.count) endpoints in $($totaltime.totalseconds) seconds"
     $endpointResults
 }
