@@ -1,3 +1,20 @@
+<#
+    PowerUp aims to be a clearinghouse of common Windows privilege escalation
+    vectors that rely on misconfigurations. See README.md for more information.
+
+    Author: @harmj0y
+    License: BSD 3-Clause
+    Required Dependencies: None
+    Optional Dependencies: None
+#>
+
+
+########################################################
+#
+# Helpers
+#
+########################################################
+
 function Get-ModifiableFile {
 <#
     .SYNOPSIS

