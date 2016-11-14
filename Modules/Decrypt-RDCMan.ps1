@@ -16,7 +16,7 @@ Decrypt-RDCMan -FilePath
     $Xml = Select-Xml -Xml $Types -XPath "//logonCredentials"
 
     # depending on the RDCMan version we may need to change the XML search 
-    $Xml | select-object -ExpandProperty "Node" | % { $pass = Decrypt-DPAPI $_.Password; $_.Domain + "\" + $_.Username + " - " + $Pass + " - " + "Hash:" + $_Password + "`n" } 
+    $Xml | select-object -ExpandProperty "Node" | % { $pass = Decrypt-DPAPI $_.Password; $_.Domain + "\" + $_.Username + " - " + $Pass + " - " + "Hash:" + $_.Password + "`n" } 
 
     # depending on the RDCMan version, we may have to use search through the #text field in the XML structure 
     $Xml | select-object -ExpandProperty "Node" | % { $pass = Decrypt-DPAPI $_.Password."#text"; $_.Domain + "\" + $_.Username + "`n" + $Pass + " - Hash: " + $_.Password."#text" + "`n"}
