@@ -690,8 +690,16 @@ param
             if ($pscommand -eq 'ListModules') 
             {
                 $pscommand = 'fvdsghfdsyyh'
-                Write-Host -Object ""
-                $listmodules = Get-ChildItem -Path "C:\temp\PowershellC2\Modules" -Name
+                Write-Host -Object "Reading modules from `$env:PSModulePath\* and C:\Temp\PowershellC2\Modules\*"
+                $folders = $env:PSModulePath -split ";" 
+                foreach ($item in $folders) {
+                    $PSmod = Get-ChildItem -Path $item -Include *.ps1 -Name
+                    foreach ($mod in $PSmod)
+                    {
+                        Write-Host $mod
+                    }
+                }
+                $listmodules = Get-ChildItem -Path "C:\temp\PowershellC2\Modules" -Name 
                 foreach ($mod in $listmodules)
                 {
                   Write-Host $mod

