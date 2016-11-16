@@ -3,18 +3,15 @@
   <assemblyIdentity name="PoshC2.application" version="1.1.0.7" publicKeyToken="0000000000000000" language="neutral" processorArchitecture="x86" xmlns="urn:schemas-microsoft-com:asm.v1" />
   <description asmv2:publisher="Nettitude" asmv2:product="PoshC2" asmv2:supportUrl="https://labs.nettitude.com/tools/poshc2/" xmlns="urn:schemas-microsoft-com:asm.v1" />
   <deployment install="true" mapFileExtensions="true" co.v1:createDesktopShortcut="true" />
-  <compatibleFrameworks xmlns="urn:schemas-microsoft-com:clickonce.v2">
-    <framework targetVersion="4.5.2" profile="Full" supportedRuntime="4.0.30319" />
-  </compatibleFrameworks>
   <dependency>
-    <dependentAssembly dependencyType="install" codebase="PoshC2.exe.manifest" size="6637">
+    <dependentAssembly dependencyType="install" codebase="PoshC2.exe.manifest" size="6564">
       <assemblyIdentity name="PoshC2.exe" version="1.1.0.7" publicKeyToken="0000000000000000" language="neutral" processorArchitecture="x86" type="win32" />
       <hash>
         <dsig:Transforms>
           <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
         </dsig:Transforms>
-        <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" />
-        <dsig:DigestValue>Q2ozIPeUPClcLH2LCxuq3z07mZy3rc6B3be4ZQB5vhc=</dsig:DigestValue>
+        <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
+        <dsig:DigestValue>BdR+TxuAA6nwSZOv6AFPnKmoQNk=</dsig:DigestValue>
       </hash>
     </dependentAssembly>
   </dependency>
