@@ -3,7 +3,7 @@
   <asmv1:assemblyIdentity name="PoshC2.exe" version="1.1.0.7" publicKeyToken="0000000000000000" language="neutral" processorArchitecture="x86" type="win32" />
   <application />
   <entryPoint>
-    <assemblyIdentity name="PoshC2" version="1.0.0.0" language="neutral" processorArchitecture="x86" />
+    <assemblyIdentity name="PoshC2" version="0.0.0.7" language="neutral" processorArchitecture="x86" />
     <commandLine file="PoshC2.exe" parameters="" />
   </entryPoint>
   <trustInfo>
@@ -67,14 +67,14 @@
     </dependentAssembly>
   </dependency>
   <dependency>
-    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="PoshC2.exe" size="146888">
-      <assemblyIdentity name="PoshC2" version="1.0.0.0" language="neutral" processorArchitecture="x86" />
+    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="PoshC2.exe" size="148936">
+      <assemblyIdentity name="PoshC2" version="0.0.0.7" language="neutral" processorArchitecture="x86" />
       <hash>
         <dsig:Transforms>
           <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
         </dsig:Transforms>
         <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
-        <dsig:DigestValue>nZCtt982CWlIXWiqyg/z1ndu8Ec=</dsig:DigestValue>
+        <dsig:DigestValue>uvn3TPYneAHuoKlLUxMRbtkXDcw=</dsig:DigestValue>
       </hash>
     </dependentAssembly>
   </dependency>
