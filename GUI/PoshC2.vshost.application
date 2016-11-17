@@ -4,14 +4,14 @@
   <description asmv2:publisher="Nettitude" asmv2:product="PoshC2" asmv2:supportUrl="https://labs.nettitude.com/tools/poshc2/" xmlns="urn:schemas-microsoft-com:asm.v1" />
   <deployment install="true" mapFileExtensions="true" co.v1:createDesktopShortcut="true" />
   <dependency>
-    <dependentAssembly dependencyType="install" codebase="PoshC2.exe.manifest" size="6564">
+    <dependentAssembly dependencyType="install" codebase="PoshC2.exe.manifest" size="7015">
       <assemblyIdentity name="PoshC2.exe" version="1.1.0.7" publicKeyToken="0000000000000000" language="neutral" processorArchitecture="x86" type="win32" />
       <hash>
         <dsig:Transforms>
           <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
         </dsig:Transforms>
         <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
-        <dsig:DigestValue>dzIjOOfaN+ONmJHVmsJ5E6JIdWY=</dsig:DigestValue>
+        <dsig:DigestValue>OjGklyK/Ht6PewG+vskiI7VITxk=</dsig:DigestValue>
       </hash>
     </dependentAssembly>
   </dependency>
