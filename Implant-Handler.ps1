@@ -117,7 +117,7 @@ function Implant-Handler
         write-host " Unhide-Implant"-ForegroundColor Green 
         write-host " Output-To-HTML"-ForegroundColor Green 
         write-host " Get-Proxy"-ForegroundColor Green 
-        write-host " Systeminfo"-ForegroundColor Green 
+        write-host " Get-ComputerInfo"-ForegroundColor Green 
         write-host " Add-Creds -Username <Username> -Password <Pass> -Hash <Hash>"-ForegroundColor Green 
         write-host " Dump-Creds"-ForegroundColor Green 
         write-host " Unzip <source file> <destination folder>"-ForegroundColor Green 
@@ -909,7 +909,10 @@ param
             {
                 CheckModuleLoaded "Invoke-WinRMSession.ps1" $psrandomuri
             }
-
+            if ($pscommand.tolower().startswith('get-computerinfo'))
+            {
+                CheckModuleLoaded "Get-ComputerInfo.ps1" $psrandomuri
+            }
             if ($pscommand.ToLower().StartsWith('invoke-runaspayload'))
             { 
                 CheckModuleLoaded "NamedPipe.ps1" $psrandomuri
