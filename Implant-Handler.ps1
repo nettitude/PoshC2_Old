@@ -153,7 +153,8 @@ function Implant-Handler
         write-host " Web-Upload-File -From 'http://www.example.com/App.exe' -To 'C:\Temp\App.exe' " -ForegroundColor Green 
         write-host `n "Persistence: " -ForegroundColor Green
         write-host "================" -ForegroundColor Red
-        write-host " Install-Persistence | Remove-Persistence" -ForegroundColor Green 
+        write-host " Install-Persistence 1,2,3 " -ForegroundColor Green 
+        write-host " Remove-Persistence 1,2,3" -ForegroundColor Green 
         write-host " Install-ServiceLevel-Persistence | Remove-ServiceLevel-Persistence" -ForegroundColor Green 
         write-host " Install-ServiceLevel-PersistenceWithProxy | Remove-ServiceLevel-Persistence" -ForegroundColor Green 
         write-host `n "Network Tasks / Lateral Movement: " -ForegroundColor Green
