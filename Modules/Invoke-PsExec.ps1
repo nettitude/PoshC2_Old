@@ -1237,7 +1237,7 @@ if($SMB_client.Connected)
                
                     'ReadAndXRequest'
                     {
-                        Start-Sleep -m 100
+                        Start-Sleep -m 500
                         $packet_SMB_header = Get-PacketSMBHeader 0x2e 0x18 0x05,0x28 $SMB_tree_ID $process_ID_bytes $SMB_user_ID
 
                         if($SMB_signing)
@@ -1765,7 +1765,7 @@ if($SMB_client.Connected)
                
                     'ReadRequest'
                     {
-                        Start-Sleep -m 100   
+                        Start-Sleep -m 500   
                         $SMB2_message_ID += 1
                         $packet_SMB2_header = Get-PacketSMB2Header 0x08,0x00 $SMB2_message_ID $SMB2_tree_ID $SMB_session_ID
                         $packet_SMB2_header["SMB2Header_CreditRequest"] = 0x7f,0x00
