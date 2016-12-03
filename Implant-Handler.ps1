@@ -1198,7 +1198,14 @@ while($true)
     $global:command = Read-Host -Prompt $global:cmdlineinput
 
     if ($global:command)
-    {          
+    {
+        $query = "INSERT INTO History (Command)
+        VALUES (@Command)"
+
+        Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
+        Command = $global:command
+        } | Out-Null
+                              
         if ($global:implantid -eq "ALL")
         {
             if ($global:command -eq 'back' -or $global:command -eq 'exit') 

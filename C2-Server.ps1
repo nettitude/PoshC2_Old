@@ -879,7 +879,16 @@ else
         FolderPath TEXT,
         ServerPort TEXT,
         QuickCommand TEXT,
-        DownloadURI TEXT)'
+        DownloadURI TEXT,
+        ProxyURL TEXT,
+        ProxyUser TEXT,
+        ProxyPass TEXT)'
+
+    Invoke-SqliteQuery -Query $Query -DataSource $Database | Out-Null
+
+    $Query = 'CREATE TABLE History (
+        ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
+        Command TEXT)'
 
     Invoke-SqliteQuery -Query $Query -DataSource $Database | Out-Null
 
