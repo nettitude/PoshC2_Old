@@ -170,6 +170,9 @@ function Implant-Handler
         write-host " Get-NetForest | Get-NetForestTrust | Get-NetForestDomain " -ForegroundColor Green
         write-host ' Get-NetComputer | Select-String -pattern "Citrix" ' -ForegroundColor Green 
         write-host ' Get-NetGroup | Select-String -pattern "Internet" ' -ForegroundColor Green
+        write-host " Get-BloodHoundData -CollectionMethod 'Stealth' | Export-BloodHoundCSV" -ForegroundColor Green
+        write-host " Get-BloodHoundData | Export-BloodHoundCSV" -ForegroundColor Green
+        write-host ' Get-NetGroup | Select-String -pattern "Internet" ' -ForegroundColor Green
         write-host " Invoke-Hostscan -IPRangeCIDR 172.16.0.0/24 (Provides list of hosts with 445 open)" -ForegroundColor Green
         write-host " Invoke-ShareFinder -hostlist hosts.txt" -ForegroundColor Green
         write-host " Get-NetFileServer -Domain testdomain.com" -ForegroundColor Green
@@ -837,6 +840,10 @@ param
             if ($pscommand.ToLower().StartsWith('invoke-inveigh'))
             { 
                 CheckModuleLoaded "inveigh.ps1" $psrandomuri
+            }
+            if ($pscommand.ToLower().StartsWith('get-bloodhounddata'))
+            { 
+                CheckModuleLoaded "bloodhound.ps1" $psrandomuri
             }
             if ($pscommand.ToLower().StartsWith('invoke-sniffer'))
             { 
