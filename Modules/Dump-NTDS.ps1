@@ -4,11 +4,7 @@
 .DESCRIPTION
 	Dumps the active directory dit using ntdsutil
 .EXAMPLE
-    PS C:\> Dump-NTDS -EmptyFolder C:\Temp\NTDS\
-    Bruteforce all accounts in AD with the builtinn list of passwords.
-.EXAMPLE
-	Brute-Ad -list password1,password2,'$password$','$Pa55w0rd$'
-	Bruteforce all accounts in AD with a provided list of passwords.
+    PS C:\>Dump-NTDS -EmptyFolder C:\Temp\NTDS\
 #>
 function Dump-NTDS
 {
