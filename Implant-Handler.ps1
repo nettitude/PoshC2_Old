@@ -11,10 +11,14 @@ function Implant-Handler
     [CmdletBinding(DefaultParameterSetName = "FolderPath")]
     Param
     (
-        [Parameter(ParameterSetName = "FolderPath", Mandatory = $true)]
+        [Parameter(ParameterSetName = "FolderPath", Mandatory = $false)]
         [string]
         $FolderPath
     )
+
+    if (!$FolderPath) {
+        $FolderPath = Read-Host -Prompt `n'Enter the root folder path of the Database/Project'
+    }
 
     # initiate defaults
     $Database = "$FolderPath\PowershellC2.SQLite"
