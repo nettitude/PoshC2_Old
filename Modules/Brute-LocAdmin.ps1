@@ -47,8 +47,9 @@ Function Brute-LocAdmin
 	    $result = Test-LocAdminCred $username $password 
 	    if ($result.IsValid -eq 'True'){
 	        $break = $true
-	        $result
 	    } 
 	    if ($break -eq 'True'){break}
     }
+    Write-Host "[+] Brute-force finished`n"
+    $result
 }
