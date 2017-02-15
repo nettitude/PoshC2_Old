@@ -801,7 +801,7 @@ else
         $ipv4address = ($localipfull,$prompt)[[bool]$prompt]
     }
 
-    if ($ipv4address.length -gt 15){
+    if ($ipv4address.length -gt 20){
         Write-Host "`nIP address is not valid, enter one IP address only!" -ForegroundColor Red
         $prompt = Read-Host -Prompt "[1] Enter the IP address or Hostname of the Posh C2 server (External address if using NAT) [$($localipfull)]"
         $ipv4address = ($localipfull,$prompt)[[bool]$prompt]
