@@ -820,7 +820,7 @@ else
 openssl pkcs12 -inkey privkey.pem -in cert.pem -export -out priv.pfx
 
 Grab the thumbprint:
-dir cert:\localmachine\my|% { $_.thumbprint}
+dir cert:\localmachine\my|% { `$_.thumbprint}
 
 Install using netsh:
 netsh http delete sslcert ipport=0.0.0.0:443
