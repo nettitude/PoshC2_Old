@@ -33,6 +33,7 @@ Function StartAnotherImplant {
     }
 }
 sal s startanotherimplant
+sal invoke-smblogin invoke-smbexec
 function Test-Administrator  
 {  
     $user = [Security.Principal.WindowsIdentity]::GetCurrent();

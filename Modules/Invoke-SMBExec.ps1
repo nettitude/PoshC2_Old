@@ -57,7 +57,7 @@ param
     [parameter(Mandatory=$false)][String]$Domain,
     [parameter(Mandatory=$false)][String]$Command,
     [parameter(Mandatory=$false)][ValidateSet("Y","N")][String]$CommandCOMSPEC="Y",
-    [parameter(Mandatory=$true)][ValidateScript({$_.Length -eq 32 -or $_.Length -eq 65})][String]$Hash,
+    [parameter(Mandatory=$false)][ValidateScript({$_.Length -eq 32 -or $_.Length -eq 65})][String]$Hash,
     [parameter(Mandatory=$false)][String]$Service,
     [parameter(Mandatory=$false)][Switch]$SMB1,
     [parameter(Mandatory=$false)][String]$Password,

