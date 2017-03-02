@@ -20,8 +20,6 @@ Write-Host -Object "                    \/     \/          \/         \/"  -Fore
 Write-Host "============ @benpturner & @davehardy20 ============" -ForegroundColor Green
 Write-Host "====================================================" `n -ForegroundColor Green
 
-if (!(Test-Path -Path C:\temp)) 
-{New-Item c:\Temp -type directory}
 $PathExists = Test-Path $PoshPath
 
 if (!$PathExists) {
@@ -739,7 +737,7 @@ Write-Host -Object "Java Payload written to: $global:newdir\JavaPS.jar and apple
 }
 
 # if the server has been restarted using the Restart-C2Server shortcut
-if ($args[0]) 
+if ($args[1]) 
 {
     $global:newdir = $args[0]
     $payload = Get-Content "$global:newdir\payloads\payload.bat"
