@@ -17,6 +17,10 @@ function C2-Viewer
         $FolderPath = Read-Host -Prompt `n'Enter the root folder path of the Database/Project'
         # do you want a read-only c2 server window
     }
+    $slash = $FolderPath -match '.+[^\\]\\$'
+    if ($slash) {
+        $FolderPath = $FolderPath.TrimEnd('\')
+    }
 
     $defaultrows = 10
     $prompt = Read-Host -Prompt "How many previous rows do you want to show, Number or ALL? [$($defaultrows)]"
