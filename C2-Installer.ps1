@@ -69,7 +69,7 @@ if ($downloaded) {
 
     $SourceExe = "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
     $ArgumentsToSourceExe = "-exec bypass "+$installpath+"PowershellC2\C2-Server.ps1 $installpath"
-    $DestinationPath = $installpath+"Start-C2Server.lnk"
+    $DestinationPath = $installpath+"PowershellC2\Start-C2Server.lnk"
     $WshShell = New-Object -comObject WScript.Shell
     $Shortcut = $WshShell.CreateShortcut($DestinationPath)
     $Shortcut.TargetPath = $SourceExe
@@ -78,7 +78,7 @@ if ($downloaded) {
 
     $SourceExe = "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
     $ArgumentsToSourceExe = "-exec bypass "+$installpath+"PowershellC2\C2-Installer.ps1 $installpath"
-    $DestinationPath = $installpath+"Start-C2Server.lnk"
+    $DestinationPath = $installpath+"PowershellC2\Update-PoshC2.lnk"
     $WshShell = New-Object -comObject WScript.Shell
     $Shortcut = $WshShell.CreateShortcut($DestinationPath)
     $Shortcut.TargetPath = $SourceExe
