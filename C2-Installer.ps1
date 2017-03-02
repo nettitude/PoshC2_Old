@@ -43,7 +43,7 @@ if (!$slash) {
     $installpath = $installpath+"\"
 }
 $poshpath = $installpath+"PowershellC2\"
-$downloadpath = "https://github.com/nettitude/PoshC2/archive/master.zip"
+$downloadpath = "https://github.com/nettitude/PoshC2/archive/new_directory.zip"
     
 $pathexists = Test-Path $installpath
 
