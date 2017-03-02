@@ -69,7 +69,7 @@ if ($downloaded) {
 
     $SourceExe = "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
     $ArgumentsToSourceExe = "-exec bypass "+$poshpath+"C2-Server.ps1 $poshpath"
-    $DestinationPath = $installpath+"PowershellC2\Start-C2Server.lnk"
+    $DestinationPath = $installpath+"PowershellC2\Start-C2-Server.lnk"
     $WshShell = New-Object -comObject WScript.Shell
     $Shortcut = $WshShell.CreateShortcut($DestinationPath)
     $Shortcut.TargetPath = $SourceExe
