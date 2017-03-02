@@ -35,7 +35,7 @@ function Unzip-File
 }
 
 if (!$installpath) {
-    $installpath = Read-Host "Please specify the install directory"   
+    $installpath = Read-Host "`n[+] Please specify the install directory: "   
 } 
 
 $slash = $installpath -match '.+[^\\]\\$'
@@ -85,8 +85,8 @@ if ($downloaded) {
     $Shortcut.Arguments = $ArgumentsToSourceExe
     $Shortcut.Save()
 
-    C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -exec bypass c:\temp\powershellc2\c2-installer.ps1
-
+    Write-Host "[+] Sucessfully installed PoshC2"
+    
 } else {
     Write-Host "Could not download file"
     Start-Sleep 3
