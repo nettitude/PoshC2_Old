@@ -1,6 +1,9 @@
-﻿# To install or upgrade PoshC2 run the following command in PowerShell
+﻿# Written by @benpturner and @davehardy20
+Param($installpath)
+
+# To install or upgrade PoshC2 run the following command in PowerShell
 # 
-# powershell -exec bypass -c "iex (new-object system.net.webclient).downloadstring('https://raw.githubusercontent.com/nettitude/PoshC2/master/C2-Installer.ps1')"
+# powershell -exec bypass -c "iex (new-object system.net.webclient).downloadstring('https://raw.githubusercontent.com/nettitude/PoshC2/new_directory/C2-Installer.ps1')"
 
 function Download-File 
 {
@@ -30,12 +33,17 @@ function Unzip-File
 		$shell.Namespace($destination).copyhere($item)
 	}
 }
-$installpath = Read-Host "Please specify the install directory" 
 
+if (!$installpath) {
+    $installpath = Read-Host "Please specify the install directory"   
+} 
+
+$slash = $installpath -match '.+[^\\]\\$'
+if (!$slash) {
+    $installpath = $installpath+"\"
+}
 
 $downloadpath = "https://github.com/nettitude/PoshC2/archive/master.zip"
-
-#$installpath = "C:\Temp\"
     
 $pathexists = Test-Path $installpath
 
@@ -58,6 +66,26 @@ if ($downloaded) {
     Remove-Item "$($installpath)PowershellC2" -Recurse
     Move-Item "$($installpath)PoshC2-master" "$($installpath)PowershellC2"
     }
+
+    $SourceExe = "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
+    $ArgumentsToSourceExe = "-exec bypass "+$installpath+"PowershellC2\C2-Server.ps1 $installpath"
+    $DestinationPath = $installpath+"Start-C2Server.lnk"
+    $WshShell = New-Object -comObject WScript.Shell
+    $Shortcut = $WshShell.CreateShortcut($DestinationPath)
+    $Shortcut.TargetPath = $SourceExe
+    $Shortcut.Arguments = $ArgumentsToSourceExe
+    $Shortcut.Save()
+
+    $SourceExe = "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
+    $ArgumentsToSourceExe = "-exec bypass "+$installpath+"PowershellC2\C2-Installer.ps1 $installpath"
+    $DestinationPath = $installpath+"Start-C2Server.lnk"
+    $WshShell = New-Object -comObject WScript.Shell
+    $Shortcut = $WshShell.CreateShortcut($DestinationPath)
+    $Shortcut.TargetPath = $SourceExe
+    $Shortcut.Arguments = $ArgumentsToSourceExe
+    $Shortcut.Save()
+
+    C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -exec bypass c:\temp\powershellc2\c2-installer.ps1
 
 } else {
     Write-Host "Could not download file"

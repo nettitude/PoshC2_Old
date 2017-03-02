@@ -1,4 +1,5 @@
 # Written by @benpturner and @davehardy20
+Param($PoshPath)
 
 # are we running with Administrator privileges to open port 80
 If (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] 'Administrator'))
@@ -21,8 +22,9 @@ Write-Host "====================================================" `n -Foreground
 
 if (!(Test-Path -Path C:\temp)) 
 {New-Item c:\Temp -type directory}
+$PathExists = Test-Path $PoshPath
 
-if (!Test-Path "C:\Temp\PowershellC2\C2-Server.ps1") {
+if (!$PathExists) {
     $PoshPath = Read-Host "Cannot find the PowershellC2 directory, please specify path: "
 }
 # if poshpath ends with slash then remove this
