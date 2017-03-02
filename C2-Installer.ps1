@@ -35,14 +35,14 @@ function Unzip-File
 }
 
 if (!$installpath) {
-    $installpath = Read-Host "`n[+] Please specify the install directory: "   
+    $installpath = Read-Host "`n[+] Please specify the install directory"   
 } 
 
 $slash = $installpath -match '.+[^\\]\\$'
 if (!$slash) {
     $installpath = $installpath+"\"
 }
-
+$poshpath = $installpath+"PowershellC2\"
 $downloadpath = "https://github.com/nettitude/PoshC2/archive/master.zip"
     
 $pathexists = Test-Path $installpath
@@ -68,7 +68,7 @@ if ($downloaded) {
     }
 
     $SourceExe = "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
-    $ArgumentsToSourceExe = "-exec bypass "+$installpath+"PowershellC2\C2-Server.ps1 $installpath"
+    $ArgumentsToSourceExe = "-exec bypass "+$poshpath+"C2-Server.ps1 $poshpath"
     $DestinationPath = $installpath+"PowershellC2\Start-C2Server.lnk"
     $WshShell = New-Object -comObject WScript.Shell
     $Shortcut = $WshShell.CreateShortcut($DestinationPath)
@@ -77,7 +77,7 @@ if ($downloaded) {
     $Shortcut.Save()
 
     $SourceExe = "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
-    $ArgumentsToSourceExe = "-exec bypass "+$installpath+"PowershellC2\C2-Installer.ps1 $installpath"
+    $ArgumentsToSourceExe = "-exec bypass "+$poshpath+"C2-Installer.ps1 $poshpath"
     $DestinationPath = $installpath+"PowershellC2\Update-PoshC2.lnk"
     $WshShell = New-Object -comObject WScript.Shell
     $Shortcut = $WshShell.CreateShortcut($DestinationPath)
