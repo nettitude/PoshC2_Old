@@ -60,7 +60,7 @@ $downloaded = Test-Path "$($installpath)PoshC2-master.zip"
 if ($downloaded) {
 
     Unzip-File "$($installpath)PoshC2-master.zip" $installpath
-    Remove-Item "$($installpath)PoshC2-master.zip" -Force
+    Remove-Item "$($installpath)PoshC2-master.zip" -Force -Recurse
     $pathexists = Test-Path "$($installpath)PowershellC2"
 
     if (!$pathexists) {
