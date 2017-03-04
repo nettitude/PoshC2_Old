@@ -35,12 +35,14 @@ function Unzip-File
 }
 
 if (!$installpath) {
-    $installpath = Read-Host "`n[+] Please specify the install directory"   
+    $currentdirectory = Get-Location
+    $prompt = Read-Host -Prompt "`n[+] Please specify the install directory [$($currentdirectory)]" 
+    $installpath = ($currentdirectory,$prompt)[[bool]$prompt]
 } 
 
 $slash = $installpath -match '.+[^\\]\\$'
 if (!$slash) {
-    $installpath = $installpath+"\"
+    $installpath = "$($installpath)\"
 }
 $poshpath = $installpath+"PowershellC2\"
 $downloadpath = "https://github.com/nettitude/PoshC2/archive/new_directory.zip"
@@ -51,6 +53,7 @@ if (!$pathexists) {
     New-Item $installpath -Type Directory 
 }
 
+Write-Host "[+] Downloading PoshC2 to $poshpath"
 Download-File -From $downloadpath -To "$($installpath)PoshC2-master.zip"
 $downloaded = Test-Path "$($installpath)PoshC2-master.zip"
 
