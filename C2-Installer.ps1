@@ -67,7 +67,7 @@ if ($downloaded) {
         Move-Item "$($installpath)PoshC2-new_directory" "$($installpath)PowershellC2" 
     } else {
         Remove-Item "$($installpath)PowershellC2" -Recurse
-        Get-ChildItem -Path "$($installpath)PoshC2-new_directory\*" -Recurse | Move-Item -Destination "$($installpath)PowershellC2"
+        Copy-Item -Path "$($installpath)PoshC2-new_directory" -Destination "$($installpath)PowershellC2" –Recurse -Force
     }
 
     $SourceExe = "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
