@@ -1032,6 +1032,10 @@ primer | iex }'
     $Shortcut.TargetPath = $SourceExe
     $Shortcut.Arguments = $ArgumentsToSourceExe
     $Shortcut.Save()
+    # add run as administrator 
+    $bytes = [System.IO.File]::ReadAllBytes("$global:newdir\Restart-C2Server.lnk")
+    $bytes[0x15] = $bytes[0x15] -bor 0x20
+    [System.IO.File]::WriteAllBytes("$global:newdir\Restart-C2Server.lnk", $bytes)
 
     $SourceExe = "powershell.exe"
     $ArgumentsToSourceExe = "-exec bypass -c import-module ${PoshPath}Implant-Handler.ps1; Implant-Handler -FolderPath '$global:newdir'"

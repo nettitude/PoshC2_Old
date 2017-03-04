@@ -69,21 +69,31 @@ if ($downloaded) {
 
     $SourceExe = "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
     $ArgumentsToSourceExe = "-exec bypass -c import-module ${poshpath}C2-Server.ps1; C2-Server -PoshPath $poshpath"
-    $DestinationPath = $installpath+"PowershellC2\Start-C2-Server.lnk"
+    $DestinationPath = "$($installpath)PowershellC2\Start-C2-Server.lnk"
     $WshShell = New-Object -comObject WScript.Shell
     $Shortcut = $WshShell.CreateShortcut($DestinationPath)
     $Shortcut.TargetPath = $SourceExe
     $Shortcut.Arguments = $ArgumentsToSourceExe
     $Shortcut.Save()
 
+    # add run as administrator 
+    $bytes = [System.IO.File]::ReadAllBytes("$($installpath)PowershellC2\Start-C2-Server.lnk")
+    $bytes[0x15] = $bytes[0x15] -bor 0x20
+    [System.IO.File]::WriteAllBytes("$($installpath)PowershellC2\Start-C2-Server.lnk", $bytes)
+
     $SourceExe = "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
     $ArgumentsToSourceExe = "-exec bypass ${poshpath}C2-Installer.ps1 -PoshPath $poshpath"
-    $DestinationPath = $installpath+"PowershellC2\Update-PoshC2.lnk"
+    $DestinationPath = "$($installpath)PowershellC2\Update-PoshC2.lnk"
     $WshShell = New-Object -comObject WScript.Shell
     $Shortcut = $WshShell.CreateShortcut($DestinationPath)
     $Shortcut.TargetPath = $SourceExe
     $Shortcut.Arguments = $ArgumentsToSourceExe
     $Shortcut.Save()
+
+    # add run as administrator 
+    $bytes = [System.IO.File]::ReadAllBytes("$($installpath)PowershellC2\Start-C2-Server.lnk")
+    $bytes[0x15] = $bytes[0x15] -bor 0x20
+    [System.IO.File]::WriteAllBytes("$($installpath)PowershellC2\Start-C2-Server.lnk", $bytes)
 
     Write-Host "[+] Sucessfully installed PoshC2"
     
