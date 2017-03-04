@@ -82,7 +82,7 @@ if ($downloaded) {
     [System.IO.File]::WriteAllBytes("$($installpath)PowershellC2\Start-C2-Server.lnk", $bytes)
 
     $SourceExe = "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
-    $ArgumentsToSourceExe = "-exec bypass ${poshpath}C2-Installer.ps1 -PoshPath $poshpath"
+    $ArgumentsToSourceExe = "-exec bypass -c ${poshpath}C2-Installer.ps1 $poshpath"
     $DestinationPath = "$($installpath)PowershellC2\Update-PoshC2.lnk"
     $WshShell = New-Object -comObject WScript.Shell
     $Shortcut = $WshShell.CreateShortcut($DestinationPath)
