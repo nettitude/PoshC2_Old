@@ -53,7 +53,7 @@ if (!$pathexists) {
     New-Item $installpath -Type Directory 
 }
 
-Write-Host "[+] Downloading PoshC2 to $poshpath"
+Write-Host "[+] Downloading PoshC2 to $installpath"
 Download-File -From $downloadpath -To "$($installpath)PoshC2-master.zip"
 $downloaded = Test-Path "$($installpath)PoshC2-master.zip"
 
