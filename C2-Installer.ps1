@@ -66,10 +66,9 @@ if ($downloaded) {
     if (!$pathexists) {
         Move-Item "$($installpath)PoshC2-new_directory" "$($installpath)PowershellC2" 
     } else {
-        Copy-Item -Path "$($installpath)PoshC2-new_directory" -Destination "$($installpath)PowershellC2" –Recurse -Force
+        Copy-Item -Path "$($installpath)PoshC2-new_directory\PoshC2-new_directory\*" -Destination "$($installpath)PowershellC2" –Recurse -Force
+        Remove-Item "$($installpath)PoshC2-new_directory" -Force -Recurse
     }
-
-    Remove-Item "$($installpath)PoshC2-new_directory" -Force -Recurse
 
     $SourceExe = "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
     $ArgumentsToSourceExe = "-exec bypass -c import-module ${poshpath}C2-Server.ps1; C2-Server -PoshPath $poshpath"
