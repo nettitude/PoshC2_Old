@@ -3,7 +3,7 @@ Param($installpath)
 
 # To install or upgrade PoshC2 run the following command in PowerShell
 # 
-# powershell -exec bypass -c "iex (new-object system.net.webclient).downloadstring('https://raw.githubusercontent.com/nettitude/PoshC2/new_directory/C2-Installer.ps1')"
+# powershell -exec bypass -c "iex (new-object system.net.webclient).downloadstring('https://raw.githubusercontent.com/nettitude/PoshC2/master/C2-Installer.ps1')"
 
 function Download-File 
 {
@@ -45,7 +45,7 @@ if (!$slash) {
     $installpath = "$($installpath)\"
 }
 $poshpath = $installpath+"PowershellC2\"
-$downloadpath = "https://github.com/nettitude/PoshC2/archive/new_directory.zip"
+$downloadpath = "https://github.com/nettitude/PoshC2/archive/master.zip"
     
 $pathexists = Test-Path $installpath
 
@@ -64,10 +64,10 @@ if ($downloaded) {
     $pathexists = Test-Path "$($installpath)PowershellC2"
 
     if (!$pathexists) {
-        Move-Item "$($installpath)PoshC2-new_directory" "$($installpath)PowershellC2" 
+        Move-Item "$($installpath)PoshC2-master" "$($installpath)PowershellC2" 
     } else {
-        Copy-Item -Path "$($installpath)PoshC2-new_directory\PoshC2-new_directory\*" -Destination "$($installpath)PowershellC2" –Recurse -Force
-        Remove-Item "$($installpath)PoshC2-new_directory" -Force -Recurse
+        Copy-Item -Path "$($installpath)\PoshC2-master\*" -Destination "$($installpath)PowershellC2" –Recurse -Force
+        Remove-Item "$($installpath)PoshC2-master" -Force -Recurse
     }
 
     $SourceExe = "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
