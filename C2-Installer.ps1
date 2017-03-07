@@ -1,4 +1,4 @@
-﻿# Written by @benpturner and @davehardy20
+# Written by @benpturner and @davehardy20
 Param($installpath)
 
 # To install or upgrade PoshC2 run the following command in PowerShell
@@ -66,7 +66,7 @@ if ($downloaded) {
     if (!$pathexists) {
         Move-Item "$($installpath)PoshC2-master" "$($installpath)PowershellC2" 
     } else {
-        Copy-Item -Path "$($installpath)\PoshC2-master\*" -Destination "$($installpath)PowershellC2" –Recurse -Force
+        Copy-Item -Path "$($installpath)\PoshC2-master\*" -Destination "$($installpath)PowershellC2" -Recurse -Force
         Remove-Item "$($installpath)PoshC2-master" -Force -Recurse
     }
 
@@ -104,4 +104,3 @@ if ($downloaded) {
     Write-Host "Could not download file"
     Start-Sleep 3
 }
-
