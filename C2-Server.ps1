@@ -1682,16 +1682,6 @@ $message =[Convert]::ToBase64String($Bytes)
                 $commandsent = $fromstring
                 $message = $fromstring 
             }
-            if ($taskid.ToLower().StartsWith("load-module")) 
-            {
-                $modulename = $taskid -replace 'Load-Module ', '' 
-                $module = (Get-Content -Path "$PoshPath\Modules\$modulename") -join "`n"
-                # ensure the module name 
-                $module = "LoadModule"+$module
-                $fromstring = Encrypt-String $key $module
-                $commandsent = $fromstring
-                $message = $fromstring 
-            }
             else 
             {
                 Invoke-SqliteQuery -DataSource $Database -Query "UPDATE Implants SET LastSeen='$(get-date)' WHERE RandomURI='$ranuri'"|out-null
