@@ -317,7 +317,7 @@ public class Program
             }
             catch
             {
-                Console.WriteLine("Error running encoded command, ensure the command is unicode base64!");
+                Main();
             }
         }
         
@@ -328,11 +328,7 @@ public class Sample : System.Configuration.Install.Installer
 {
     public override void Uninstall(System.Collections.IDictionary savedState)
     {
-        while(true)
-        {
-            string tt = System.Text.Encoding.Unicode.GetString(System.Convert.FromBase64String("'+$praw+'"));
-            InvokeAutomation(tt);           
-        }
+        Program.Main();       
     }
     public static string InvokeAutomation(string cmd)
     {
