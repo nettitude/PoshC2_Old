@@ -1404,8 +1404,8 @@ while($true)
             }
             catch
             {
-	            Write-Host -ForegroundColor Red "failed"
-	            exit -1
+                Write-Host -ForegroundColor Red "failed"
+                exit -1
             }
 
             }
@@ -1671,12 +1671,18 @@ $message =[Convert]::ToBase64String($Bytes)
             if ($taskid.ToLower().StartsWith("loadmodule")) 
             {
                 $modulename = $taskid -replace 'LoadModule ', '' 
+
+                if (Test-Path "$PoshPath\Modules\$modulename") {
                 $module = (Get-Content -Path "$PoshPath\Modules\$modulename") -join "`n"
                 # ensure the module name 
                 $module = "LoadModule"+$module
                 $fromstring = Encrypt-String $key $module
                 $commandsent = $fromstring
                 $message = $fromstring 
+                } else {
+                $message = 'fvdsghfdsyyh'
+                Write-Host "Error finding module"
+                }
             }
             else 
             {
