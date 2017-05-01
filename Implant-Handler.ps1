@@ -935,6 +935,10 @@ param
             { 
                 CheckModuleLoaded "Invoke-SMBExec.ps1" $psrandomuri
             }
+            if ($pscommand.ToLower().StartsWith('new-zipfile'))
+            { 
+                CheckModuleLoaded "Zippy.ps1" $psrandomuri
+            }
             if ($pscommand.ToLower().StartsWith('invoke-smblogin'))
             { 
                 CheckModuleLoaded "Invoke-SMBExec.ps1" $psrandomuri
