@@ -18,7 +18,7 @@ Write-Host -Object " |     ___/  _ \/  ___/  |  \  /    \  \/  /  ____/ "  -Fore
 Write-Host -Object " |    |  (  <_> )___ \|   Y  \ \     \____/       \ "  -ForegroundColor Green
 Write-Host -Object " |____|   \____/____  >___|  /  \______  /\_______ \"  -ForegroundColor Green
 Write-Host -Object "                    \/     \/          \/         \/"  -ForegroundColor Green
-Write-Host "=============== v2.2 www.PoshC2.co.uk ==============" -ForegroundColor Green
+Write-Host "=============== v2.3 www.PoshC2.co.uk ==============" -ForegroundColor Green
 Write-Host "====================================================" `n -ForegroundColor Green
 
 if (!$RestartC2Server) {
@@ -1200,9 +1200,11 @@ while ($listener.IsListening)
         Write-Host "$endpointip | PID:$im_pid | Sleep:$defaultbeacon | $im_computername $im_domain ($im_arch) "`n -ForegroundColor Green
 
         if ($enablesound -eq "Yes") {
+            try {
             $voice = New-Object -com SAPI.SpVoice                        
             $voice.rate = -2                        
             $voice.Speak("Nice, we have a daisy chain implant")|Out-Null
+            } catch {}
         }
 
         $Query = 'INSERT INTO Implants (RandomURI, User, Hostname, IpAddress, Key, FirstSeen, LastSeen, PID, Arch, Domain, Alive, Sleep, ModsLoaded)
@@ -1441,9 +1443,11 @@ $message =[Convert]::ToBase64String($Bytes)
         Write-Host "$endpointip | PID:$im_pid | Sleep:$defaultbeacon | $im_computername $im_domain ($im_arch) "`n -ForegroundColor Green
 
         if ($enablesound -eq "Yes") {
+            try {
             $voice = New-Object -com SAPI.SpVoice                        
             $voice.rate = -2                        
             $voice.Speak("Nice, we have an implant")|Out-Null
+            } catch {}
         }
 
         $Query = 'INSERT INTO Implants (RandomURI, User, Hostname, IpAddress, Key, FirstSeen, LastSeen, PID, Arch, Domain, Alive, Sleep, ModsLoaded)

