@@ -873,13 +873,11 @@ netsh http delete sslcert ipport=0.0.0.0:443
 netsh http add sslcert ipport=0.0.0.0:443 certhash=REPLACE `"appid={00112233-4455-6677-8899-AABBCCDDEEFF}`"
 "
 }
+}
     $promptdomfront = Read-Host -Prompt "[2b] Do you want to use domain fronting, if so specify the host header?"
     if ($promptdomfront) {
         $domainfrontheader = $promptdomfront
     }
-
-    } 
-
         $defaultserverport = 443
     } else {
     $ipv4address = "http://"+$ipv4address
