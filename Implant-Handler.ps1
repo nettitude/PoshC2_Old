@@ -13,7 +13,9 @@ function Implant-Handler
     (
         [Parameter(ParameterSetName = "FolderPath", Mandatory = $false)]
         [string]
-        $FolderPath
+        $FolderPath,
+        [string]
+        $PoshPath
     )
 
     if (!$FolderPath) {
