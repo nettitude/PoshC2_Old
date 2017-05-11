@@ -1079,7 +1079,7 @@ primer | iex }'
     Write-Host `n"To re-open the Implant-Handler or C2Server, use the following shortcuts in this directory: "
     Write-Host "$global:newdir" `n  -ForegroundColor Green
     $SourceExe = "powershell.exe"
-    $ArgumentsToSourceExe = "-exec bypass -c import-module ${PoshPath}C2-Server.ps1;C2-Server -RestartC2Server $global:newdir -PoshPath $PoshPath"
+    $ArgumentsToSourceExe = "-exec bypass -c import-module ${PoshPath}C2-Server.ps1;C2-Server -RestartC2Server '$global:newdir' -PoshPath '$PoshPath'"
     $DestinationPath = "$global:newdir\Restart-C2Server.lnk"
     $WshShell = New-Object -comObject WScript.Shell
     $Shortcut = $WshShell.CreateShortcut($DestinationPath)
@@ -1092,7 +1092,7 @@ primer | iex }'
     [System.IO.File]::WriteAllBytes("$global:newdir\Restart-C2Server.lnk", $bytes)
 
     $SourceExe = "powershell.exe"
-    $ArgumentsToSourceExe = "-exec bypass -c import-module ${PoshPath}Implant-Handler.ps1; Implant-Handler -FolderPath '$global:newdir'"
+    $ArgumentsToSourceExe = "-exec bypass -c import-module ${PoshPath}Implant-Handler.ps1; Implant-Handler -FolderPath '$global:newdir' -PoshPath '$PoshPath'"
     $DestinationPath = "$global:newdir\Restart-Implant-Handler.lnk"
     $WshShell = New-Object -comObject WScript.Shell
     $Shortcut = $WshShell.CreateShortcut($DestinationPath)
