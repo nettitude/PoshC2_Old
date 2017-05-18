@@ -1,4 +1,4 @@
-function Invoke-Pipekat {
+﻿function Invoke-Pipekat {
 <#
 .SYNOPSIS
 
