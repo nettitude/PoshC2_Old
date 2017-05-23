@@ -874,9 +874,18 @@ param
             { 
                 CheckModuleLoaded "Get-FirewallRules.ps1" $psrandomuri
             }
-            if ($pscommand.ToLower().StartsWith('invoke-psinject'))
+            if ($pscommand.ToLower().StartsWith('invoke-psinject-proxypayload'))
             { 
+                if (Test-Path "$FolderPath\payloads\proxypayload.bat"){ 
                 CheckModuleLoaded "invoke-psinject.ps1" $psrandomuri
+                CheckModuleLoaded "proxypayload.ps1" $psrandomuri
+                CheckModuleLoaded "NamedPipeProxy.ps1" $psrandomuri
+                $psargs = $pscommand -replace 'invoke-psinject-proxypayload',''
+                $pscommand = "invoke-psinject -payloadtype proxy $($psargs)"
+                } else {
+                write-host "Need to run CreateProxyPayload first"
+                $pscommand = 'fvdsghfdsyyh'
+                }
             }
             if ($pscommand.ToLower().StartsWith('invoke-psinject-payload'))
             { 
@@ -884,6 +893,10 @@ param
                 CheckModuleLoaded "NamedPipe.ps1" $psrandomuri
                 $psargs = $pscommand -replace 'invoke-psinject-payload',''
                 $pscommand = "invoke-psinject -payloadtype normal $($psargs)"
+            }
+            if ($pscommand.ToLower().StartsWith('invoke-psinject'))
+            { 
+                CheckModuleLoaded "invoke-psinject.ps1" $psrandomuri
             }
             if ($pscommand.ToLower().StartsWith('invoke-inveighunprivileged'))
             { 
@@ -900,19 +913,6 @@ param
             if ($pscommand.ToLower().StartsWith('invoke-sniffer'))
             { 
                 CheckModuleLoaded "invoke-sniffer.ps1" $psrandomuri
-            }
-            if ($pscommand.ToLower().StartsWith('invoke-psinject-proxypayload'))
-            { 
-                if (Test-Path "$FolderPath\payloads\proxypayload.bat"){ 
-                CheckModuleLoaded "invoke-psinject.ps1" $psrandomuri
-                CheckModuleLoaded "proxypayload.ps1" $psrandomuri
-                CheckModuleLoaded "NamedPipeProxy.ps1" $psrandomuri
-                $psargs = $pscommand -replace 'invoke-psinject-proxypayload',''
-                $pscommand = "invoke-psinject -payloadtype proxy $($psargs)"
-                } else {
-                write-host "Need to run CreateProxyPayload first"
-                $pscommand = 'fvdsghfdsyyh'
-                }
             }
             if ($pscommand.ToLower().StartsWith('test-adcredential'))
             { 
