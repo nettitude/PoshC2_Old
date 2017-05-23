@@ -203,6 +203,7 @@ function Implant-Handler
         Write-Host " Get-PassPol" -ForegroundColor Green
         Write-Host " Get-PassNotExp" -ForegroundColor Green
         Write-Host " Get-LocAdm" -ForegroundColor Green
+        Write-Host " Invoke-Pipekat -Target <ip-optional> -Domain <dom> -Username <user> -Password '<pass>' -Hash <hash-optional>" -ForegroundColor Green
         Write-Host " Invoke-InveighUnprivileged -OutputDir C:\Temp\ -FileOutput Y -HTTP Y -NBNS Y -Tool 1" -ForegroundColor Green
         Write-Host " Invoke-Inveigh -OutputDir C:\Temp\ -FileOutput Y -HTTP Y -NBNS Y -Tool 1" -ForegroundColor Green
         Write-Host " Invoke-Sniffer -OutputFile C:\Temp\Output.txt -MaxSize 50MB -LocalIP 10.10.10.10" -ForegroundColor Green
@@ -953,6 +954,10 @@ param
             if ($pscommand.ToLower().StartsWith('invoke-wmiexec'))
             { 
                 CheckModuleLoaded "Invoke-WMIExec.ps1" $psrandomuri
+            }
+            if ($pscommand.ToLower().StartsWith('invoke-pipekat'))
+            { 
+                CheckModuleLoaded "Invoke-Pipekat.ps1" $psrandomuri
             }
             if ($pscommand.ToLower().StartsWith('get-net'))
             { 

