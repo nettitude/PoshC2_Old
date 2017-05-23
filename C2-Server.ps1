@@ -1115,7 +1115,7 @@ primer | iex }'
 
     
     #launch a new powershell session with the implant handler running
-    Start-Process -FilePath powershell.exe -ArgumentList " -NoP -Command import-module $PoshPath\Implant-Handler.ps1; Implant-Handler -FolderPath '$global:newdir'"
+    Start-Process -FilePath powershell.exe -ArgumentList " -NoP -Command import-module $PoshPath\Implant-Handler.ps1; Implant-Handler -FolderPath '$global:newdir' -PoshPath '$PoshPath'"
     Write-Host `n"To re-open the Implant-Handler or C2Server, use the following shortcuts in this directory: "
     Write-Host "$global:newdir" `n  -ForegroundColor Green
     $SourceExe = "powershell.exe"
