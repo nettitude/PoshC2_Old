@@ -841,12 +841,47 @@ else
         $ipv4address = ($localipfull,$prompt)[[bool]$prompt]
     }
     $prompthttpsdef = "Yes"
-    $prompthttps = Read-Host -Prompt "[2] Do you want to use HTTPS? [Yes]"
+    $prompthttps = Read-Host -Prompt "[2] Do you want to use HTTPS for implant comms? [Yes]"
     $prompthttps = ($prompthttpsdef,$prompthttps)[[bool]$prompthttps]
     if ($prompthttps -eq "Yes") {
     $ipv4address = "https://"+$ipv4address
     $promptssldefault = "Yes"
-    $promptssl = Read-Host -Prompt "[2a] Do you want PoshC2 to create a new self-signed SSL certificate, PSv4 required? [Yes]"
+
+    #detect if powershell < v4
+    $psver = $PSVersionTable.psversion.Major
+    if ($psver -lt '4') {
+        $promptssl = Read-Host -Prompt "[2a] Do you want PoshC2 to use the default self-signed SSL certificate [Yes]"
+        $promptssl = ($promptssldefault,$promptssl)[[bool]$promptssl]
+        if ($promptssl -eq "Yes") {
+            CERTUTIL -f -p poshc2 -importpfx "$PoshPath\poshc2.pfx"
+            $thumb = "DE5ADA225693F8E0ED43453F3EB512CE96991747"
+            $Deleted = netsh.exe http delete sslcert ipport=0.0.0.0:443
+            $Added = netsh.exe http add sslcert ipport=0.0.0.0:443 certhash=$thumb "appid={00112233-4455-6677-8899-AABBCCDDEEFF}"
+            if ($Added = "SSL Certificate successfully added") {
+                netsh.exe http show sslcert ipport=0.0.0.0:443
+            }
+        } else {
+            Write-Error "Error adding the certificate" 
+            Write-Host "`nEither install a self-signed cert using IIS Resource Kit as below
+https://www.microsoft.com/en-us/download/details.aspx?id=17275
+selfssl.exe /N:CN=HTTPS_CERT /K:1024 /V:7 /S:1 /P:443
+
+or 
+    
+Download and convert the PEM to PFX for windows import and import to personal:
+openssl pkcs12 -inkey privkey.pem -in cert.pem -export -out priv.pfx
+
+Grab the thumbprint:
+dir cert:\localmachine\my|% { `$_.thumbprint}
+
+Install using netsh:
+netsh http delete sslcert ipport=0.0.0.0:443
+netsh http add sslcert ipport=0.0.0.0:443 certhash=REPLACE `"appid={00112233-4455-6677-8899-AABBCCDDEEFF}`"
+"
+}
+    } else {
+
+    $promptssl = Read-Host -Prompt "[2a] Do you want PoshC2 to create a new self-signed SSL certificate [Yes]"
     $promptssl = ($promptssldefault,$promptssl)[[bool]$promptssl]
     if ($promptssl -eq "Yes") {
         $thumb = New-SelfSignedCertificate -certstorelocation cert:\localmachine\my -dnsname $ipv4address | select thumbprint -ExpandProperty thumbprint
@@ -874,11 +909,20 @@ netsh http add sslcert ipport=0.0.0.0:443 certhash=REPLACE `"appid={00112233-445
 "
 }
 }
-    $promptdomfront = Read-Host -Prompt "[2b] Do you want to use domain fronting, if so specify the host header?"
-    if ($promptdomfront) {
-        $domainfrontheader = $promptdomfront
+
+}
+
+    $promptdomfrontdef = "No"
+    $promptdomfront = Read-Host -Prompt "[2b] Do you want to use domain fronting? [No]"
+    $promptdomfront = ($promptdomfrontdef,$promptdomfront)[[bool]$promptdomfront]
+    if ($promptdomfront -eq "Yes") {
+        $promptdomfront = Read-Host -Prompt "[2c] Please specify the host header for domain fronting?"
+        if ($promptdomfront) {
+            $domainfrontheader = $promptdomfront
+        }
     }
-        $defaultserverport = 443
+
+    $defaultserverport = 443
     } else {
     $ipv4address = "http://"+$ipv4address
         $defaultserverport = 80
