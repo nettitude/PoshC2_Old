@@ -164,6 +164,7 @@ function Implant-Handler
         write-host `n "File Management: " -ForegroundColor Green
         write-host "====================" -ForegroundColor Red
         write-host " Download-File -Source 'C:\Temp Dir\Run.exe'" -ForegroundColor Green
+        write-host " Download-Files -Directory 'C:\Temp Dir\'" -ForegroundColor Green
         write-host " Upload-File -Source 'C:\Temp\Run.exe' -Destination 'C:\Temp\Test.exe'" -ForegroundColor Green  
         write-host " Web-Upload-File -From 'http://www.example.com/App.exe' -To 'C:\Temp\App.exe' " -ForegroundColor Green 
         write-host `n "Persistence: " -ForegroundColor Green

