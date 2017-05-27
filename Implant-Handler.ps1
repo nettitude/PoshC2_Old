@@ -529,17 +529,19 @@ if (-not (Test-Path "$FolderPath\payloads\daisypayload.bat")){
     [IO.File]::WriteAllLines("$FolderPath\payloads\daisypayload.bat", $payload)
     Write-Host -Object "Payload written to: $FolderPath\payloads\daisypayload.bat"  -ForegroundColor Green
 } 
-if (-not (Test-Path "$FolderPath\payloads\daisypayload2.bat")){
+elseif (-not (Test-Path "$FolderPath\payloads\daisypayload2.bat")){
     [IO.File]::WriteAllLines("$FolderPath\payloads\daisypayload2.bat", $payload)
     Write-Host -Object "Payload written to: $FolderPath\payloads\daisypayload2.bat"  -ForegroundColor Green
 }
-if (-not (Test-Path "$FolderPath\payloads\daisypayload3.bat")){
+elseif (-not (Test-Path "$FolderPath\payloads\daisypayload3.bat")){
     [IO.File]::WriteAllLines("$FolderPath\payloads\daisypayload3.bat", $payload)
     Write-Host -Object "Payload written to: $FolderPath\payloads\daisypayload3.bat"  -ForegroundColor Green
 }
-if (-not (Test-Path "$FolderPath\payloads\daisypayload4.bat")){
+elseif (-not (Test-Path "$FolderPath\payloads\daisypayload4.bat")){
     [IO.File]::WriteAllLines("$FolderPath\payloads\daisypayload4.bat", $payload)
     Write-Host -Object "Payload written to: $FolderPath\payloads\daisypayload4.bat"  -ForegroundColor Green
+} else {
+    Write-Host "Cannot create payload"
 }
 $rundaisy = @"
 `$t = Invoke-Netstat| ? {`$_.ListeningPort -eq $port}
