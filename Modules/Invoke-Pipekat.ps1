@@ -419,8 +419,13 @@ $mkun += $sc32
 $Bytes = [System.Text.Encoding]::UTF8.GetBytes($mkun)
 $ed = [Convert]::ToBase64String($Bytes)
 add-Type -assembly "System.Core"
-$net = "net.exe use \\$target\ipc`$ /user:$domain\$username $password"
-IEX $net
+if ($domain -eq ".") {
+	$net = new-object -ComObject WScript.Network
+	$net.MapNetworkDrive("", "\\$target\ipc$", $false, "$username", "$Password")
+} else {
+	$net = new-object -ComObject WScript.Network
+	$net.MapNetworkDrive("", "\\$target\ipc$", $false, "$domain\$username", "$Password")
+}
 $p = new-object System.IO.Pipes.NamedPipeClientStream($target, $pipeName);
 $w = new-object System.IO.StreamWriter($p)
 $p.Connect($TimeoutMS); $w.WriteLine($ed);
