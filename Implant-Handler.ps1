@@ -62,7 +62,7 @@ function Implant-Handler
             Write-Host -Object "|   |  Y Y  \  |_> >  |__/ __ \|   |  \  |  \___ \ " -ForegroundColor Green
             Write-Host -Object "|___|__|_|  /   __/|____(____  /___|  /__| /____  >" -ForegroundColor Green
             Write-Host -Object "          \/|__|             \/     \/          \/ " -ForegroundColor Green
-            Write-Host "============== v2.7 www.PoshC2.co.uk ==============" -ForegroundColor Green
+            Write-Host "============== v2.8 www.PoshC2.co.uk ==============" -ForegroundColor Green
             Write-Host "===================================================" `n -ForegroundColor Green
 
             foreach ($implant in $dbresults) 
