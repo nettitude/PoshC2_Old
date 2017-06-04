@@ -2232,11 +2232,13 @@ Function Get-MD4Hash {
     END
     {       
         Set-StrictMode -Version Latest
+        if (-not ([System.Management.Automation.PSTypeName]'dsafdsafdsafds').Type)
+        {
         Add-Type -TypeDefinition @'
         using System;
         using System.Text;
         using System.Runtime.InteropServices;
-        public class BCrypt
+        public class dsafdsafdsafds
         {
             [DllImport("bcrypt.dll", CharSet = CharSet.Auto)]
             public static extern NTStatus BCryptOpenAlgorithmProvider(
@@ -2294,45 +2296,46 @@ Function Get-MD4Hash {
             }
         }
 '@
+}
  
         [Byte[]]$HashBytes   = New-Object Byte[] 16
         [IntPtr]$PHAlgorithm = [IntPtr]::Zero
         [IntPtr]$PHHash      = [IntPtr]::Zero
-        $NTStatus = [BCrypt]::BCryptOpenAlgorithmProvider([Ref] $PHAlgorithm, 'MD4', $Null, 0)
+        $NTStatus = [dsafdsafdsafds]::BCryptOpenAlgorithmProvider([Ref] $PHAlgorithm, 'MD4', $Null, 0)
         If ($NTStatus -NE 0)
         {
             Write-Error "BCryptOpenAlgorithmProvider failed with NTSTATUS $NTStatus"
             If ($PHAlgorithm -NE [IntPtr]::Zero)
             {
-                $NTStatus = [BCrypt]::BCryptCloseAlgorithmProvider($PHAlgorithm, 0)
+                $NTStatus = [dsafdsafdsafds]::BCryptCloseAlgorithmProvider($PHAlgorithm, 0)
             }
             Return
         }
-        $NTStatus = [BCrypt]::BCryptCreateHash($PHAlgorithm, [Ref] $PHHash, [IntPtr]::Zero, 0, [IntPtr]::Zero, 0, 0)
+        $NTStatus = [dsafdsafdsafds]::BCryptCreateHash($PHAlgorithm, [Ref] $PHHash, [IntPtr]::Zero, 0, [IntPtr]::Zero, 0, 0)
         If ($NTStatus -NE 0)
         {
             Write-Error "BCryptCreateHash failed with NTSTATUS $NTStatus"
             If ($PHHash -NE [IntPtr]::Zero)
             {
-                $NTStatus = [BCrypt]::BCryptDestroyHash($PHHash)               
+                $NTStatus = [dsafdsafdsafds]::BCryptDestroyHash($PHHash)               
             }
             If ($PHAlgorithm -NE [IntPtr]::Zero)
             {
-                $NTStatus = [BCrypt]::BCryptCloseAlgorithmProvider($PHAlgorithm, 0)
+                $NTStatus = [dsafdsafdsafds]::BCryptCloseAlgorithmProvider($PHAlgorithm, 0)
             }
             Return
         }
  
-        $NTStatus = [BCrypt]::BCryptHashData($PHHash, $DataToHash, $DataToHash.Length, 0)
-        $NTStatus = [BCrypt]::BCryptFinishHash($PHHash, $HashBytes, $HashBytes.Length, 0)
+        $NTStatus = [dsafdsafdsafds]::BCryptHashData($PHHash, $DataToHash, $DataToHash.Length, 0)
+        $NTStatus = [dsafdsafdsafds]::BCryptFinishHash($PHHash, $HashBytes, $HashBytes.Length, 0)
  
         If ($PHHash -NE [IntPtr]::Zero)
         {
-            $NTStatus = [BCrypt]::BCryptDestroyHash($PHHash)
+            $NTStatus = [dsafdsafdsafds]::BCryptDestroyHash($PHHash)
         }
         If ($PHAlgorithm -NE [IntPtr]::Zero)
         {
-            $NTStatus = [BCrypt]::BCryptCloseAlgorithmProvider($PHAlgorithm, 0)
+            $NTStatus = [dsafdsafdsafds]::BCryptCloseAlgorithmProvider($PHAlgorithm, 0)
         }
          
         $HashString = New-Object System.Text.StringBuilder

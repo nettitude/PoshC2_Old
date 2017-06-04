@@ -1550,6 +1550,8 @@ Function Get-MD4Hash {
     END
     {       
         Set-StrictMode -Version Latest
+        if (-not ([System.Management.Automation.PSTypeName]'dsafdsafdsafds').Type)
+        {
         Add-Type -TypeDefinition @'
         using System;
         using System.Text;
@@ -1612,6 +1614,7 @@ Function Get-MD4Hash {
             }
         }
 '@
+}
  
         [Byte[]]$HashBytes   = New-Object Byte[] 16
         [IntPtr]$PHAlgorithm = [IntPtr]::Zero
