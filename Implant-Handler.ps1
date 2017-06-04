@@ -132,7 +132,8 @@ function Implant-Handler
         #write-host " Zip <destination zip file> <source folder>"-ForegroundColor Green 
         write-host " Get-System | Get-System-WithProxy" -ForegroundColor Green 
         write-host " Get-ImplantWorkingDirectory"-ForegroundColor Green
-        write-host " Get-Pid " -ForegroundColor Green 
+        write-host " Get-Pid" -ForegroundColor Green 
+        write-host " Get-Webpage http://intranet" -ForegroundColor Green 
         write-host " ListModules " -ForegroundColor Green
         write-host " ModulesLoaded " -ForegroundColor Green 
         write-host " LoadModule <modulename>" -ForegroundColor Green 
