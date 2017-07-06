@@ -938,7 +938,7 @@ netsh http add sslcert ipport=0.0.0.0:443 certhash=REPLACE `"appid={00112233-445
 
     $killdatedefault = (get-date).AddDays(14)
     $killdatedefault = (get-date -date $killdatedefault -Format "dd/MM/yyyy")
-    $prompt = Read-Host -Prompt "[5] Enter the auto Kill Date of the implants in this format dd/MMM/yyyy [$($killdatedefault)]"
+    $prompt = Read-Host -Prompt "[5] Enter the auto Kill Date of the implants in this format dd/MM/yyyy [$($killdatedefault)]"
     $killdate = ($killdatedefault,$prompt)[[bool]$prompt]
     $killdatefm = Get-Date -Date $killdate -Format "dd/MM/yyyy"
 
