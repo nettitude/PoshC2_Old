@@ -1014,9 +1014,25 @@ netsh http add sslcert ipport=0.0.0.0:443 certhash=REPLACE `"appid={00112233-445
     $RootFolder = $PoshPath.TrimEnd("PowershellC2\")
     $global:newdir = $RootFolder+"\"+$tempdir
 
-    $defbeacontime = 5
-    $prompt = Read-Host -Prompt "[4] Enter the default becaon time in seconds of the Posh C2 server (10% jitter is always applied) [$($defbeacontime)]"
+    $defbeacontime = "5s"
+    $prompt = Read-Host -Prompt "[4] Enter the default beacon time of the Posh C2 Server - 30s, 5m, 1h (10% jitter is always applied) [$($defbeacontime)]"
     $defaultbeacon = ($defbeacontime,$prompt)[[bool]$prompt]
+    if ($defaultbeacon.ToLower().Contains('m')) { 
+        $defaultbeacon = $defaultbeacon -replace 'm', ''
+        [int]$newsleep = $defaultbeacon 
+        [int]$defaultbeacon = $newsleep * 60
+    }
+    elseif ($defaultbeacon.ToLower().Contains('h')) { 
+        $defaultbeacon = $defaultbeacon -replace 'h', ''
+        [int]$newsleep1 = $defaultbeacon 
+        [int]$newsleep2 = $newsleep1 * 60
+        [int]$defaultbeacon = $newsleep2 * 60
+    }
+    elseif ($defaultbeacon.ToLower().Contains('s')) { 
+        $defaultbeacon = $defaultbeacon -replace 's', ''
+    } else {
+        $defaultbeacon = $defaultbeacon
+    }
 
     $killdatedefault = (get-date).AddDays(14)
     $killdatedefault = (get-date -date $killdatedefault -Format "dd/MM/yyyy")
