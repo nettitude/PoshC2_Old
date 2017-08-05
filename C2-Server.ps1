@@ -1022,6 +1022,7 @@ netsh http add sslcert ipport=0.0.0.0:443 certhash=REPLACE `"appid={00112233-445
     $killdatedefault = (get-date -date $killdatedefault -Format "dd/MM/yyyy")
     $prompt = Read-Host -Prompt "[5] Enter the auto Kill Date of the implants in this format dd/MM/yyyy [$($killdatedefault)]"
     $killdate = ($killdatedefault,$prompt)[[bool]$prompt]
+    $killdate = [datetime]::ParseExact($killdate,"dd/MM/yyyy",$null)
     $killdatefm = Get-Date -Date $killdate -Format "dd/MM/yyyy"
 
     $prompt = Read-Host -Prompt "[6] Enter the HTTP port you want to use, 80/443 is highly preferable for proxying [$($defaultserverport)]"
