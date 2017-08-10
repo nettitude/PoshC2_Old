@@ -930,11 +930,12 @@ else
         $prompt = Read-Host -Prompt "[1] Enter the IP address or Hostname of the Posh C2 server (External address if using NAT) [$($localipfull)]"
         $ipv4address = ($localipfull,$prompt)[[bool]$prompt]
     }
-
+    $uri="http://"
     $prompthttpsdef = "Yes"
     $prompthttps = Read-Host -Prompt "[2] Do you want to use HTTPS for implant comms? [Yes]"
     $prompthttps = ($prompthttpsdef,$prompthttps)[[bool]$prompthttps]
     if ($prompthttps -eq "Yes") {
+    $uri="https://"
     $ipv4address = "https://"+$ipv4address
     $promptssldefault = "Yes"
 
@@ -1019,7 +1020,6 @@ netsh http add sslcert ipport=0.0.0.0:443 certhash=REPLACE `"appid={00112233-445
 
 }
 
-
     $promptdomfrontdef = "No"
     $promptdomfront = Read-Host -Prompt "[2b] Do you want to use domain fronting? [No]"
     $promptdomfront = ($promptdomfrontdef,$promptdomfront)[[bool]$promptdomfront]
@@ -1038,9 +1038,9 @@ netsh http add sslcert ipport=0.0.0.0:443 certhash=REPLACE `"appid={00112233-445
     
     $apache = @"
 RewriteEngine On
-RewriteRule ^/webapp/static(.*) http://<IP ADDRESS>/webapp/static`$1 [NC,P]
-RewriteRule ^/connect(.*) http://<IP ADDRESS>/connect`$1 [NC,P]
-RewriteRule ^/daisy(.*) http://<IP ADDRESS>/daisy`$1 [NC,P]
+RewriteRule ^/webapp/static(.*) $uri<IP ADDRESS>/webapp/static`$1 [NC,P]
+RewriteRule ^/connect(.*) $uri<IP ADDRESS>/connect`$1 [NC,P]
+RewriteRule ^/daisy(.*) $uri<IP ADDRESS>/daisy`$1 [NC,P]
 "@
     $customurldef = "No"
     $customurl = Read-Host -Prompt "[3] Do you want to customize the beacon URLs from the default? [No]"
@@ -1058,16 +1058,16 @@ RewriteRule ^/daisy(.*) http://<IP ADDRESS>/daisy`$1 [NC,P]
         $urlstring = '"images/static/content/","news/id=","webapp/static/","images/prints/","wordpress/site/","steam/","true/images/77/static/","holdings/office/images/"'
             $apache = @"
 RewriteEngine On
-RewriteRule ^/connect(.*) http://<IP ADDRESS>/connect`$1 [NC,P]
-RewriteRule ^/daisy(.*) http://<IP ADDRESS>/daisy`$1 [NC,P]
-RewriteRule ^/images/static/content/(.*) http://<IP ADDRESS>/images/static/content/`$1 [NC,P]
-RewriteRule ^/news/(.*) http://<IP ADDRESS>/news/`$1 [NC,P]
-RewriteRule ^/webapp/static/(.*) http://<IP ADDRESS>/webapp/static/`$1 [NC,P]
-RewriteRule ^/images/prints/(.*) http://<IP ADDRESS>/images/prints/`$1 [NC,P]
-RewriteRule ^/wordpress/site/(.*) http://<IP ADDRESS>/wordpress/site/`$1 [NC,P]
-RewriteRule ^/true/images/77/(.*) http://<IP ADDRESS>/true/images/77/`$1 [NC,P]
-RewriteRule ^/holdings/(.*) http://<IP ADDRESS>/holdings/images/`$1 [NC,P]
-RewriteRule ^/steam(.*) http://<IP ADDRESS>/holidngs/images/`$1 [NC,P]
+RewriteRule ^/connect(.*) $uri<IP ADDRESS>/connect`$1 [NC,P]
+RewriteRule ^/daisy(.*) $uri<IP ADDRESS>/daisy`$1 [NC,P]
+RewriteRule ^/images/static/content/(.*) $uri<IP ADDRESS>/images/static/content/`$1 [NC,P]
+RewriteRule ^/news/(.*) $uri<IP ADDRESS>/news/`$1 [NC,P]
+RewriteRule ^/webapp/static/(.*) $uri<IP ADDRESS>/webapp/static/`$1 [NC,P]
+RewriteRule ^/images/prints/(.*) $uri<IP ADDRESS>/images/prints/`$1 [NC,P]
+RewriteRule ^/wordpress/site/(.*) $uri<IP ADDRESS>/wordpress/site/`$1 [NC,P]
+RewriteRule ^/true/images/77/(.*) $uri<IP ADDRESS>/true/images/77/`$1 [NC,P]
+RewriteRule ^/holdings/office/images/(.*) $uri<IP ADDRESS>/holdings/office/images/`$1 [NC,P]
+RewriteRule ^/steam(.*) $uri<IP ADDRESS>/steam`$1 [NC,P]
 "@
     }
 
