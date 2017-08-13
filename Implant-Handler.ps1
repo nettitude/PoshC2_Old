@@ -41,6 +41,55 @@ function Implant-Handler
     $DomainFrontHeader = $c2serverresults.DomainFrontHeader 
     $ipv4address = $c2serverresults.HostnameIP
     $serverport = $c2serverresults.ServerPort 
+        
+$head = '
+<style>
+
+body {
+font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;
+}
+
+table {
+    table-layout: fixed;
+    word-wrap: break-word;
+    display: table;
+    font-family: monospace;
+    white-space: pre;
+    margin: 1em 0;
+}
+
+th, td {
+    text-align: left;
+    padding: 8px;
+}
+
+tr:nth-child(even){background-color: #f2f2f2}
+
+th {
+    background-color: #4CAF50;
+    color: white;
+}
+ 
+p { 
+margin-left: 20px; 
+font-size: 12px; 
+}
+ 
+</style>'
+
+$header = '
+<pre>
+  __________            .__.     _________  ________  
+  \_______  \____  _____|  |__   \_   ___ \ \_____  \ 
+   |     ___/  _ \/  ___/  |  \  /    \  \/  /  ____/ 
+   |    |  (  <_> )___ \|   Y  \ \     \____/       \ 
+   |____|   \____/____  >___|  /  \______  /\_______ \
+                      \/     \/          \/         \/
+  ============ @benpturner & @davehardy20 ============
+  ====================================================
+</pre>'
+
+
     function startup 
     {
         Clear-Host
@@ -89,31 +138,174 @@ function Implant-Handler
                 }
             }
 
+            if (($HelpOutput) -and ($HelpOutput -eq "PrintMainHelp")){
+                print-mainhelp
+                $HelpOutput = $Null
+            } 
+
+            if (($HelpOutput) -and ($HelpOutput -ne "PrintMainHelp")){
+                Write-Host ""
+                Write-Host $HelpOutput -ForegroundColor Green
+                $HelpOutput = $Null
+            }
+
             $global:implantid = Read-Host -Prompt `n'Select ImplantID or ALL or Comma Separated List (Enter to refresh):'
             Write-Host -Object ""
             if (!$global:implantid) 
             {
                 startup
             }
-            if ($global:implantid -eq "ALL") 
+            elseif ($global:implantid -eq "ALL") 
             {
                 $global:cmdlineinput = "PS $global:implantid>"
                 break
             }
-            else 
+            if ($global:implantid -eq "Help"){
+               $HelpOutput = "PrintMainHelp"
+               startup
+            }
+            elseif ($global:implantid -eq "?"){
+               $HelpOutput = "PrintMainHelp"
+               startup
+            }
+            elseif ($global:implantid -eq "list-autorun") 
             {
-                if ($global:implantid.Contains(",")){
+                $autorunlist = Invoke-SqliteQuery -DataSource $Database -Query "SELECT * FROM AutoRuns" -As PSObject
+                foreach ($i in $autorunlist) {
+                    $taskid = $i.TaskID
+                    $taskname = $i.Task
+                    $HelpOutput += "TaskID: $taskid | Task: $taskname `n"
+                }             
+                startup
+            }
+            elseif ($global:implantid -eq "nuke-autorun") 
+            {
+                Invoke-SqliteQuery -DataSource $Database -Query "Drop Table AutoRuns"
+                
+                $Query = 'CREATE TABLE AutoRuns (
+                TaskID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
+                Task TEXT)'
+                Invoke-SqliteQuery -Query $Query -DataSource $Database 
+                startup
+            }
+            elseif ($global:implantid.ToLower().StartsWith("del-autorun")) 
+            {
+                $number = $global:implantid.Substring(12)
+                $number = [int]$number
+                if ($number  -match '^\d+$'){
+                    Invoke-SqliteQuery -DataSource $Database -Query "DELETE FROM AutoRuns where TaskID='$number'"
+
+                    $autorunlist = Invoke-SqliteQuery -DataSource $Database -Query "SELECT * FROM AutoRuns" -As PSObject
+                    foreach ($i in $autorunlist) {
+                        $taskid = $i.TaskID
+                        $taskname = $i.Task
+                        $HelpOutput += "TaskID: $taskid | Task: $taskname"
+                    }
+                
+                    startup    
+                }
+                else
+                {  
+                    $HelpOutput = "Error not an integer"
+                    startup
+                }
+            }
+            elseif ($global:implantid.ToLower().StartsWith("add-autorun")) 
+            {
+                $tasker = $global:implantid.Substring(12)
+                write-host "$tasker" -ForegroundColor Cyan
+                $Query = 'INSERT
+                INTO AutoRuns (Task)
+                VALUES (@Task)'
+                
+                Invoke-SqliteQuery -DataSource $Database -Query $Query -SqlParameters @{
+                Task = $tasker
+                }
+                $HelpOutput = "Added autorun $tasker"
+                startup                
+            } elseif ($global:implantid.ToLower().StartsWith("output-to-html"))
+            {
+                $allcreds = Invoke-SqliteQuery -Datasource $Database -Query "SELECT * FROM Creds" -As PSObject
+                $CredsArray = @()
+                foreach ($cred in $allcreds) {
+                    $CredLog = New-object PSObject | Select  CredsID, Username, Password, Hash
+                    $CredLog.CredsID = $cred.CredsID;
+                    $Credlog.Username = $cred.Username;
+                    $CredLog.Password = $cred.Password;
+                    $CredLog.Hash = $cred.Hash;
+                    $CredsArray += $CredLog
+                }
+                $CredsArray | ConvertTo-Html -title "<title>Credential List from PoshC2</title>" -Head $head -pre $header -post "<h3>For details, contact X<br>Created by X</h3>" | Out-File "$FolderPath\reports\Creds.html"
+
+               $allresults = Invoke-SqliteQuery -DataSource $Database -Query "SELECT * FROM Implants" -As PSObject
+               $ImplantsArray = @()
+               foreach ($implantres in $allresults) {                  
+                    $ImplantLog = New-Object PSObject | Select ImplantID, RandomURI, User, Hostname, IPAddress, FirstSeen, LastSeen, PID, Arch, Domain, Sleep
+                    $ImplantLog.ImplantID = $implantres.ImplantID;
+                    $ImplantLog.RandomURI = $implantres.RandomURI;
+                    $ImplantLog.User = $implantres.User;
+                    $ImplantLog.Hostname = $implantres.Hostname;
+                    $ImplantLog.IPAddress = $implantres.IPAddress;
+                    $ImplantLog.FirstSeen = $implantres.FirstSeen;
+                    $ImplantLog.LastSeen = $implantres.LastSeen;
+                    $ImplantLog.PID = $implantres.PID;
+                    $ImplantLog.Arch = $implantres.Arch;
+                    $ImplantLog.Domain = $implantres.Domain;
+                    $ImplantLog.Sleep = $implantres.Sleep;
+                    $ImplantsArray += $ImplantLog
+               }
+
+               $ImplantsArray | ConvertTo-Html -title "<title>Implant List from PoshC2</title>" -Head $head -pre $header -post "<h3>For details, contact X<br>Created by X</h3>" | Out-File "$FolderPath\reports\Implants.html"
+
+               $allresults = Invoke-SqliteQuery -DataSource $Database -Query "SELECT * FROM CompletedTasks" -As PSObject
+               $TasksArray = @()
+               foreach ($task in $allresults) {                  
+                    $ImplantTask = New-Object PSObject | Select TaskID, Timestamp, RandomURI, Command, Output
+                    $ImplantTask.TaskID = $task.CompletedTaskID;
+                    $ImplantTask.Timestamp = $task.TaskID;
+                    $ImplantTask.RandomURI = $task.RandomURI;
+                    $ImplantTask.Command = $task.Command;
+                    $ImplantTask.Output = $task.Output;
+                    $TasksArray += $ImplantTask
+               }
+               $TasksArray | ConvertTo-Html -title "<title>Tasks from PoshC2</title>" -Head $head -pre $header -post "<h3>For details, contact X<br>Created by X</h3>" | Out-File "$FolderPath\reports\ImplantTasks.html"
+            } elseif ($global:implantid.ToLower().StartsWith("show-serverinfo"))
+            {
+                $HelpOutput  = Invoke-SqliteQuery -DataSource $Database -Query "SELECT * FROM C2Server" -As PSObject
+                $HelpOutput
+            } elseif ($global:implantid.Contains(","))
+            {
                 $global:cmdlineinput = "PS $global:implantid>"
                 break 
-
-                }
+            } else 
+            {
                 $global:randomuri = Invoke-SqliteQuery -DataSource $Database -Query "SELECT RandomURI FROM Implants WHERE ImplantID='$global:implantid'" -as SingleValue
-                $global:cmdlineinput = "PS $global:implantid>"
+                $global:cmdlineinput = "PS $global:implantid>"   
             }
         }
     }
+
     $tick = "'"
     $speechmarks = '"'
+
+     function print-mainhelp {
+        write-host `n "Main Menu: " -ForegroundColor Green
+        write-host "================================" -ForegroundColor Red
+        write-host " Use Implant by <id>, e.g. 1"-ForegroundColor Green
+        write-host " Use Multiple Implants by <id>,<id>,<id>, e.g. 1,2,5"-ForegroundColor Green
+        write-host " Use ALL Implants by ALL" -ForegroundColor Green
+        write-host `n "Auto-Runs: " -ForegroundColor Green
+        write-host "=====================" -ForegroundColor Red
+        write-host " Add-autorun <task>"-ForegroundColor Green
+        write-host " List-autorun"-ForegroundColor Green
+        write-host " Del-autorun <taskID>"-ForegroundColor Green
+        write-host " Nuke-autorun"-ForegroundColor Green
+        write-host `n "Server Commands: " -ForegroundColor Green
+        write-host "=====================" -ForegroundColor Red
+        write-host " Show-ServerInfo" -ForegroundColor Green 
+        write-host " Output-To-HTML"-ForegroundColor Green  
+    }
+
     function print-help {
         write-host `n "Implant Features: " -ForegroundColor Green
         write-host "=====================" -ForegroundColor Red
@@ -129,7 +321,6 @@ function Implant-Handler
         write-host " Add-Creds -Username <Username> -Password <Pass> -Hash <Hash>"-ForegroundColor Green 
         write-host " Dump-Creds"-ForegroundColor Green 
         write-host " Unzip <source file> <destination folder>"-ForegroundColor Green 
-        #write-host " Zip <destination zip file> <source folder>"-ForegroundColor Green 
         write-host " Get-System" -ForegroundColor Green
         write-host " Get-System-WithProxy" -ForegroundColor Green 
         write-host " Get-ImplantWorkingDirectory"-ForegroundColor Green
@@ -271,7 +462,6 @@ function Implant-Handler
         write-host "=====================" -ForegroundColor Red
         write-host " Back" -ForegroundColor Green 
         write-host " Exit" `n -ForegroundColor Green 
-
     }
 
     # run startup function
@@ -814,56 +1004,6 @@ function Add-Creds {
         Write-Host "No username or password specified. Please complete both arguments."
     }
 }
-
-$head = '
-<style>
-
-body {
-font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;
-}
-
-table {
-    table-layout: fixed;
-    word-wrap: break-word;
-    display: table;
-    font-family: monospace;
-    white-space: pre;
-    margin: 1em 0;
-}
-
-th, td {
-    text-align: left;
-    padding: 8px;
-}
-
-tr:nth-child(even){background-color: #f2f2f2}
-
-th {
-    background-color: #4CAF50;
-    color: white;
-}
- 
-p { 
-margin-left: 20px; 
-font-size: 12px; 
-}
- 
-</style>'
-
-$header = '
-<pre>
-  __________            .__.     _________  ________  
-  \_______  \____  _____|  |__   \_   ___ \ \_____  \ 
-   |     ___/  _ \/  ___/  |  \  /    \  \/  /  ____/ 
-   |    |  (  <_> )___ \|   Y  \ \     \____/       \ 
-   |____|   \____/____  >___|  /  \______  /\_______ \
-                      \/     \/          \/         \/
-  ============ @benpturner & @davehardy20 ============
-  ====================================================
-</pre>'
-
-
-
 
 function runcommand {
 

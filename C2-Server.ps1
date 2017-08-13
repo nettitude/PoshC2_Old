@@ -1153,6 +1153,12 @@ RewriteRule ^/steam(.*) $uri<IP ADDRESS>/steam`$1 [NC,P]
 
     Invoke-SqliteQuery -Query $Query -DataSource $Database | Out-Null
 
+	$Query = 'CREATE TABLE AutoRuns (
+        TaskID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
+        Task TEXT)'
+
+    Invoke-SqliteQuery -Query $Query -DataSource $Database | Out-Null
+
     $Query = 'CREATE TABLE CompletedTasks (
         CompletedTaskID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
         TaskID TEXT,
@@ -1492,6 +1498,30 @@ while ($listener.IsListening)
             Sleep = $defaultbeacon
             ModsLoaded = ""
         }
+
+	    $autorunresults = Invoke-SqliteQuery -DataSource $Database -Query "SELECT * FROM AutoRuns" -As PSObject        
+ 
+        if ($autorunresults -ne $null){
+			Invoke-SqliteQuery -DataSource $Database -Query "UPDATE Implants SET ModsLoaded='implant-core.ps1' WHERE RandomURI='$randomuri'"|Out-Null
+			$query = "INSERT INTO NewTasks (RandomURI, Command)
+			VALUES (@RandomURI, @Command)"
+			
+			Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
+			RandomURI = $randomuri
+			Command   = "LoadModule implant-core.ps1"
+			} | Out-Null
+			
+            foreach ($i in $autorunresults) {
+                $taskee = $i.Task
+                			
+                Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
+			    RandomURI = $randomuri
+			    Command   = $taskee
+                } | Out-Null
+			
+            }
+		}
+
         $message = '
 
 $key="' + "$key"+'"
@@ -1781,6 +1811,29 @@ $message =[Convert]::ToBase64String($Bytes)
             Sleep = $defaultbeacon
             ModsLoaded = ""
         }
+
+	    $autorunresults = Invoke-SqliteQuery -DataSource $Database -Query "SELECT * FROM AutoRuns" -As PSObject
+        
+        if ($autorunresults -ne $null){
+			Invoke-SqliteQuery -DataSource $Database -Query "UPDATE Implants SET ModsLoaded='implant-core.ps1' WHERE RandomURI='$randomuri'"|Out-Null
+			$query = "INSERT INTO NewTasks (RandomURI, Command)
+			VALUES (@RandomURI, @Command)"
+			
+			Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
+			RandomURI = $randomuri
+			Command   = "LoadModule implant-core.ps1"
+			} | Out-Null
+			
+            foreach ($i in $autorunresults) {
+                $taskee = $i.Task
+                			
+                Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
+			    RandomURI = $randomuri
+			    Command   = $taskee
+                } | Out-Null
+			
+            }
+		}
 
         $message = '
 
