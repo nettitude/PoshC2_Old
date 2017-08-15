@@ -155,11 +155,6 @@ $header = '
             {
                 startup
             }
-            elseif ($global:implantid -eq "ALL") 
-            {
-                $global:cmdlineinput = "PS $global:implantid>"
-                break
-            }
             if ($global:implantid -eq "Help"){
                $HelpOutput = "PrintMainHelp"
                startup
@@ -277,6 +272,10 @@ $header = '
             {
                 $global:cmdlineinput = "PS $global:implantid>"
                 break 
+            } elseif ($global:implantid -eq "ALL") 
+            {
+                $global:cmdlineinput = "PS $global:implantid>"
+                break
             } else 
             {
                 $global:randomuri = Invoke-SqliteQuery -DataSource $Database -Query "SELECT RandomURI FROM Implants WHERE ImplantID='$global:implantid'" -as SingleValue
