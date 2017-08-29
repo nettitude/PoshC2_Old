@@ -292,11 +292,40 @@ $header = '
                     $TasksArray += $ImplantTask
                }
                $TasksArray | ConvertTo-Html -title "<title>Tasks from PoshC2</title>" -Head $head -pre $header -post "<h3>For details, contact X<br>Created by X</h3>" | Out-File "$FolderPath\reports\ImplantTasks.html"
+            } elseif ($global:implantid.ToLower().StartsWith("pwnself"))
+            {
+                $HelpOutput = "pwnself"
+                $HelpOutput
             } elseif ($global:implantid.ToLower().StartsWith("show-serverinfo"))
             {
                 $HelpOutput  = Invoke-SqliteQuery -DataSource $Database -Query "SELECT * FROM C2Server" -As PSObject
                 $HelpOutput
-            } elseif ($global:implantid.Contains(","))
+            } elseif ($global:implantid.ToLower().StartsWith("createproxypayload")) 
+            {
+                $global:implantid|Invoke-Expression
+                $HelpOutput = "createproxypayload"
+                $HelpOutput
+            } elseif ($global:implantid.ToLower().StartsWith("listmodules")) 
+            {
+                $pscommand = $null
+                Write-Host -Object "Reading modules from `$env:PSModulePath\* and $PoshPath\Modules\*"
+                $folders = $env:PSModulePath -split ";" 
+                foreach ($item in $folders) {
+                    $PSmod = Get-ChildItem -Path $item -Include *.ps1 -Name
+                    foreach ($mod in $PSmod)
+                    {
+                        Write-Host $mod
+                    }
+                }
+                $listmodules = Get-ChildItem -Path "$PoshPath\Modules" -Name 
+                foreach ($mod in $listmodules)
+                {
+                  Write-Host $mod
+                }
+                
+                Write-Host -Object ""
+            }  
+            elseif ($global:implantid.Contains(","))
             {
                 $global:cmdlineinput = "PS $global:implantid>"
                 break 
@@ -332,7 +361,10 @@ $header = '
         write-host "=====================" -ForegroundColor Red
         write-host " Show-ServerInfo" -ForegroundColor Green 
         write-host " Output-To-HTML"-ForegroundColor Green
-        write-host " Set-DefaultBeacon 60"-ForegroundColor Green  
+        write-host " Set-DefaultBeacon 60"-ForegroundColor Green
+        write-host " ListModules " -ForegroundColor Green
+        write-host " PwnSelf " -ForegroundColor Green
+        write-host " CreateProxyPayload -user <dom\user> -pass <pass> -proxyurl <http://10.0.0.1:8080>" -ForegroundColor Green  
     }
 
     function print-help {
