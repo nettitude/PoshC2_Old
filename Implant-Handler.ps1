@@ -1163,6 +1163,47 @@ function Add-Creds {
     }
 }
 
+function Search-Creds {
+    param
+    (
+    [string] $Username,
+    [string] $Password,
+    [string] $Hash
+    )
+        if ($Username){
+            $dbResult = Invoke-SqliteQuery -DataSource $Database -Query "SELECT * FROM Creds WHERE username LIKE '$username'" -As PSObject
+            Write-Output -InputObject $dbResult | ft -AutoSize | Out-Host
+        } else {
+            Write-Host "No username specified. Please complete all necessary arguments."
+        }
+}
+
+function Del-Creds {
+    param
+    (
+    [string] $credsID
+    )
+    if ($credsID){
+        $dbResult = Invoke-SqliteQuery -Datasource $database -Query "SELECT credsid, username FROM Creds Where CredsID == '$credsID'" -As DataRow
+        Write-Host "The following user credential will be deleted from the database:"
+        Write-Host "ID: " $dbResult.Item(0)
+        Write-Host "User: " $dbResult.Item(1)
+        $caption = "Delete Credentials from Database?";
+        $message = "Please Confirm:";
+        $yes = new-Object System.Management.Automation.Host.ChoiceDescription "&Yes","YES";
+        $no = new-Object System.Management.Automation.Host.ChoiceDescription "&No","NO";
+        $choices = [System.Management.Automation.Host.ChoiceDescription[]]($yes,$no);
+        $answer = $host.ui.PromptForChoice($caption,$message,$choices,0)
+
+        switch ($answer){
+            0 {Write-Host "Deleting Credentials"; Invoke-SqliteQuery -Datasource $database -Query "DELETE FROM Creds Where CredsID == '$credsID'" | out-null; break}
+            1 {Write-Host "Cancel selected, no changes made"; break}
+        }
+    } else {
+        Write-Host "No CredID specified. Please complete all necessary arguments."
+    }
+}
+
 # run startup function
 startup
 
@@ -1755,6 +1796,14 @@ param
                 $pscommand = 'Start-Sleep '+$newsleep
             }
             if ($pscommand.tolower().startswith('add-creds')){
+                $pscommand|Invoke-Expression
+                $pscommand = $null
+            }
+            if ($pscommand.tolower().startswith('del-creds')){
+                $pscommand|Invoke-Expression
+                $pscommand = $null
+            }
+            if ($pscommand.tolower().startswith('search-creds')){
                 $pscommand|Invoke-Expression
                 $pscommand = $null
             }
