@@ -415,8 +415,7 @@ $header = '
         write-host " Invoke-Enum"-ForegroundColor Green 
         write-host " Get-Proxy"-ForegroundColor Green 
         write-host " Get-ComputerInfo"-ForegroundColor Green 
-        write-host " Add-Creds -Username <Username> -Password <Pass> -Hash <Hash>"-ForegroundColor Green 
-        write-host " Dump-Creds"-ForegroundColor Green 
+        write-host " Creds -action <dump/add/del/search> -username <username> -password/-hash -credsid <credsid> *Credsid is only used for deletion"-ForegroundColor Green 
         write-host " Unzip <source file> <destination folder>"-ForegroundColor Green 
         write-host " Get-System" -ForegroundColor Green
         write-host " Get-System-WithProxy" -ForegroundColor Green 
@@ -1149,6 +1148,47 @@ function CheckModuleLoaded {
     }
 }
 
+function creds {
+    param
+    (
+    [string] $action,
+    [string] $username,
+    [string] $password,
+    [string] $hash,
+    [string] $credsID
+    )
+
+    switch ($action){
+            "dump" {
+                $dbResult = Invoke-SqliteQuery -DataSource $Database -Query "SELECT * FROM Creds" -As PSObject
+                Write-Output -InputObject $dbResult | ft -AutoSize | out-host
+                $pscommand = $null
+                break
+            }
+            "add" {
+                if ($password){
+                # Password set so use password method to add.
+                    add-creds -username $username -password $password
+                } elseif ($hash){
+                    add-creds -username $username -hash $hash
+                } else {
+                    Write-host "Unable to create credentials in database."
+                }
+                break
+            }
+            "del" {
+                Del-Creds $credsID
+                break
+            }
+            "search" {
+                Search-Creds $username
+                break
+            }
+            default {
+                Write-Host "No action defined for: '$action'"
+            }
+    }
+}
 function Add-Creds {
     param
     (
@@ -1166,9 +1206,7 @@ function Add-Creds {
 function Search-Creds {
     param
     (
-    [string] $Username,
-    [string] $Password,
-    [string] $Hash
+    [string] $Username
     )
         if ($Username){
             $dbResult = Invoke-SqliteQuery -DataSource $Database -Query "SELECT * FROM Creds WHERE username LIKE '$username'" -As PSObject
@@ -1185,11 +1223,8 @@ function Del-Creds {
     )
     if ($credsID){
         $dbResult = Invoke-SqliteQuery -Datasource $database -Query "SELECT credsid, username FROM Creds Where CredsID == '$credsID'" -As DataRow
-        Write-Host "The following user credential will be deleted from the database:"
-        Write-Host "ID: " $dbResult.Item(0)
-        Write-Host "User: " $dbResult.Item(1)
         $caption = "Delete Credentials from Database?";
-        $message = "Please Confirm:";
+        $message = "Credential: " + $dbResult.Item(0) + " - " + $dbResult.Item(1);
         $yes = new-Object System.Management.Automation.Host.ChoiceDescription "&Yes","YES";
         $no = new-Object System.Management.Automation.Host.ChoiceDescription "&No","NO";
         $choices = [System.Management.Automation.Host.ChoiceDescription[]]($yes,$no);
@@ -1197,7 +1232,7 @@ function Del-Creds {
 
         switch ($answer){
             0 {Write-Host "Deleting Credentials"; Invoke-SqliteQuery -Datasource $database -Query "DELETE FROM Creds Where CredsID == '$credsID'" | out-null; break}
-            1 {Write-Host "Cancel selected, no changes made"; break}
+            1 {Write-Host "No selected, no changes made"; break}
         }
     } else {
         Write-Host "No CredID specified. Please complete all necessary arguments."
@@ -1794,6 +1829,10 @@ param
                     $newsleep = $sleeptime
                 }
                 $pscommand = 'Start-Sleep '+$newsleep
+            }
+            if ($pscommand.tolower().startswith('creds')){
+                $pscommand|Invoke-Expression
+                $pscommand = $null
             }
             if ($pscommand.tolower().startswith('add-creds')){
                 $pscommand|Invoke-Expression
