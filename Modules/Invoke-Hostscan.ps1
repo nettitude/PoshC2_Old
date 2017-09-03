@@ -201,12 +201,12 @@ function Invoke-Hostscan
     if ($IPList) {$iprangefull = Get-Content $IPList}
     if ($IPRangeCIDR) {$iprangefull = New-IPv4RangeFromCIDR $IPRangeCIDR}
     if ($IPAddress) {$iprangefull = $IPAddress}
-    write-host ''
-    write-host $iprangefull.count Total hosts read from file
+    Write-Output ''
+    Write-Output $iprangefull.count Total hosts read from file
      
     $jobs = @()
     $start = get-date
-    write-host `n"Begin Scanning at $start" -ForegroundColor Red
+    Write-Output `n"Begin Scanning at $start" -ForegroundColor Red
 
     #Multithreading setup
     # create a pool of maxThread runspaces
@@ -246,7 +246,7 @@ function Invoke-Hostscan
         $i++
     }
      
-    write-host 'Waiting for scanning threads to finish...' -ForegroundColor Cyan
+    Write-Output 'Waiting for scanning threads to finish...' -ForegroundColor Cyan
 
     $waitTimeout = get-date
 
@@ -278,6 +278,6 @@ function Invoke-Hostscan
     $end = get-date
     $totaltime = $end - $start
 
-    write-host "We scanned $($iprangefull.count) endpoints in $($totaltime.totalseconds) seconds" -ForegroundColor green
+    Write-Output "We scanned $($iprangefull.count) endpoints in $($totaltime.totalseconds) seconds" -ForegroundColor green
     $endpointResults
 }

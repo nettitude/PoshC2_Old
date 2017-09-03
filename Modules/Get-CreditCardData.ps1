@@ -25,12 +25,12 @@ Function Get-CreditCardData {
             #$Workbook = $Excel.Workbooks.Open($_.FullName)
             #If(($Workbook.Sheets.Item(1).Range("A:Z")) | Select-String -pattern $REGEX){
             #    $Workbook.Close($false)
-            #    write-host "[+] Potential Card data found:" $_.FullName -ForegroundColor green
+            #    Write-Output "[+] Potential Card data found:" $_.FullName -ForegroundColor green
             #}
         #}
 
         if ((Select-String -pattern $REGEX -Path $_.FullName -AllMatches).Matches.Count -gt 5 ) {
-            write-host "[+] Potential Card data found:" $_.FullName -ForegroundColor green
+            Write-Output "[+] Potential Card data found:" $_.FullName -ForegroundColor green
             return
         }
 
