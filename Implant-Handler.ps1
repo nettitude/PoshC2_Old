@@ -342,6 +342,10 @@ $header = '
             {
                 $HelpOutput = IEX $global:implantid
                 $HelpOutput
+            } elseif ($global:implantid.ToLower().StartsWith("creds")) 
+            {
+                $HelpOutput = IEX $global:implantid
+                $HelpOutput
             } elseif ($global:implantid.ToLower().StartsWith("listmodules")) 
             {
                 Write-Host -Object "Reading modules from `$env:PSModulePath\* and $PoshPath\Modules\*"
@@ -400,6 +404,7 @@ $header = '
         write-host " Set-DefaultBeacon 60"-ForegroundColor Green
         write-host " ListModules " -ForegroundColor Green
         write-host " PwnSelf (Alias: P)" -ForegroundColor Green
+        write-host " Creds -action <dump/add/del/search> -username <username> -password/-hash -credsid <credsid> *Credsid is only used for deletion"-ForegroundColor Green 
         write-host " CreateProxyPayload -user <dom\user> -pass <pass> -proxyurl <http://10.0.0.1:8080>" -ForegroundColor Green  
     }
 
@@ -1161,31 +1166,31 @@ function creds {
     switch ($action){
             "dump" {
                 $dbResult = Invoke-SqliteQuery -DataSource $Database -Query "SELECT * FROM Creds" -As PSObject
-                Write-Output -InputObject $dbResult | ft -AutoSize | out-host
-                $pscommand = $null
-                break
+                Write-Output -InputObject $dbResult | ft -AutoSize | Out-Host
+                $t = $dbResult | ft -AutoSize | Out-String
+                return $t
             }
             "add" {
                 if ($password){
-                # Password set so use password method to add.
-                    add-creds -username $username -password $password
+                    $t = add-creds -username $username -password $password
+                    return $t
                 } elseif ($hash){
-                    add-creds -username $username -hash $hash
+                    $t = add-creds -username $username -hash $hash
+                    return $t
                 } else {
-                    Write-host "Unable to create credentials in database."
+                    return "Unable to create credentials in database."
                 }
-                break
             }
             "del" {
-                Del-Creds $credsID
-                break
+                $t = Del-Creds $CredsID
+                return $t
             }
             "search" {
-                Search-Creds $username
-                break
+                $t = Search-Creds $username
+                return $t
             }
             default {
-                Write-Host "No action defined for: '$action'"
+                return "No action defined for: '$action'"
             }
     }
 }
@@ -1196,10 +1201,11 @@ function Add-Creds {
     [string] $Password,
     [string] $Hash
     )
-    if (($Username) -or ($Password)){
+    if ($Username){
         Invoke-SqliteQuery -DataSource $Database -Query "INSERT INTO Creds (username, password, hash) VALUES ('$username','$password','$hash')"|Out-Null
+        return "$Username added to the database"
     } else {
-        Write-Host "No username or password specified. Please complete both arguments."
+        return "No username or password specified. Please complete both arguments."
     }
 }
 
@@ -1209,17 +1215,18 @@ function Search-Creds {
     [string] $Username
     )
         if ($Username){
-            $dbResult = Invoke-SqliteQuery -DataSource $Database -Query "SELECT * FROM Creds WHERE username LIKE '$username'" -As PSObject
+            $dbResult = Invoke-SqliteQuery -DataSource $Database -Query "SELECT * FROM Creds WHERE username LIKE '%$username%'" -As PSObject
             Write-Output -InputObject $dbResult | ft -AutoSize | Out-Host
+            return $dbResult | ft -AutoSize | Out-String
         } else {
-            Write-Host "No username specified. Please complete all necessary arguments."
+            return "No username specified. Please complete all necessary arguments."
         }
 }
 
 function Del-Creds {
     param
     (
-    [string] $credsID
+    [string] $CredsID
     )
     if ($credsID){
         $dbResult = Invoke-SqliteQuery -Datasource $database -Query "SELECT credsid, username FROM Creds Where CredsID == '$credsID'" -As DataRow
@@ -1231,11 +1238,11 @@ function Del-Creds {
         $answer = $host.ui.PromptForChoice($caption,$message,$choices,0)
 
         switch ($answer){
-            0 {Write-Host "Deleting Credentials"; Invoke-SqliteQuery -Datasource $database -Query "DELETE FROM Creds Where CredsID == '$credsID'" | out-null; break}
-            1 {Write-Host "No selected, no changes made"; break}
+            0 {Invoke-SqliteQuery -Datasource $database -Query "DELETE FROM Creds Where CredsID == '$credsID'" | out-null; return "Deleting Credentials"}
+            1 {return "No selected, no changes made";}
         }
     } else {
-        Write-Host "No CredID specified. Please complete all necessary arguments."
+        return "No CredsID specified. Please complete all necessary arguments."
     }
 }
 
