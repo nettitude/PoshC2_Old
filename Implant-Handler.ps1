@@ -404,7 +404,7 @@ $header = '
         write-host " Set-DefaultBeacon 60"-ForegroundColor Green
         write-host " ListModules " -ForegroundColor Green
         write-host " PwnSelf (Alias: P)" -ForegroundColor Green
-        write-host " Creds -action <dump/add/del/search> -username <username> -password/-hash -credsid <credsid> *Credsid is only used for deletion"-ForegroundColor Green 
+        write-host " Creds -Action <dump/add/del/search> -Username <username> -password/-hash"-ForegroundColor Green 
         write-host " CreateProxyPayload -user <dom\user> -pass <pass> -proxyurl <http://10.0.0.1:8080>" -ForegroundColor Green  
     }
 
@@ -420,7 +420,7 @@ $header = '
         write-host " Invoke-Enum"-ForegroundColor Green 
         write-host " Get-Proxy"-ForegroundColor Green 
         write-host " Get-ComputerInfo"-ForegroundColor Green 
-        write-host " Creds -action <dump/add/del/search> -username <username> -password/-hash -credsid <credsid> *Credsid is only used for deletion"-ForegroundColor Green 
+        write-host " Creds -Action <dump/add/del/search> -Username <username> -password/-hash"-ForegroundColor Green 
         write-host " Unzip <source file> <destination folder>"-ForegroundColor Green 
         write-host " Get-System" -ForegroundColor Green
         write-host " Get-System-WithProxy" -ForegroundColor Green 
