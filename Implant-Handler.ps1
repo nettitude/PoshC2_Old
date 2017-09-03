@@ -479,6 +479,8 @@ $header = '
         write-host ' Get-NetUser -Filter | Select-Object samaccountname,userprincipalname' -ForegroundColor Green 
         write-host ' Get-NetUser -Filter samaccountname=test' -ForegroundColor Green 
         write-host ' Get-NetUser -Filter userprinciplename=test@test.com' -ForegroundColor Green 
+        write-host ' Get-NetGroup | select samaccountname' -ForegroundColor Green
+        write-host ' Get-NetGroup "*BEN*" | select samaccountname ' -ForegroundColor Green
         write-host ' Get-NetGroupMember "Domain Admins" -recurse|select membername' -ForegroundColor Green
         write-host `n "Domain Trusts: " -ForegroundColor Green
         write-host "==================" -ForegroundColor Red
