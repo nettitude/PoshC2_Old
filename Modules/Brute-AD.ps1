@@ -31,12 +31,12 @@ Param
     if ($list)
         {
         $allpasswords = $list
-        Write-Host -ForegroundColor Yellow 'The provided list will be used: '$allpasswords`n
+        Write-Output -ForegroundColor Yellow 'The provided list will be used: '$allpasswords`n
         }
         else
         {
         $allpasswords = @('Password1')
-        Write-Host -ForegroundColor Yellow 'The built-in list will be used: '$allpasswords`n
+        Write-Output -ForegroundColor Yellow 'The built-in list will be used: '$allpasswords`n
         }
 
 	Function Get-LockOutThreshold  
