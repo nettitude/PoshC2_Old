@@ -479,8 +479,7 @@ $header = '
         write-host ' Get-NetUser -Filter | Select-Object samaccountname,userprincipalname' -ForegroundColor Green 
         write-host ' Get-NetUser -Filter samaccountname=test' -ForegroundColor Green 
         write-host ' Get-NetUser -Filter userprinciplename=test@test.com' -ForegroundColor Green 
-        write-host ' Get-NetGroup -GroupName "Domain Admins" | %{ Get-NetUser $_.membername } | %{ $a=$_.displayname.split(" ")[0..1] -join " "; Get-NetUser -Filter "(displayname=*$a*)" } | Select-Object -Property displayname,samaccountname' -ForegroundColor Green 
-        write-host ' Get-DomainGroupMember -Recurse "Domain Admins" | Select MemberName' -ForegroundColor Green
+        write-host ' Get-NetGroupMember "Domain Admins" -recurse|select membername' -ForegroundColor Green
         write-host `n "Domain Trusts: " -ForegroundColor Green
         write-host "==================" -ForegroundColor Red
         write-host " Get-NetDomain | Get-NetDomainController | Get-NetForestDomain" -ForegroundColor Green 
