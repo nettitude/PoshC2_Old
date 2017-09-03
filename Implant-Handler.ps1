@@ -324,6 +324,9 @@ $header = '
                     $TasksArray += $ImplantTask
                }
                $TasksArray | ConvertTo-Html -title "<title>Tasks from PoshC2</title>" -Head $head -pre $header -post "<h3>For details, contact X<br>Created by X</h3>" | Out-File "$FolderPath\reports\ImplantTasks.html"
+
+               $HelpOutput = "Created three reports in $FolderPath\reports\*"
+                
             } elseif ($global:implantid -eq "P")
             {
                 start-process $FolderPath\payloads\payload.bat
@@ -412,11 +415,10 @@ $header = '
         write-host `n "Implant Features: " -ForegroundColor Green
         write-host "=====================" -ForegroundColor Red
         write-host " Beacon 60s / Beacon 10m / Beacon 2h"-ForegroundColor Green 
-        write-host " Turtle 60s / Tutle 30m / Turtle 8h "-ForegroundColor Green 
+        write-host " Turtle 60s / Turtle 30m / Turtle 8h "-ForegroundColor Green 
         write-host " Kill-Implant"-ForegroundColor Green 
         write-host " Hide-Implant"-ForegroundColor Green 
         write-host " Unhide-Implant"-ForegroundColor Green 
-        write-host " Output-To-HTML"-ForegroundColor Green 
         write-host " Invoke-Enum"-ForegroundColor Green 
         write-host " Get-Proxy"-ForegroundColor Green 
         write-host " Get-ComputerInfo"-ForegroundColor Green 
@@ -555,7 +557,7 @@ $header = '
         write-host " Invoke-UserHunter -StopOnSuccess" -ForegroundColor Green
         write-host " Migrate-x64" -ForegroundColor Green
         write-host " Migrate-x64 -ProcID 4444" -ForegroundColor Green
-        write-host " Migrate-x64 -NewProcess C:\Windows\System32\ConHost.exe" -ForegroundColor Green
+        write-host " Migrate-x64 -NewProcess C:\Windows\System32\netsh.exe" -ForegroundColor Green
         write-host " Migrate-x86 -ProcName lsass" -ForegroundColor Green
         write-host " Migrate-Proxypayload-x86 -ProcID 4444" -ForegroundColor Green
         write-host " Migrate-Proxypayload-x64 -ProcName notepad" -ForegroundColor Green
@@ -1932,53 +1934,6 @@ param
             if ($pscommand -eq 'Unhide-Implant' ) {
                Invoke-SqliteQuery -DataSource $Database -Query "UPDATE Implants SET Alive='Yes' WHERE RandomURI='$psrandomuri'" | Out-Null
             }
-            if ($pscommand -eq 'output-to-html' ) {
-                $allcreds = Invoke-SqliteQuery -Datasource $Database -Query "SELECT * FROM Creds" -As PSObject
-                $CredsArray = @()
-                foreach ($cred in $allcreds) {
-                    $CredLog = New-object PSObject | Select  CredsID, Username, Password, Hash
-                    $CredLog.CredsID = $cred.CredsID;
-                    $Credlog.Username = $cred.Username;
-                    $CredLog.Password = $cred.Password;
-                    $CredLog.Hash = $cred.Hash;
-                    $CredsArray += $CredLog
-                }
-                $CredsArray | ConvertTo-Html -title "<title>Credential List from PoshC2</title>" -Head $head -pre $header -post "<h3>For details, contact X<br>Created by X</h3>" | Out-File "$FolderPath\reports\Creds.html"
-
-               $allresults = Invoke-SqliteQuery -DataSource $Database -Query "SELECT * FROM Implants" -As PSObject
-               $ImplantsArray = @()
-               foreach ($implantres in $allresults) {                  
-                    $ImplantLog = New-Object PSObject | Select ImplantID, RandomURI, User, Hostname, IPAddress, FirstSeen, LastSeen, PID, Arch, Domain, Sleep
-                    $ImplantLog.ImplantID = $implantres.ImplantID;
-                    $ImplantLog.RandomURI = $implantres.RandomURI;
-                    $ImplantLog.User = $implantres.User;
-                    $ImplantLog.Hostname = $implantres.Hostname;
-                    $ImplantLog.IPAddress = $implantres.IPAddress;
-                    $ImplantLog.FirstSeen = $implantres.FirstSeen;
-                    $ImplantLog.LastSeen = $implantres.LastSeen;
-                    $ImplantLog.PID = $implantres.PID;
-                    $ImplantLog.Arch = $implantres.Arch;
-                    $ImplantLog.Domain = $implantres.Domain;
-                    $ImplantLog.Sleep = $implantres.Sleep;
-                    $ImplantsArray += $ImplantLog
-               }
-
-               $ImplantsArray | ConvertTo-Html -title "<title>Implant List from PoshC2</title>" -Head $head -pre $header -post "<h3>For details, contact X<br>Created by X</h3>" | Out-File "$FolderPath\reports\Implants.html"
-
-               $allresults = Invoke-SqliteQuery -DataSource $Database -Query "SELECT * FROM CompletedTasks" -As PSObject
-               $TasksArray = @()
-               foreach ($task in $allresults) {                  
-                    $ImplantTask = New-Object PSObject | Select TaskID, Timestamp, RandomURI, Command, Output
-                    $ImplantTask.TaskID = $task.CompletedTaskID;
-                    $ImplantTask.Timestamp = $task.TaskID;
-                    $ImplantTask.RandomURI = $task.RandomURI;
-                    $ImplantTask.Command = $task.Command;
-                    $ImplantTask.Output = $task.Output;
-                    $TasksArray += $ImplantTask
-               }
-               $TasksArray | ConvertTo-Html -title "<title>Tasks from PoshC2</title>" -Head $head -pre $header -post "<h3>For details, contact X<br>Created by X</h3>" | Out-File "$FolderPath\reports\ImplantTasks.html"
-               $pscommand = $null
-            }
             $pscommand
 }
 # command process loop
@@ -2005,6 +1960,10 @@ while($true)
             {
                 print-help
             } 
+            elseif ($global:command -eq '?') 
+            {
+                print-help
+            }
             else 
             {
                 $dbresults = Invoke-SqliteQuery -DataSource $Database -Query "SELECT RandomURI FROM Implants WHERE Alive='Yes'" -As SingleValue
@@ -2035,6 +1994,10 @@ while($true)
             {
                 print-help
             } 
+            elseif ($global:command -eq '?') 
+            {
+                print-help
+            } 
             else 
             {
                 $global:implantid.split(",")| foreach {
@@ -2061,6 +2024,10 @@ while($true)
                 startup
             }
             elseif ($global:command -eq 'help') 
+            {
+                print-help
+            } 
+            elseif ($global:command -eq '?') 
             {
                 print-help
             } 
