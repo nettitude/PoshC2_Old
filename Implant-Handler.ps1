@@ -420,7 +420,6 @@ $header = '
         write-host " Invoke-Enum"-ForegroundColor Green 
         write-host " Get-Proxy"-ForegroundColor Green 
         write-host " Get-ComputerInfo"-ForegroundColor Green 
-        write-host " Creds -Action <dump/add/del/search> -Username <username> -password/-hash"-ForegroundColor Green 
         write-host " Unzip <source file> <destination folder>"-ForegroundColor Green 
         write-host " Get-System" -ForegroundColor Green
         write-host " Get-System-WithProxy" -ForegroundColor Green 
@@ -1836,27 +1835,6 @@ param
                     $newsleep = $sleeptime
                 }
                 $pscommand = 'Start-Sleep '+$newsleep
-            }
-            if ($pscommand.tolower().startswith('creds')){
-                $pscommand|Invoke-Expression
-                $pscommand = $null
-            }
-            if ($pscommand.tolower().startswith('add-creds')){
-                $pscommand|Invoke-Expression
-                $pscommand = $null
-            }
-            if ($pscommand.tolower().startswith('del-creds')){
-                $pscommand|Invoke-Expression
-                $pscommand = $null
-            }
-            if ($pscommand.tolower().startswith('search-creds')){
-                $pscommand|Invoke-Expression
-                $pscommand = $null
-            }
-            if ($pscommand -eq 'dump-creds'){
-                $dbResult = Invoke-SqliteQuery -DataSource $Database -Query "SELECT * FROM Creds" -As PSObject
-                Write-Output -InputObject $dbResult | ft -AutoSize | out-host
-                $pscommand = $null
             }
             if ($pscommand -eq 'invoke-ms16-032')
             { 
