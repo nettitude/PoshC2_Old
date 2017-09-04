@@ -100,7 +100,7 @@ if ($downloaded) {
 
     $SourceExe = "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
     $ArgumentsToSourceExe = "-exec bypass -c import-module ${poshpath}C2-Viewer.ps1; c2-viewer -poshpath ${poshpath}"
-    $DestinationPath = "$($installpath)PowershellC2\Start-C2-Viewer.lnk"
+    $DestinationPath = "$($installpath)PowershellC2\Start-Team-Viewer.lnk"
     $WshShell = New-Object -comObject WScript.Shell
     $Shortcut = $WshShell.CreateShortcut($DestinationPath)
     $Shortcut.TargetPath = $SourceExe
