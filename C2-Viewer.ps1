@@ -53,7 +53,7 @@ function C2-Viewer
     [Environment]::SetEnvironmentVariable("PSModulePath",$p)
     Import-Module -Name PSSQLite
 
-    Start-Process powershell.exe -ArgumentList "-exec bypass -c import-module $poshpath\implant-handler.ps1; Implant-Handler -FolderPath $folderpath"
+    Start-Process powershell.exe -ArgumentList "-exec bypass -c import-module $poshpath\implant-handler.ps1; Implant-Handler -FolderPath '$folderpath' -PoshPath '$poshpath'"
 
     $count = Invoke-SqliteQuery -DataSource $Database -Query "SELECT COUNT() FROM CompletedTasks" -as SingleValue
 
