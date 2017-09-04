@@ -501,7 +501,7 @@ $header = '
         write-host "==================" -ForegroundColor Red
         write-host ' Get-NetComputer | Select-String -pattern "Citrix" ' -ForegroundColor Green 
         write-host ' Get-NetGroup | Select-String -pattern "Internet" ' -ForegroundColor Green
-        write-host " Get-BloodHoundData -CollectionMethod 'Stealth' | Export-BloodHoundCSV" -ForegroundColor Green
+        write-host " Invoke-BloodHound -CollectionMethod 'Stealth' -CSVFolder C:\temp\" -ForegroundColor Green
         write-host " Get-NetDomainController | Select name | get-netsession | select *username,*CName" -ForegroundColor Green
         write-host " Get-DFSshare | get-netsession | Select *username,*CName" -ForegroundColor Green
         write-host " Get-NetFileServer | get-netsession | Select *username,*CName" -ForegroundColor Green
