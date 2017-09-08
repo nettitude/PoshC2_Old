@@ -853,12 +853,12 @@ http://webstersprodigy.net
                             `$status = `$sockets[$p].Connected;
                             if (`$status -eq `$True)
                             {
-                                #write-host "$p is open"
+                                #Write-Output "$p is open"
                                 `$openPorts.Add($p)
                             }
                             else
                             {
-                                #write-host "$p is closed"
+                                #Write-Output "$p is closed"
                                 `$closedPorts.Add($p)
 
                             }
@@ -868,7 +868,7 @@ http://webstersprodigy.net
                         }
 "@
                     $timeoutCallback = @"
-                        #write-host "$p is filtered"
+                        #Write-Output "$p is filtered"
                         `$sockets[$p].Close()
                         if (!`$timeouts[$p].Disposed) {
                             `$timeouts[$p].Dispose()

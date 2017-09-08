@@ -11,10 +11,16 @@ function C2-Viewer
     (
         [Parameter(ParameterSetName = "FolderPath", Mandatory = $false)]
         [string]
-        $FolderPath
+        $FolderPath,
+        [string]
+        $PoshPath
     )
     if (!$FolderPath) {
         $FolderPath = Read-Host -Prompt `n'Enter the root folder path of the Database/Project'
+        # do you want a read-only c2 server window
+    }
+    if (!$PoshPath) {
+        $PoshPath = Read-Host -Prompt `n'Enter the PoshC2 path'
         # do you want a read-only c2 server window
     }
     $slash = $FolderPath -match '.+[^\\]\\$'
@@ -42,11 +48,12 @@ function C2-Viewer
     # initiate defaults
     $Database = "$FolderPath\PowershellC2.SQLite"
     $p = $env:PsModulePath
-    $p += ";C:\temp\PowershellC2\"
+    $p += ";$PoshPath"
 
     [Environment]::SetEnvironmentVariable("PSModulePath",$p)
     Import-Module -Name PSSQLite
 
+    Start-Process powershell.exe -ArgumentList "-exec bypass -c import-module $poshpath\implant-handler.ps1; Implant-Handler -FolderPath '$folderpath' -PoshPath '$poshpath'"
 
     $count = Invoke-SqliteQuery -DataSource $Database -Query "SELECT COUNT() FROM CompletedTasks" -as SingleValue
 

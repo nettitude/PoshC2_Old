@@ -14,6 +14,6 @@
     }
 
     catch {
-    write-host 'Not a link, skipping'
+    Write-Output 'Not a link, skipping'
     }
 }

@@ -21,5 +21,5 @@ function Get-PassPol
 	$domain | Select-Object $Name,$MinPassLen,$MinPassAge,$MaxPassAge,$PassHistory,$AcctLockoutThreshold,$AcctLockoutDuration,$ResetAcctLockoutCounter
 }
 $PassPol = Get-PassPol
-Write-Host 'Domain Password Policy: '
-Write-Host $PassPol
+Write-Output 'Domain Password Policy: '
+Write-Output $PassPol

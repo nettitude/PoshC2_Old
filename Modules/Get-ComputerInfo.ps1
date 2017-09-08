@@ -335,7 +335,7 @@
                 } | Select-Object $CompInfoSelProp
 						
                 #There may be multiple NICs that have IPAddresses, hence the Foreach loop.
-                Write-Host 'Network Adaptors'`n
+                Write-Output 'Network Adaptors'`n
                 Foreach ($NAC in $WMI_NAC)
                 {
                     #Getting properties from $WMI_NA that correlate to the matched Index, this is faster than using $WMI_NAC.GetRelated('Win32_NetworkAdapter'). 
@@ -372,7 +372,7 @@
                 }#End Foreach ($NAC in $WMI_NAC)
 							
                 #There may be multiple Volumes, hence the Foreach loop.
-                Write-Host 'Disk Information'`n
+                Write-Output 'Disk Information'`n
                 Foreach ($Volume in $WMI_LD)
                 {
                     #Creating the $VolInfo Object
@@ -385,7 +385,7 @@
                         PercentFree = $('{0:P}' -f $($Volume.FreeSpace / $Volume.Size))
                     } | Select-Object $VolInfoSelProp
                 }#End Foreach ($Volume in $WMI_LD)
-                Write-Host 'Hotfix(s) Installed: '$WMI_HOTFIX.Count`n
+                Write-Output 'Hotfix(s) Installed: '$WMI_HOTFIX.Count`n
                 $WMI_HOTFIX|Select-Object -Property Description, HotfixID, InstalledOn
             }#End Try
 

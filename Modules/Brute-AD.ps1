@@ -1,21 +1,20 @@
 ﻿<#
 .Synopsis
-    Brute-forces active directory user accounts based on the password lockout threshold
+    Brute forces active directory user accounts 
 .DESCRIPTION
-	Brute-forces active directory user accounts based on the password lockout threshold
+	Brute forces active directory user accounts 
 .EXAMPLE
     PS C:\> Brute-Ad
-    Bruteforce all accounts in AD with the builtinn list of passwords.
+    Bruteforce all accounts in AD with a given password or list of passwords.
 .EXAMPLE
 	Brute-Ad -list password1,password2,'$password$','$Pa55w0rd$'
-	Bruteforce all accounts in AD with a provided list of passwords.
+	Brute force all accounts in AD with a provided list of passwords.
 .EXAMPLE
 	Brute-Ad -List password1
-    Bruteforce all accounts in AD with just one password.
+    Brute force all accounts in AD with just one password.
 .EXAMPLE
     Brute-Ad -list Password1,password2,'$password$','$Pa55w0rd$',password12345
     The provided list will be used:  Password1 password2 $password$ $Pa55w0rd$ password12345
-
 
     Username        Password   IsValid
     --------        --------   -------
@@ -32,12 +31,12 @@ Param
     if ($list)
         {
         $allpasswords = $list
-        Write-Host -ForegroundColor Yellow 'The provided list will be used: '$allpasswords`n
+        Write-Output -ForegroundColor Yellow 'The provided list will be used: '$allpasswords`n
         }
         else
         {
-        $allpasswords = @('Password1','password','Password2015','Pa55w0rd','password123','Pa55w0rd1234')
-        Write-Host -ForegroundColor Yellow 'The built-in list will be used: '$allpasswords`n
+        $allpasswords = @('Password1')
+        Write-Output -ForegroundColor Yellow 'The built-in list will be used: '$allpasswords`n
         }
 
 	Function Get-LockOutThreshold  
