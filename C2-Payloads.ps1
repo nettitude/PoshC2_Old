@@ -350,13 +350,12 @@ namespace Service
 }'
 [IO.File]::WriteAllLines("$global:newdir\payloads\$Name.cs", $cscservicecode)
 
-if (Test-Path "C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe") {
+if (Test-Path "C:\Windows\Microsoft.NET\Framework\v3.5\csc.exe") {
+    Start-Process -WindowStyle hidden -FilePath "C:\Windows\Microsoft.NET\Framework\v3.5\csc.exe" -ArgumentList "/out:$global:newdir\payloads\$Name.exe $global:newdir\payloads\$Name.cs /reference:$PoshPath\System.Management.Automation.dll"
+} elseif (Test-Path "C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe") {
     Start-Process -WindowStyle hidden -FilePath "C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe" -ArgumentList "/out:$global:newdir\payloads\$Name.exe $global:newdir\payloads\$Name.cs /reference:$PoshPath\System.Management.Automation.dll"
-} else {
-    if (Test-Path "C:\Windows\Microsoft.NET\Framework\v3.5\csc.exe") {
-        Start-Process -WindowStyle hidden -FilePath "C:\Windows\Microsoft.NET\Framework\v3.5\csc.exe" -ArgumentList "/out:$global:newdir\payloads\$Name.exe $global:newdir\payloads\$Name.cs /reference:$PoshPath\System.Management.Automation.dll"
-    }
-}
+} 
+
 Write-Host -Object "Service Exe written to: $global:newdir\payloads\$Name.exe"  -ForegroundColor Green
 }
 
