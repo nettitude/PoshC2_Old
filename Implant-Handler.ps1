@@ -678,7 +678,7 @@ function CreateProxyPayload
     CreatePayload -Proxy 1
     CreateStandAloneExe -Proxy 1
     CreateServiceExe -Proxy 1
-
+    CreateDLL -Proxy 1
 }
 function Invoke-DaisyChain {
 param($port, $daisyserver, $c2server, $c2port, $domfront, $proxyurl, $proxyuser, $proxypassword)
