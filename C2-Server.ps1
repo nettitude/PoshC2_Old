@@ -363,12 +363,12 @@ else
         $promptssl = Read-Host -Prompt "[2a] Do you want PoshC2 to use the default self-signed SSL certificate [Yes]"
         $promptssl = ($promptssldefault,$promptssl)[[bool]$promptssl]
         if ($promptssl -eq "Yes") {
-            CERTUTIL -f -p poshc2 -importpfx "$PoshPath\poshc2.pfx"
+            CERTUTIL -f -p poshc2 -importpfx "$PoshPath\poshc2.pfx" 
             $thumb = "DE5ADA225693F8E0ED43453F3EB512CE96991747"
             $Deleted = netsh.exe http delete sslcert ipport=0.0.0.0:443
             $Added = netsh.exe http add sslcert ipport=0.0.0.0:443 certhash=$thumb "appid={00112233-4455-6677-8899-AABBCCDDEEFF}"
             if ($Added = "SSL Certificate successfully added") {
-                netsh.exe http show sslcert ipport=0.0.0.0:443
+                $cert = netsh.exe http show sslcert ipport=0.0.0.0:443
             }
         } else {
             Write-Error "Error adding the certificate" 
@@ -397,7 +397,7 @@ netsh http add sslcert ipport=0.0.0.0:443 certhash=REPLACE `"appid={00112233-445
         $Deleted = netsh.exe http delete sslcert ipport=0.0.0.0:443
         $Added = netsh.exe http add sslcert ipport=0.0.0.0:443 certhash=$thumb "appid={00112233-4455-6677-8899-AABBCCDDEEFF}"
         if ($Added = "SSL Certificate successfully added") {
-            netsh.exe http show sslcert ipport=0.0.0.0:443
+            $cert = netsh.exe http show sslcert ipport=0.0.0.0:443
         } else {
             Write-Error "Error adding the certificate" 
             Write-Host "`nEither install a self-signed cert using IIS Resource Kit as below
