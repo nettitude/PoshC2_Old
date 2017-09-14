@@ -716,6 +716,15 @@ if (Test-Path "C:\program files\java\") {
             CreateJavaPayloadTrue
         }
     }
+} elseif (Test-Path "C:\program files (x86)\java\") {
+    foreach ($folder in (get-childitem -name -path "C:\program files (x86)\java\"))
+    {
+        if ($folder.ToString().ToLower().StartsWith("jdk"))
+        {
+            $JDKPath = "C:\program files (x86)\java\$folder"
+            CreateJavaPayloadTrue
+        }
+    }
 } else {
     Write-host "Cannot find any Java JDK versions Installed, Install Java JDK to create Java Applet Payloads" -ForegroundColor Red
 }
