@@ -48,7 +48,8 @@ function Get-GPPAutologon
     
     #Some XML issues between versions
     Set-StrictMode -Version 2
-    
+    [System.Reflection.Assembly]::LoadWithPartialName("System.Core") |Out-Null
+
     #define helper function to parse fields from xml files
     function Get-GPPInnerFields 
     {
