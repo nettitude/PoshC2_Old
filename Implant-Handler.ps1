@@ -88,7 +88,7 @@ $header = '
    |    |  (  <_> )___ \|   Y  \ \     \____/       \ 
    |____|   \____/____  >___|  /  \______  /\_______ \
                       \/     \/          \/         \/
-  ============ @benpturner & @davehardy20 ============
+  ================== www.PoshC2.co.uk ================
   ====================================================
 </pre>'
 
@@ -114,7 +114,7 @@ $header = '
             Write-Host -Object "|   |  Y Y  \  |_> >  |__/ __ \|   |  \  |  \___ \ " -ForegroundColor Green
             Write-Host -Object "|___|__|_|  /   __/|____(____  /___|  /__| /____  >" -ForegroundColor Green
             Write-Host -Object "          \/|__|             \/     \/          \/ " -ForegroundColor Green
-            Write-Host "============== v2.9 www.PoshC2.co.uk ==============" -ForegroundColor Green
+            Write-Host "============== v2.10 www.PoshC2.co.uk =============" -ForegroundColor Green
             Write-Host "===================================================" `n -ForegroundColor Green
 
             foreach ($implant in $dbresults) 
