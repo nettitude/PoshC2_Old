@@ -91,7 +91,7 @@ function Get-GPPPassword {
     
     #Some XML issues between versions
     Set-StrictMode -Version 2
-    
+    [System.Reflection.Assembly]::LoadWithPartialName("System.Core") |Out-Null
     #define helper function that decodes and decrypts password
     function Get-DecryptedCpassword {
         [CmdletBinding()]
