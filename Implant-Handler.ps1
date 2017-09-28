@@ -1313,6 +1313,10 @@ param
             { 
                 CheckModuleLoaded "Powerup.ps1" $psrandomuri
             }
+            if ($pscommand.ToLower().StartsWith('invoke-privescaudit'))
+            { 
+                CheckModuleLoaded "Powerup.ps1" $psrandomuri
+            }
             if ($pscommand.ToLower().StartsWith('invoke-wscriptuacbypass'))
             { 
                 CheckModuleLoaded "Invoke-WScriptBypassUAC.ps1" $psrandomuri
