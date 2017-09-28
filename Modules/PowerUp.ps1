@@ -4748,7 +4748,7 @@ detailing any discovered issues.
         @{
             Type        = 'User In Local Group with Admin Privileges'
             Command     = { if ((Get-ProcessTokenGroup | Select-Object -ExpandProperty SID) -contains 'S-1-5-32-544'){ New-Object PSObject } }
-            AbuseScript = { 'Invoke-WScriptUACBypass -Command "..."' }
+            AbuseScript = { 'Invoke-WScriptUACBypass -Payload "..."' }
         },
         @{
             Type       = 'Process Token Privileges'
