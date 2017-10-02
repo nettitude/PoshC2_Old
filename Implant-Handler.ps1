@@ -1309,10 +1309,16 @@ param
             { 
                 CheckModuleLoaded "test-adcredential.ps1" $psrandomuri
             }
+            if ($pscommand.ToLower() -eq 'invoke-allchecks')
+            { 
+                CheckModuleLoaded "Powerup.ps1" $psrandomuri
+                $pscommand = "invoke-allchecks | fl" 
+            }
             if ($pscommand.ToLower().StartsWith('invoke-allchecks'))
             { 
                 CheckModuleLoaded "Powerup.ps1" $psrandomuri
             }
+
             if ($pscommand.ToLower().StartsWith('invoke-privescaudit'))
             { 
                 CheckModuleLoaded "Powerup.ps1" $psrandomuri
