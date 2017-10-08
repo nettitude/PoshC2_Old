@@ -499,6 +499,7 @@ $header = '
         write-host ' Get-NetGroupMember "Domain Admins" -recurse|select membername' -ForegroundColor Green
         write-host ' Get-NetShare Hostname' -ForegroundColor Green
         write-host " Invoke-ShareFinder -Verbose -CheckShareAccess" -ForegroundColor Green
+        write-host " New-PSDrive -Name `"P`" -PSProvider `"FileSystem`" -Root `"\\bloredc1\netlogon`"" -ForegroundColor Green
         write-host `n "Domain Trusts: " -ForegroundColor Green
         write-host "==================" -ForegroundColor Red
         write-host " Get-NetDomain | Get-NetDomainController | Get-NetForestDomain" -ForegroundColor Green 
