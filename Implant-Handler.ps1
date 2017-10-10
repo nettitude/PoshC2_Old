@@ -331,7 +331,22 @@ $header = '
                }
                $TasksArray | ConvertTo-Html -title "<title>Tasks from PoshC2</title>" -Head $head -pre $header -post "<h3>For details, contact X<br>Created by X</h3>" | Out-File "$FolderPath\reports\ImplantTasks.html"
 
-               $HelpOutput = "Created three reports in $FolderPath\reports\*"
+               $allresults = Invoke-SqliteQuery -DataSource $Database -Query "SELECT * FROM C2Server" -As PSObject
+               $TasksArray = @()
+               foreach ($task in $allresults) {                  
+                    $C2ServerDetails = New-Object PSObject | Select HostnameIP, DomainFrontHeader, KillDate, ServerPort, DownloadURI, URLS
+                    $C2ServerDetails.HostnameIP = $task.HostnameIP;
+                    $C2ServerDetails.DomainFrontHeader = $task.DomainFrontHeader;
+                    $C2ServerDetails.KillDate = $task.KillDate;
+                    $C2ServerDetails.ServerPort = $task.ServerPort;
+                    $C2ServerDetails.DownloadURI = $task.DownloadURI;
+                    $C2ServerDetails.URLS = $task.URLS;
+                    $TasksArray += $C2ServerDetails
+               }
+               $TasksArray | ConvertTo-Html -title "<title>PoshC2 Server</title>" -Head $head -pre $header -post "<h3>For details, contact X<br>Created by X</h3>" | Out-File "$FolderPath\reports\C2Server.html"
+
+
+               $HelpOutput = "Created four reports in $FolderPath\reports\*"
                 
             } elseif ($global:implantid -eq "P")
             {
