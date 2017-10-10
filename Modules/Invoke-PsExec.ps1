@@ -50,7 +50,8 @@ param
     [parameter(Mandatory=$false)][ValidateScript({$_.Length -eq 32 -or $_.Length -eq 65})][String]$Hash,
     [parameter(Mandatory=$false)][String]$Service,
     [parameter(Mandatory=$false)][Switch]$SMB1,
-    [parameter(Mandatory=$false)][String]$Password
+    [parameter(Mandatory=$false)][String]$Password,
+    [parameter(Mandatory=$false)][String]$Name
 )
 
 if($SMB1)

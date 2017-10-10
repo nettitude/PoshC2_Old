@@ -582,7 +582,8 @@ RewriteRule ^/steam(.*) $uri<IP ADDRESS>/steam`$1 [NC,P]
         Domain TEXT,
         Alive TEXT,
         Sleep TEXT,
-        ModsLoaded TEXT)'
+        ModsLoaded TEXT,
+        Pivot TEXT)'
 
     Invoke-SqliteQuery -Query $Query -DataSource $Database | Out-Null
 
@@ -842,9 +843,8 @@ while ($listener.IsListening)
 
         # optional clockwork sms on new implant
         if (($apikey) -and ($mobilenumber)){
-            (New-Object System.Net.Webclient).DownloadString("https://api.clockworksms.com/http/send.aspx?key=$apikey&to=$mobilenumber&from=PoshC2&content=$im_computername")|Out-Null
+            (New-Object System.Net.Webclient).DownloadString("https://api.clockworksms.com/http/send.aspx?key=$($apikey)&to=$($mobilenumber)&from=PoshC2&content=$($im_computername)")|Out-Null
         }
-
 
         if ($enablesound -eq "Yes") {
             try {
@@ -854,8 +854,8 @@ while ($listener.IsListening)
             } catch {}
         }
 
-        $Query = 'INSERT INTO Implants (RandomURI, User, Hostname, IpAddress, Key, FirstSeen, LastSeen, PID, Proxy, Arch, Domain, Alive, Sleep, ModsLoaded)
-        VALUES (@RandomURI, @User, @Hostname, @IpAddress, @Key, @FirstSeen, @LastSeen, @PID, @Proxy, @Arch, @Domain, @Alive, @Sleep, @ModsLoaded)'
+        $Query = 'INSERT INTO Implants (RandomURI, User, Hostname, IpAddress, Key, FirstSeen, LastSeen, PID, Proxy, Arch, Domain, Alive, Sleep, ModsLoaded, Pivot)
+        VALUES (@RandomURI, @User, @Hostname, @IpAddress, @Key, @FirstSeen, @LastSeen, @PID, @Proxy, @Arch, @Domain, @Alive, @Sleep, @ModsLoaded, @Pivot)'
 
         Invoke-SqliteQuery -DataSource $Database -Query $Query -SqlParameters @{
             RandomURI = $randomuri
@@ -872,6 +872,7 @@ while ($listener.IsListening)
             Alive = "Yes"
             Sleep = $defaultbeacon
             ModsLoaded = ""
+            Pivot = "YES"
         }
 
 	    $autorunresults = Invoke-SqliteQuery -DataSource $Database -Query "SELECT * FROM AutoRuns" -As PSObject        
@@ -1176,7 +1177,7 @@ $message =[Convert]::ToBase64String($Bytes)
 
         # optional clockwork sms on new implant
         if (($apikey) -and ($mobilenumber)){
-            (New-Object System.Net.Webclient).DownloadString("https://api.clockworksms.com/http/send.aspx?key=$apikey&to=$mobilenumber&from=PoshC2&content=$im_computername")|Out-Null
+            (New-Object System.Net.Webclient).DownloadString("https://api.clockworksms.com/http/send.aspx?key=$($apikey)&to=$($mobilenumber)&from=PoshC2&content=$($im_computername)")|Out-Null
         }
 
         if ($enablesound -eq "Yes") {
@@ -1187,8 +1188,8 @@ $message =[Convert]::ToBase64String($Bytes)
             } catch {}
         }
 
-        $Query = 'INSERT INTO Implants (RandomURI, User, Hostname, IpAddress, Key, FirstSeen, LastSeen, PID, Arch, Domain, Alive, Sleep, ModsLoaded)
-        VALUES (@RandomURI, @User, @Hostname, @IpAddress, @Key, @FirstSeen, @LastSeen, @PID, @Arch, @Domain, @Alive, @Sleep, @ModsLoaded)'
+        $Query = 'INSERT INTO Implants (RandomURI, User, Hostname, IpAddress, Key, FirstSeen, LastSeen, PID, Arch, Domain, Alive, Sleep, ModsLoaded, Pivot)
+        VALUES (@RandomURI, @User, @Hostname, @IpAddress, @Key, @FirstSeen, @LastSeen, @PID, @Arch, @Domain, @Alive, @Sleep, @ModsLoaded, @Pivot)'
 
         Invoke-SqliteQuery -DataSource $Database -Query $Query -SqlParameters @{
             RandomURI = $randomuri
@@ -1204,6 +1205,7 @@ $message =[Convert]::ToBase64String($Bytes)
             Alive = "Yes"
             Sleep = $defaultbeacon
             ModsLoaded = ""
+            Pivot = "NO"
         }
 
 	    $autorunresults = Invoke-SqliteQuery -DataSource $Database -Query "SELECT * FROM AutoRuns" -As PSObject
@@ -1582,9 +1584,7 @@ $message =[Convert]::ToBase64String($Bytes)
             # [io.file]::WriteAllBytes("$global:newdir\TempHeuristicImage.png", $Buffer)
             $encryptedString = $buffer[1500..$size2]
             $cookiesin = $request.Cookies -replace 'SessionID=', ''
-            $cookieplaintext = Decrypt-String $key $cookiesin 
-            
-            
+            $cookieplaintext = Decrypt-String $key $cookiesin          
             
             try {
             $backToPlainText = Decrypt-String2 $key $encryptedString

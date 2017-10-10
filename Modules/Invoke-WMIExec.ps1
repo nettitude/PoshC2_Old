@@ -47,7 +47,8 @@ param
     [parameter(Mandatory=$false)][String]$Command,
     [parameter(Mandatory=$false)][String]$Password,
     [parameter(Mandatory=$false)][ValidateScript({$_.Length -eq 32 -or $_.Length -eq 65})][String]$Hash,
-    [parameter(Mandatory=$false)][Int]$Sleep=10
+    [parameter(Mandatory=$false)][Int]$Sleep=10,
+    [parameter(Mandatory=$false)][String]$Name
 )
 
 if($Command)
