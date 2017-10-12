@@ -18,7 +18,7 @@ Write-Host -Object " |     ___/  _ \/  ___/  |  \  /    \  \/  /  ____/ "  -Fore
 Write-Host -Object " |    |  (  <_> )___ \|   Y  \ \     \____/       \ "  -ForegroundColor Green
 Write-Host -Object " |____|   \____/____  >___|  /  \______  /\_______ \"  -ForegroundColor Green
 Write-Host -Object "                    \/     \/          \/         \/"  -ForegroundColor Green
-Write-Host "=============== v2.10 www.PoshC2.co.uk =============" -ForegroundColor Green
+Write-Host "=============== v2.11 www.PoshC2.co.uk =============" -ForegroundColor Green
 Write-Host "====================================================" `n -ForegroundColor Green
 
 if (!$RestartC2Server) {
@@ -297,6 +297,8 @@ if ($RestartC2Server)
     $mobilenumber = $c2serverresults.MobileNumber
     $urlstring = $c2serverresults.URLS
 
+    $Host.ui.RawUI.WindowTitle = "PoshC2 Server: $ipv4address Port $serverport"
+
     Write-Host `n"Listening on: $ipv4address Port $serverport (HTTP) | Kill date $killdatefm" `n -ForegroundColor Green
     Write-Host "To quickly get setup for internal pentesting, run:"
     write-host $shortcut `n -ForegroundColor green
@@ -517,7 +519,7 @@ RewriteRule ^/steam(.*) $uri<IP ADDRESS>/steam`$1 [NC,P]
     } else {
         $defaultbeacon = $defaultbeacon
     }
-
+    
     $killdatedefault = (get-date).AddDays(14)
     $killdatedefault = (get-date -date $killdatedefault -Format "dd/MM/yyyy")
     $prompt = Read-Host -Prompt "[6] Enter the auto Kill Date of the implants in this format dd/MM/yyyy [$($killdatedefault)]"
@@ -664,6 +666,8 @@ RewriteRule ^/steam(.*) $uri<IP ADDRESS>/steam`$1 [NC,P]
         MobileNumber = $MobileNumber
         URLS = $urlstring
     } | Out-Null
+
+    $Host.ui.RawUI.WindowTitle = "PoshC2 Server: $ipv4address Port $serverport"
 
     Write-Host `n"Apache rewrite rules written to: $global:newdir\apache.conf" -ForegroundColor Green
     Out-File -InputObject $apache -Encoding ascii -FilePath "$global:newdir\apache.conf"
@@ -1514,6 +1518,15 @@ $message =[Convert]::ToBase64String($Bytes)
                     $modulename = $taskid -replace 'LoadModule ', '' 
                     if (Test-Path "$PoshPath\Modules\$modulename") {
                     $module = (Get-Content -Path "$PoshPath\Modules\$modulename") -join "`n"
+                    # ensure the module name 
+                    $module = "LoadModule"+$module
+                    if ($message) {
+                        $message = $message + "!d-3dion@LD!-d" + $module
+                    } else {
+                        $message = $module 
+                    }
+                    } elseif (Test-Path "$modulename") {
+                    $module = (Get-Content -Path "$modulename") -join "`n"
                     # ensure the module name 
                     $module = "LoadModule"+$module
                     if ($message) {

