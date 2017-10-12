@@ -132,7 +132,7 @@ $header = '
                 $im_sleep = $implant.Sleep
                 $im_domain = $implant.Domain
                 $pivot = $implant.Pivot
-                if ($pivot -eq "YES"){$pivotimplant = " P"}
+                if ($pivot -eq "YES"){$pivotimplant = " D"}
                 if ($randomurihost) {
                     if (((get-date).AddMinutes(-10) -gt $implant.LastSeen) -and ((get-date).AddMinutes(-59) -lt $implant.LastSeen)){
                         Write-Host "[$implantid]: Seen:$im_lastseen | PID:$im_pid | Sleep:$im_sleep | $im_domain @ $im_hostname ($im_arch)$($pivotimplant)" -ForegroundColor Yellow
