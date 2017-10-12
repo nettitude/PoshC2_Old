@@ -477,6 +477,8 @@ $header = '
         write-host " Get-WLANPass" -ForegroundColor Green
         write-host " Get-WmiObject -Class Win32_Product" -ForegroundColor Green
         write-host " Get-CreditCardData -Path 'C:\Backup\'" -ForegroundColor Green
+        write-host " TimeStomp C:\Windows\System32\Service.exe `"01/03/2008 12:12 pm`"" -ForegroundColor Green
+        write-host " iCacls C:\Windows\System32\ResetPassword.exe /grant Administrator:F" -ForegroundColor Green
         write-host `n "Privilege Escalation: " -ForegroundColor Green
         write-host "====================" -ForegroundColor Red
         write-host " Invoke-AllChecks" -ForegroundColor Green

