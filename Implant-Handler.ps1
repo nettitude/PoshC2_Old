@@ -605,6 +605,7 @@ $header = '
         write-host " Cred-Popper" -ForegroundColor Green 
         write-host " Hashdump" -ForegroundColor Green 
         write-host ' Get-Keystrokes -LogPath "$($Env:TEMP)\key.log"' -ForegroundColor Green
+        #write-host " PortScanner -IPaddress 127.0.0.1 -StartPortRange 1 -EndPortRange 65535 -maxQueriesPS 10000 -Delay 0" -ForegroundColor Green
         write-host " Invoke-Portscan -Hosts 192.168.1.1/24,10.10.10.10 -T 4 -Ports `"445,3389,22-25`" | Select Hostname,OpenPorts" -ForegroundColor Green
         write-host " Invoke-UserHunter -StopOnSuccess" -ForegroundColor Green
         write-host " Migrate" -ForegroundColor Green
@@ -1533,7 +1534,7 @@ param
             }
             if ($pscommand.ToLower().StartsWith('migrate'))
             {
-                $pscommand = $pscommand -replace 'migrate ',''
+                $pscommand = $pscommand -replace 'migrate',''
                 $pscommand = IEX "migrate $psrandomuri `"$pscommand`""
             }
 
@@ -1660,6 +1661,10 @@ param
             if ($pscommand.ToLower().StartsWith('get-keystrokes'))
             { 
                 CheckModuleLoaded "Get-Keystrokes.ps1" $psrandomuri    
+            }
+            if ($pscommand.ToLower().StartsWith('portscanner'))
+            { 
+                CheckModuleLoaded "PortScanner.ps1" $psrandomuri
             }
             if ($pscommand.ToLower().StartsWith('invoke-portscan'))
             { 
