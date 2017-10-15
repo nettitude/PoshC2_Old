@@ -907,6 +907,15 @@ function Resolve-PathSafe
       
     $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Path)
 }
+Function Get-FileName($Dir)
+{
+    [System.Reflection.Assembly]::LoadWithPartialName("System.windows.forms") | Out-Null
+    $OpenFileDialog = New-Object System.Windows.Forms.OpenFileDialog
+    $OpenFileDialog.initialDirectory = $Dir
+    $OpenFileDialog.filter = "ANY *.* | *.*"
+    $OpenFileDialog.ShowDialog() | Out-Null
+    $OpenFileDialog.filename
+}
 
 function Upload-File
 {
@@ -915,7 +924,15 @@ function Upload-File
         [string] $Source,
         [string] $Destination
     )
- 
+
+    if (!$Source) {
+        $Source = Get-FileName "C:\"
+    }
+    
+    if (!$Destination) {
+        $Destination = Read-Host "Destination Location\File Name (C:\Temp\File.txt)"
+    }
+
     $Source = Resolve-PathSafe $Source
      
     $bufferSize = 90000
@@ -1202,8 +1219,6 @@ elseif ($im_type -eq "Proxy"){
         return $null
     }
 }
-
-
 }
 
 
@@ -1218,9 +1233,14 @@ param
 [string] $psrandomuri
 )
 # alias list
-            if ($pscommand.ToLower().StartsWith('load-module'))
+            if (($pscommand.ToLower().StartsWith('load-module')) -or ($pscommand.ToLower().StartsWith('loadmodule')))
             { 
                 $pscommand = $pscommand -replace "load-module","loadmodule"
+                $params = $pscommand -replace "loadmodule",""
+                if (!$params) {
+                   $params = Get-FileName -Dir "$($PoshPath)\Modules"
+                   $pscommand = "$($pscommand) $($params)"
+                }
             }
             if ($pscommand)
             { 
@@ -1824,8 +1844,9 @@ param
                 $pscommand|Invoke-Expression
                 $pscommand = $null
             }
-            if ($pscommand.ToLower().StartsWith('upload-file')) 
+            if (($pscommand.ToLower().StartsWith('upload-file')) -or ($pscommand.ToLower().StartsWith('uploadfile'))) 
             {
+                $pscommand = $pscommand -replace "uploadfile","upload-file"
                 $output = Invoke-Expression $pscommand
                 $pscommand = $output
             }
