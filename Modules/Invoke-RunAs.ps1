@@ -6,7 +6,7 @@ function Invoke-Runas {
     Overview:
     
     Functionally equivalent to Windows "runas.exe", using Advapi32::CreateProcessWithLogonW (also used
-	by runas under the hood).
+	by runas under the hood). Args MAX Length is 1024 characters
     
     Parameters:
 
@@ -19,7 +19,7 @@ function Invoke-Runas {
      -LogonType         dwLogonFlags:
                           0x00000001 --> LOGON_WITH_PROFILE
                                            Log on, then load the user profile in the HKEY_USERS registry
-                                           key. The function returns after the profile is loaded.
+                                           key. The function returns after the profile is loaded. (Cannot be called as SYSTEM against domain user)
                                            
                           0x00000002 --> LOGON_NETCREDENTIALS_ONLY (= /netonly)
                                            Log on, but use the specified credentials on the network only.
@@ -30,7 +30,7 @@ function Invoke-Runas {
      -Binary            Full path of the module to be executed.
                        
      -Args              Arguments to pass to the module, e.g. "/c calc.exe". Defaults
-                        to $null if not specified.
+                        to $null if not specified. MAX Length is 1024 characters
                        
 
 .DESCRIPTION

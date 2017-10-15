@@ -560,7 +560,8 @@ $header = '
         Write-Host " Get-PassNotExp" -ForegroundColor Green
         Write-Host " Get-LocAdm" -ForegroundColor Green
         Write-Host " Invoke-Pipekat -Target <ip-optional> -Domain <dom> -Username <user> -Password '<pass>' -Hash <hash-optional>" -ForegroundColor Green
-        Write-Host " Invoke-Inveigh -FileOutputDirectory C:\Temp\ -FileOutput Y -HTTP Y -Proxy Y -NBNS Y -Tool 1" -ForegroundColor Green
+        Write-Host " Invoke-Inveigh -HTTP Y -Proxy Y -NBNS Y -Tool 1" -ForegroundColor Green
+        Write-Host " Get-Inveigh | Stop-Inveigh (Gets Output from Inveigh Thread)" -ForegroundColor Green
         Write-Host " Invoke-Sniffer -OutputFile C:\Temp\Output.txt -MaxSize 50MB -LocalIP 10.10.10.10" -ForegroundColor Green
         Write-Host " Invoke-SqlQuery -sqlServer 10.0.0.1 -User sa -Pass sa -Query 'SELECT @@VERSION'" -ForegroundColor Green
         Write-Host " Invoke-Runas -User SomeAccount -Password SomePass -Domain SomeDomain -Binary C:\Windows\System32\cmd.exe -Args <optional> -LogonType 0x2" -ForegroundColor Green        
@@ -1662,7 +1663,7 @@ param
             { 
                 CheckModuleLoaded "Get-Keystrokes.ps1" $psrandomuri    
             }
-            if ($pscommand.ToLower().StartsWith('portscanner'))
+            if ($pscommand.ToLower().StartsWith('portscan'))
             { 
                 CheckModuleLoaded "PortScanner.ps1" $psrandomuri
             }
