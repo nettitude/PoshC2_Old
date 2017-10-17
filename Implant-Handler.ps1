@@ -116,7 +116,7 @@ $header = '
             Write-Host -Object "|   |  Y Y  \  |_> >  |__/ __ \|   |  \  |  \___ \ " -ForegroundColor Green
             Write-Host -Object "|___|__|_|  /   __/|____(____  /___|  /__| /____  >" -ForegroundColor Green
             Write-Host -Object "          \/|__|             \/     \/          \/ " -ForegroundColor Green
-            Write-Host "============== v2.12 www.PoshC2.co.uk =============" -ForegroundColor Green
+            Write-Host "============== v2.13 www.PoshC2.co.uk =============" -ForegroundColor Green
             Write-Host "===================================================" `n -ForegroundColor Green
 
             foreach ($implant in $dbresults) 
@@ -606,7 +606,7 @@ $header = '
         write-host " Cred-Popper" -ForegroundColor Green 
         write-host " Hashdump" -ForegroundColor Green 
         write-host ' Get-Keystrokes -LogPath "$($Env:TEMP)\key.log"' -ForegroundColor Green
-        #write-host " PortScanner -IPaddress 127.0.0.1 -StartPortRange 1 -EndPortRange 65535 -maxQueriesPS 10000 -Delay 0" -ForegroundColor Green
+        write-host " PortScan -IPaddress 10.0.0.1-50 -Ports `"1-65535`" -maxQueriesPS 10000" -ForegroundColor Green
         write-host " Invoke-Portscan -Hosts 192.168.1.1/24,10.10.10.10 -T 4 -Ports `"445,3389,22-25`" | Select Hostname,OpenPorts" -ForegroundColor Green
         write-host " Invoke-UserHunter -StopOnSuccess" -ForegroundColor Green
         write-host " Migrate" -ForegroundColor Green

