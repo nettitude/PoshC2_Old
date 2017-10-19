@@ -771,6 +771,7 @@ if (`$k -lt `$d) {exit}
 `$password = `$password
 `$proxyurl = `$proxyurl
 `$wc = New-Object System.Net.WebClient;  
+`$wc.Headers.Add("User-Agent","Mozilla/5.0 (compatible; MSIE 9.0; Windows Phone OS 7.5; Trident/5.0; IEMobile/9.0)")
 `$h=`$domainfrontheader
 if (`$h) {`$wc.Headers.Add("Host",`$h)}
 if (`$proxyurl) {
