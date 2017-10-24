@@ -812,6 +812,7 @@ if (`$cookie) {
 echo "started http server"
 while (`$listener.IsListening) 
 {
+    if (`$kill.log -eq 2) {`$listener.Stop();exit}
     `$message = `$null
     `$context = `$listener.GetContext() # blocks until request is received
     `$request = `$context.Request
@@ -884,17 +885,23 @@ $EncodedPayloadScript = [Convert]::ToBase64String($UnicodeEncoder.GetBytes($NewS
 $rundaisy = @"
 $fwcmd
 `$t = Invoke-Netstat| ? {`$_.ListeningPort -eq $port}
+`$global:kill = [HashTable]::Synchronized(@{})
+`$kill.log = "1"
+function Stop-Daisy {
+`$kill.log = 2
+(new-object system.net.webclient).downloadstring("http://localhost:$port")|out-null
+}
 if (!`$t) { 
     if (Test-Administrator) { 
-        `$MaxThreads = 5
-        `$RunspacePool = [RunspaceFactory]::CreateRunspacePool(1, `$MaxThreads)
-        `$RunspacePool.Open()
+        `$Runspace = [RunspaceFactory]::CreateRunspace()
+        `$Runspace.Open()
+        `$Runspace.SessionStateProxy.SetVariable('Kill',`$Kill)
         `$Jobs = @()
         `$Job = [powershell]::Create().AddScript({$NewScript})
-        `$Job.RunspacePool = `$RunspacePool
+        `$Job.Runspace = `$Runspace
         `$Job.BeginInvoke() | Out-Null 
     }
-    echo "To stop the Daisy Server, kill current process"
+    echo "To stop the Daisy Server, Stop-Daisy current process"
 }
 
 "@
