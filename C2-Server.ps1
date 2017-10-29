@@ -11,7 +11,6 @@ If (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdenti
 }
 
 Clear-Host
-Write-Host -Object ""
 Write-Host -Object "__________            .__.     _________  ________  "  -ForegroundColor Green
 Write-Host -Object "\_______  \____  _____|  |__   \_   ___ \ \_____  \ "  -ForegroundColor Green
 Write-Host -Object " |     ___/  _ \/  ___/  |  \  /    \  \/  /  ____/ "  -ForegroundColor Green
@@ -19,7 +18,7 @@ Write-Host -Object " |    |  (  <_> )___ \|   Y  \ \     \____/       \ "  -Fore
 Write-Host -Object " |____|   \____/____  >___|  /  \______  /\_______ \"  -ForegroundColor Green
 Write-Host -Object "                    \/     \/          \/         \/"  -ForegroundColor Green
 Write-Host "=============== v2.14 www.PoshC2.co.uk =============" -ForegroundColor Green
-Write-Host "====================================================" `n -ForegroundColor Green
+Write-Host "" -ForegroundColor Green
 
 if (!$RestartC2Server) {
     $PathExists = Test-Path $PoshPath

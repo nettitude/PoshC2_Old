@@ -110,7 +110,6 @@ $header = '
         while ($global:randomuri -eq $null)
         {
             Clear-Host
-            Write-Host -Object ""
             Write-Host -Object ".___.              .__.                __          " -ForegroundColor Green
             Write-Host -Object "|   | _____ ______ |  | _____    _____/  |_  ______" -ForegroundColor Green
             Write-Host -Object "|   |/     \\____ \|  | \__  \  /    \   __\/  ___/" -ForegroundColor Green
@@ -118,8 +117,7 @@ $header = '
             Write-Host -Object "|___|__|_|  /   __/|____(____  /___|  /__| /____  >" -ForegroundColor Green
             Write-Host -Object "          \/|__|             \/     \/          \/ " -ForegroundColor Green
             Write-Host "============== v2.14 www.PoshC2.co.uk =============" -ForegroundColor Green
-            Write-Host "===================================================" `n -ForegroundColor Green
-
+            Write-Host ""
             foreach ($implant in $dbresults) 
             { 
                 $pivotimplant = $null
@@ -889,7 +887,7 @@ $fwcmd
 `$kill.log = "1"
 function Stop-Daisy {
 `$kill.log = 2
-(new-object system.net.webclient).downloadstring("http://localhost:$port")|out-null
+(new-object system.net.webclient).downloadstring("http://localhost:$port")
 }
 if (!`$t) { 
     if (Test-Administrator) { 
