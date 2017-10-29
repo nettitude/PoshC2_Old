@@ -432,7 +432,12 @@ gwmi win32_process |% {$owners[$_.handle] = $_.getowner().user}
 
 $AllProcesses = @()
 
-foreach($process in get-process) {
+    if (Test-Win64) {
+        Write-Output "64bit implant running on 64bit machine"
+    }
+
+if (Test-Win64) {
+    foreach($process in get-process) {
     $modules = $process.modules
     foreach($module in $modules) {
         $file = [System.IO.Path]::GetFileName($module.FileName).ToLower()
@@ -459,6 +464,51 @@ foreach($process in get-process) {
         $pobject.UserName = $owners[$process.Id.tostring()]
         $AllProcesses += $pobject
     }
+}
+}
+elseif ((Test-Win32) -and (-Not (Test-Wow64))) {
+foreach($process in get-process) {
+    $processes32bit += $process
+    $pobject = New-Object PSObject | Select ID, StartTime, Name, Arch, Username
+    $pobject.Id = $process.Id
+    $pobject.StartTime = $process.starttime
+    $pobject.Name = $process.Name
+    $pobject.Arch = "x86"
+    $pobject.UserName = $owners[$process.Id.tostring()]
+    $AllProcesses += $pobject
+}
+}
+elseif ((Test-Win32) -and (Test-Wow64)) {
+    foreach($process in get-process) {
+    $modules = $process.modules
+    foreach($module in $modules) {
+        $file = [System.IO.Path]::GetFileName($module.FileName).ToLower()
+        if($file -eq "wow64.dll") {
+            $processes32bit += $process
+            $pobject = New-Object PSObject | Select ID, StartTime, Name, Arch, Username
+            $pobject.Id = $process.Id
+            $pobject.StartTime = $process.starttime
+            $pobject.Name = $process.Name
+            $pobject.Arch = "x86"
+            $pobject.UserName = $owners[$process.Id.tostring()]
+            $AllProcesses += $pobject
+            break
+        }
+    }
+
+    if(!($processes32bit -contains $process)) {
+        $processes64bit += $process
+        $pobject = New-Object PSObject | Select ID, StartTime, Name, Arch, UserName
+        $pobject.Id = $process.Id
+        $pobject.StartTime = $process.starttime
+        $pobject.Name = $process.Name
+        $pobject.Arch = "x64"
+        $pobject.UserName = $owners[$process.Id.tostring()]
+        $AllProcesses += $pobject
+    }
+}
+} else {
+    Write-Output "Unknown Architecture"
 }
 
 $AllProcesses|Select ID, Arch, Name, UserName, StartTime | format-table -auto
