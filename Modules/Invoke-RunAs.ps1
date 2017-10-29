@@ -206,7 +206,7 @@ function Invoke-Runas {
 
 
     if (($env:username -eq "$($env:computername)$")) {
-        echo "`n[>] User is `"NT Authority\SYSTEM`" so running CreateProcessWithLogonW"
+        echo "`n[>] User is `"NT Authority\SYSTEM`" so running LogonUser -> DuplicateTokenEx -> CreateProcessAsUser"
         # EnablePrivs from http://www.leeholmes.com/blog/2010/09/24/adjusting-token-privileges-in-powershell/
         $processHandle = (Get-Process -id $pid).Handle
         [AdjPriv]::EnablePrivilege($processHandle, "SeAssignPrimaryTokenPrivilege", $Disable) 
@@ -228,7 +228,7 @@ function Invoke-Runas {
         $SECURITY_ATTRIBUTES = New-Object SECURITY_ATTRIBUTES
         $PrivLogonTokenHandle = [IntPtr]::Zero
 
-        echo "`n[>] Calling Advapi32::DuplicateToken"
+        echo "`n[>] Calling Advapi32::DuplicateTokenEx"
         $CallResult2 = [Advapi32]::DuplicateTokenEx($LogonTokenHandle, 0x2000000, [ref] $SECURITY_ATTRIBUTES, 2, 1, [ref] $PrivLogonTokenHandle)
 
 
