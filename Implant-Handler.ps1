@@ -1598,7 +1598,6 @@ param
             if ($pscommand.ToLower() -eq 'invoke-allchecks')
             { 
                 CheckModuleLoaded "Powerup.ps1" $psrandomuri
-                $pscommand = "invoke-allchecks | fl" 
             }
             if ($pscommand.ToLower().StartsWith('invoke-allchecks'))
             { 
