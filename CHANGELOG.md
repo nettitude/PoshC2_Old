@@ -1,0 +1,22 @@
+08/11/2017
+------------
+- Version 3.0 Major Release
+	-	Tunnelable C# Socks Proxy (SharpSocks)
+	-	New C# PortScanner
+	-	Daisy Implant now supports multi layered pivoting (No limit on hops)
+	-	C++ Reflective DLL, utilising UnmanagedPowershell and PoshC2's Custom EXE
+	-	Shellcode generator, Utilising @monoxgas new sRDI tool we can generate shellcode on the fly from the Reflective DLL created in C++ 
+	-	Stable migration utilising Inject-Shellcode which uses our newly created shellcode
+	-	New AutoRuns that allow the user to create commands that ran when a new implant is initiated
+	-	AutoMigration-FromPowershell/AM - Utilising the AutoRun, you can now migrate from powershell.exe whenever an implant has been established
+	-	Pre/Post Implant Help - The Implant-Handler window now has a pre and post help menu which allows you to do various tasks when you have no implant, such as autoruns.
+	-	HTTPS: Full HTTPS support with both trusted and untrusted certificates
+	-	CredsDB - A credentials database has been created to store passwords or hashes throughout your engagement, output-to-html creates a report which details these
+	-	Txt Message / Voice Support - Utilising Clockwork SMS's Web API, you can configure the PoshC2 to Send a TXT Message when a new implant arrives 
+	-	DotNetToJS - New DotNetToJS payload using James Forshaw's (@tyranid) code
+	-	URL Optimisation - On startup all beacon URLs can be customised and subsequent apache rewrite rules txt file is generated
+	-	Apache Rewrite Rules - Posh creates apache rewrite rules based on the initial URL configuration
+	-	Turtle Mode / Beacon Time - Both tutle mode and beacon support seconds, mintues and hours to be passed as arguments
+	-	Error Handling - Much more error handling for the C2 implant, especially for the system.management.automation.dll / unmanaged powershell
+	-	Service-Exe Payload - Posh now creates a custom C# service executable to be used for both persistence or privilege escalations via service binaries
+
