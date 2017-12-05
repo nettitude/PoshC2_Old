@@ -472,10 +472,11 @@ if (Test-Win64) {
         $file = [System.IO.Path]::GetFileName($module.FileName).ToLower()
         if($file -eq "wow64.dll") {
             $processes32bit += $process
-            $pobject = New-Object PSObject | Select ID, StartTime, Name, Arch, Username
+            $pobject = New-Object PSObject | Select ID, StartTime, Name, Path, Arch, Username
             $pobject.Id = $process.Id
             $pobject.StartTime = $process.starttime
             $pobject.Name = $process.Name
+			$pobject.Path = $process.Path
             $pobject.Arch = "x86"
             $pobject.UserName = $owners[$process.Id.tostring()]
             $AllProcesses += $pobject
@@ -485,10 +486,11 @@ if (Test-Win64) {
 
     if(!($processes32bit -contains $process)) {
         $processes64bit += $process
-        $pobject = New-Object PSObject | Select ID, StartTime, Name, Arch, UserName
+        $pobject = New-Object PSObject | Select ID, StartTime, Name, Path, Arch, UserName
         $pobject.Id = $process.Id
         $pobject.StartTime = $process.starttime
         $pobject.Name = $process.Name
+		$pobject.Path = $process.Path
         $pobject.Arch = "x64"
         $pobject.UserName = $owners[$process.Id.tostring()]
         $AllProcesses += $pobject
@@ -498,10 +500,11 @@ if (Test-Win64) {
 elseif ((Test-Win32) -and (-Not (Test-Wow64))) {
 foreach($process in get-process) {
     $processes32bit += $process
-    $pobject = New-Object PSObject | Select ID, StartTime, Name, Arch, Username
+    $pobject = New-Object PSObject | Select ID, StartTime, Name, Path, Arch, Username
     $pobject.Id = $process.Id
     $pobject.StartTime = $process.starttime
     $pobject.Name = $process.Name
+	$pobject.Path = $process.Path
     $pobject.Arch = "x86"
     $pobject.UserName = $owners[$process.Id.tostring()]
     $AllProcesses += $pobject
@@ -514,10 +517,11 @@ elseif ((Test-Win32) -and (Test-Wow64)) {
         $file = [System.IO.Path]::GetFileName($module.FileName).ToLower()
         if($file -eq "wow64.dll") {
             $processes32bit += $process
-            $pobject = New-Object PSObject | Select ID, StartTime, Name, Arch, Username
+            $pobject = New-Object PSObject | Select ID, StartTime, Name, Path, Arch, Username
             $pobject.Id = $process.Id
             $pobject.StartTime = $process.starttime
             $pobject.Name = $process.Name
+			$pobject.Path = $process.Path
             $pobject.Arch = "x86"
             $pobject.UserName = $owners[$process.Id.tostring()]
             $AllProcesses += $pobject
@@ -527,10 +531,11 @@ elseif ((Test-Win32) -and (Test-Wow64)) {
 
     if(!($processes32bit -contains $process)) {
         $processes64bit += $process
-        $pobject = New-Object PSObject | Select ID, StartTime, Name, Arch, UserName
+        $pobject = New-Object PSObject | Select ID, StartTime, Name, Path, Arch, UserName
         $pobject.Id = $process.Id
         $pobject.StartTime = $process.starttime
         $pobject.Name = $process.Name
+		$pobject.Path = $process.Path
         $pobject.Arch = "x64"
         $pobject.UserName = $owners[$process.Id.tostring()]
         $AllProcesses += $pobject
@@ -540,7 +545,7 @@ elseif ((Test-Win32) -and (Test-Wow64)) {
     Write-Output "Unknown Architecture"
 }
 
-$AllProcesses|Select ID, Arch, Name, UserName, StartTime | format-table -auto
+$AllProcesses|Select ID, UserName, Arch, Name, Path, StartTime | format-table -auto
 
 }
 Function Invoke-Netstat {                       
