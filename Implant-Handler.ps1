@@ -322,10 +322,13 @@ $header = '
                $allresults = Invoke-SqliteQuery -DataSource $Database -Query "SELECT * FROM CompletedTasks" -As PSObject
                $TasksArray = @()
                foreach ($task in $allresults) {                  
-                    $ImplantTask = New-Object PSObject | Select TaskID, Timestamp, RandomURI, Command, Output
+                    $ImplantTask = New-Object PSObject | Select TaskID, Timestamp, Hostname, ImplantID, Command, Output
                     $ImplantTask.TaskID = $task.CompletedTaskID;
                     $ImplantTask.Timestamp = $task.TaskID;
-                    $ImplantTask.RandomURI = $task.RandomURI;
+                    $ranuri = $task.RandomURI;
+                    $Rest = Invoke-SqliteQuery -DataSource $Database -Query "SELECT * FROM Implants WHERE RandomURI='$ranuri'" -As PSObject
+                    $ImplantTask.Hostname = $Rest.Hostname
+                    $ImplantTask.ImplantID = $Rest.ImplantID;
                     $ImplantTask.Command = $task.Command;
                     $ImplantTask.Output = $task.Output;
                     $TasksArray += $ImplantTask
