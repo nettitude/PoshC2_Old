@@ -3,7 +3,7 @@ PoshC2 is a proxy aware C2 framework written completely in PowerShell to aid pen
 
 Find us on #Slack - poshc2.slack.com
 
-Requires only Powershell v2 on both server and client
+Requires only Powershell v2 on the client.
 
 ![alt tag](https://github.com/nettitude/PoshC2/wiki/images/C2-server-1.PNG)
 
@@ -16,6 +16,8 @@ Implant Handler
 ![alt tag](https://github.com/nettitude/PoshC2/wiki/images/ImplantHandler.png)
 
 # Quick Install 
+
+For best results, use Powershell v4/v5 for the server. Everything will work in v2 Win7, except the shellcode creation. Therefore it is highly recommended to use Windows 10 as the base OS with PSv5 by default. (Add an exclusion in Windows Defender or other host AV products as the payloads may get picked up).
 
 powershell -exec bypass -c "IEX (New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/nettitude/PoshC2/master/C2-Installer.ps1')"
 
