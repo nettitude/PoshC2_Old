@@ -302,11 +302,12 @@ $header = '
                $allresults = Invoke-SqliteQuery -DataSource $Database -Query "SELECT * FROM Implants" -As PSObject
                $ImplantsArray = @()
                foreach ($implantres in $allresults) {                  
-                    $ImplantLog = New-Object PSObject | Select ImplantID, RandomURI, User, Hostname, IPAddress, FirstSeen, LastSeen, PID, Arch, Domain, Sleep
+                    $ImplantLog = New-Object PSObject | Select ImplantID, RandomURI, User, Proxy, Hostname, IPAddress, FirstSeen, LastSeen, PID, Arch, Domain, Sleep
                     $ImplantLog.ImplantID = $implantres.ImplantID;
                     $ImplantLog.RandomURI = $implantres.RandomURI;
                     $ImplantLog.User = $implantres.User;
                     $ImplantLog.Hostname = $implantres.Hostname;
+                    $ImplantLog.Proxy = $implantres.Proxy;
                     $ImplantLog.IPAddress = $implantres.IPAddress;
                     $ImplantLog.FirstSeen = $implantres.FirstSeen;
                     $ImplantLog.LastSeen = $implantres.LastSeen;

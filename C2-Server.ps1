@@ -1318,8 +1318,8 @@ $message =[Convert]::ToBase64String($Bytes)
             } catch {}
         }
 
-        $Query = 'INSERT INTO Implants (RandomURI, User, Hostname, IpAddress, Key, FirstSeen, LastSeen, PID, Arch, Domain, Alive, Sleep, ModsLoaded, Pivot)
-        VALUES (@RandomURI, @User, @Hostname, @IpAddress, @Key, @FirstSeen, @LastSeen, @PID, @Arch, @Domain, @Alive, @Sleep, @ModsLoaded, @Pivot)'
+        $Query = 'INSERT INTO Implants (RandomURI, User, Hostname, IpAddress, Key, FirstSeen, LastSeen, PID, Proxy, Arch, Domain, Alive, Sleep, ModsLoaded, Pivot)
+        VALUES (@RandomURI, @User, @Hostname, @IpAddress, @Key, @FirstSeen, @LastSeen, @PID, @Proxy, @Arch, @Domain, @Alive, @Sleep, @ModsLoaded, @Pivot)'
 
         Invoke-SqliteQuery -DataSource $Database -Query $Query -SqlParameters @{
             RandomURI = $randomuri
@@ -1330,6 +1330,7 @@ $message =[Convert]::ToBase64String($Bytes)
             FirstSeen = $im_firstseen
             LastSeen  = "$(Get-Date)"
             PID  = $im_pid
+            Proxy  = $im_proxy
             Arch = $im_arch
             Domain = $im_domain
             Alive = "Yes"
