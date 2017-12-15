@@ -479,8 +479,8 @@ netsh http add sslcert ipport=0.0.0.0:443 certhash=REPLACE `"appid={00112233-445
 RewriteEngine On
 Define PoshC2 <ADD_IPADDRESS_HERE>
 Define SharpSocks <ADD_IPADDRESS_HERE>
-RewriteRule ^/webapp/static(.*) $uri`${PoshC2}/webapp/static`$1 [NC,P]
-RewriteRule ^/connect(.*) $uri`${PoshC2}/connect`$1 [NC,P]
+RewriteRule ^/webapp/static(.*) $uri`${PoshC2}/webapp/static`$1 [NC,L,P]
+RewriteRule ^/connect(.*) $uri`${PoshC2}/connect`$1 [NC,L,P]
 "@
     $customurldef = "No"
     $customurl = Read-Host -Prompt "[3a] Do you want to customize the beacon URLs from the default? [No]"
@@ -489,7 +489,7 @@ RewriteRule ^/connect(.*) $uri`${PoshC2}/connect`$1 [NC,P]
         $urls = @()
         do {
             $input = (Read-Host "Please enter the URLs you want to use, enter blank entry to finish: images/site/content")
-            if ($input -ne '') {$urls += "`"$input`""; $apache += "`nRewriteRule ^/$input(.*) $uri`${PoshC2}/$input`$1 [NC,P]"}
+            if ($input -ne '') {$urls += "`"$input`""; $apache += "`nRewriteRule ^/$input(.*) $uri`${PoshC2}/$input`$1 [NC,L,P]"}
         }
         until ($input -eq '')
         [string]$urlstring = $null
@@ -500,15 +500,15 @@ RewriteRule ^/connect(.*) $uri`${PoshC2}/connect`$1 [NC,P]
 RewriteEngine On
 Define PoshC2 <ADD_IPADDRESS_HERE>
 Define SharpSocks <ADD_IPADDRESS_HERE>
-RewriteRule ^/connect(.*) $uri`${PoshC2}/connect`$1 [NC,P]
-RewriteRule ^/images/static/content/(.*) $uri`${PoshC2}/images/static/content/`$1 [NC,P]
-RewriteRule ^/news/(.*) $uri`${PoshC2}/news/`$1 [NC,P]
-RewriteRule ^/webapp/static/(.*) $uri`${PoshC2}/webapp/static/`$1 [NC,P]
-RewriteRule ^/images/prints/(.*) $uri`${PoshC2}/images/prints/`$1 [NC,P]
-RewriteRule ^/wordpress/site/(.*) $uri`${PoshC2}/wordpress/site/`$1 [NC,P]
-RewriteRule ^/true/images/77/(.*) $uri`${PoshC2}/true/images/77/`$1 [NC,P]
-RewriteRule ^/holdings/office/images/(.*) $uri`${PoshC2}/holdings/office/images/`$1 [NC,P]
-RewriteRule ^/steam(.*) $uri`${PoshC2}/steam`$1 [NC,P]
+RewriteRule ^/connect(.*) $uri`${PoshC2}/connect`$1 [NC,L,P]
+RewriteRule ^/images/static/content/(.*) $uri`${PoshC2}/images/static/content/`$1 [NC,L,P]
+RewriteRule ^/news/(.*) $uri`${PoshC2}/news/`$1 [NC,L,P]
+RewriteRule ^/webapp/static/(.*) $uri`${PoshC2}/webapp/static/`$1 [NC,L,P]
+RewriteRule ^/images/prints/(.*) $uri`${PoshC2}/images/prints/`$1 [NC,L,P]
+RewriteRule ^/wordpress/site/(.*) $uri`${PoshC2}/wordpress/site/`$1 [NC,L,P]
+RewriteRule ^/true/images/77/(.*) $uri`${PoshC2}/true/images/77/`$1 [NC,L,P]
+RewriteRule ^/holdings/office/images/(.*) $uri`${PoshC2}/holdings/office/images/`$1 [NC,L,P]
+RewriteRule ^/steam(.*) $uri`${PoshC2}/steam`$1 [NC,L,P]
 "@
     }
 
@@ -528,11 +528,11 @@ RewriteRule ^/steam(.*) $uri`${PoshC2}/steam`$1 [NC,P]
         $socksurlstring = '"sitemap/api/push","visitors/upload/map","printing/images/bin/logo","update/latest/traffic","saml/stats/update/push"'
         $apache += @"
 
-RewriteRule ^/sitemap/api/push(.*) $uri`${SharpSocks}/sitemap/api/push`$1 [NC,P]
-RewriteRule ^/visitors/upload/map(.*) $uri`${SharpSocks}/visitors/upload/map`$1 [NC,P]
-RewriteRule ^/printing/images/bin/logo(.*) $uri`${SharpSocks}/printing/images/bin/logo`$1 [NC,P]
-RewriteRule ^/update/latest/traffic(.*) $uri`${SharpSocks}/update/latest/traffic`$1 [NC,P]
-RewriteRule ^/saml/stats/update/push(.*) $uri`${SharpSocks}/saml/stats/update/push`$1 [NC,P]
+RewriteRule ^/sitemap/api/push(.*) $uri`${SharpSocks}/sitemap/api/push`$1 [NC,L,P]
+RewriteRule ^/visitors/upload/map(.*) $uri`${SharpSocks}/visitors/upload/map`$1 [NC,L,P]
+RewriteRule ^/printing/images/bin/logo(.*) $uri`${SharpSocks}/printing/images/bin/logo`$1 [NC,L,P]
+RewriteRule ^/update/latest/traffic(.*) $uri`${SharpSocks}/update/latest/traffic`$1 [NC,L,P]
+RewriteRule ^/saml/stats/update/push(.*) $uri`${SharpSocks}/saml/stats/update/push`$1 [NC,L,P]
 "@
     }
 
