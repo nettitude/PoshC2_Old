@@ -525,6 +525,7 @@ $header = '
         write-host " Get-ObjectACL -ResolveGUIDs -SamAccountName john" -ForegroundColor Green
         write-host " Add-ObjectACL -TargetSamAccountName arobbins -PrincipalSamAccountName harmj0y -Rights ResetPassword" -ForegroundColor Green
         write-host " Get-Netuser -admincount | select samaccountname" -ForegroundColor Green
+        write-host " Get-DomainUser -UACFilter NOT_PASSWORD_EXPIRED,NOT_ACCOUNTDISABLE -Properties samaccountname,pwdlastset | Export-Csv act.csv" -ForegroundColor Green
         write-host " Get-Netgroup -admincount | select samaccountname" -ForegroundColor Green
         write-host " Get-NetGroupMember `"Domain Admins`" -recurse|select membername" -ForegroundColor Green
         write-host ' Get-NetComputer | Select-String -pattern "Citrix" ' -ForegroundColor Green 

