@@ -630,7 +630,7 @@ $header = '
         write-host " Get-Clipboard" -ForegroundColor Green 
         write-host " Hashdump" -ForegroundColor Green 
         write-host ' Get-Keystrokes -LogPath "$($Env:TEMP)\key.log"' -ForegroundColor Green
-        write-host " PortScan -IPaddress 10.0.0.1-50 -Ports `"1-65535`" -maxQueriesPS 10000" -ForegroundColor Green
+        write-host " PortScan -IPaddress 10.0.0.1-50 -Ports `"1-65535`" -maxQueriesPS 10000 -delay 0" -ForegroundColor Green
         write-host " Invoke-Portscan -Hosts 192.168.1.1/24,10.10.10.10 -T 4 -Ports `"445,3389,22-25`" | Select Hostname,OpenPorts" -ForegroundColor Green
         write-host " Invoke-UserHunter -StopOnSuccess" -ForegroundColor Green
         write-host " Migrate" -ForegroundColor Green
