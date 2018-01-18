@@ -378,7 +378,27 @@ $header = '
                 }
             } elseif ($global:implantid.ToLower().StartsWith("show-serverinfo"))
             {
-                $HelpOutput = Invoke-SqliteQuery -DataSource $Database -Query "SELECT * FROM C2Server" -As PSObject
+                $item = Invoke-SqliteQuery -DataSource $Database -Query "SELECT * FROM C2Server" -As PSObject
+                $HelpOutput += "Hostname: $($item.HostnameIP) `n"
+                $HelpOutput += "ServerPort: $($item.ServerPort) `n"
+                $HelpOutput += "EncKey: $($item.EncKey) `n"
+                if ($item.DomainFrontHeader) { $HelpOutput += "DomainFrontHeader: $($item.DomainFrontHeader) `n"}
+                $HelpOutput += "DefaultSleep: $($item.DefaultSleep) `n"
+                $HelpOutput += "KillDate: $($item.KillDate) `n"
+                $HelpOutput += "HTTPResponse: $($item.HTTPResponse) `n"
+                $HelpOutput += "FolderPath: $($item.FolderPath) `n"
+                $HelpOutput += "QuickCommand: $($item.QuickCommand) `n"
+                if ($item.ProxyURL) { $HelpOutput += "ProxyURL: $($item.ProxyURL) `n"}
+                if ($item.ProxyUser) { $HelpOutput += "ProxyUser: $($item.ProxyUser) `n"}
+                if ($item.ProxyPass) { $HelpOutput += "ProxyPass: $($item.ProxyPass) `n"}
+                $HelpOutput += "Sounds: $($item.Sounds) `n"
+                if ($item.APIKEY) { $HelpOutput += "APIKEY: $($item.APIKEY) `n"}
+                if ($item.MobileNumber) { $HelpOutput += "MobileNumber: $($item.MobileNumber) `n"}
+                $HelpOutput += "URLS: $($item.URLS) `n"
+                $HelpOutput += "SocksURLS: $($item.SocksURLS) `n"
+                $HelpOutput += "Insecure: $($item.Insecure) `n"
+                $HelpOutput += "UserAgent: $($item.UserAgent) `n"
+                if ($item.Referer) { $HelpOutput += "Referer: $($item.Referer) `n"}
                 $HelpOutput
             } elseif ($global:implantid.ToLower().StartsWith("createproxypayload")) 
             {
