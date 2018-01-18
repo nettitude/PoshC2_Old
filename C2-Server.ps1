@@ -1602,8 +1602,10 @@ $message = Encrypt-String -key $EncKey -unencryptedString $message
     # if a web request comes in that is not for the c2 server, send default 404 response
     if (!$message) {
         $message = $httpresponse
-        Write-Output (Get-Date) | Out-File $global:newdir\Webserver.log -Append
-        Write-Output $request | Out-File $global:newdir\Webserver.log -Append
+        $datenow = (Get-Date)
+        $fileuri = ($request.Url).AbsoluteUri
+        $outfile = "$($datenow) $($request.HttpMethod) $($fileuri)"
+        Write-Output $outfile | Out-File $global:newdir\Webserver.log -Append
     }
 
     if ($exe) {
