@@ -430,7 +430,8 @@ function Upload-File
         [string] $Destination
     )
     try {
-    write-output "Uploaded file to: $Destination"
+    write-output "Uploaded file as HIDDEN & SYSTEM to: $Destination"
+    write-output "Run Get-ChildItem -Force to view the uploaded files"
     $fileBytes = [Convert]::FromBase64String($Base64)
     [io.file]::WriteAllBytes($Destination, $fileBytes)
     $file = Get-Item $Destination -Force
