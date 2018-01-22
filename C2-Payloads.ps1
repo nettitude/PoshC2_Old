@@ -956,15 +956,13 @@ function CreateDLL($Proxy, $DaisyName) {
     [io.file]::WriteAllBytes("$global:newdir\payloads\$($Name)_x64.dll", $dllBytes)
     Write-Host -Object "x64 DLL Written to: $global:newdir\payloads\$($Name)_x64.dll"  -ForegroundColor Green
     
-    $psver = $PSVersionTable.psversion.Major
-    if ($psver -gt '2') {    
-        Import-Module $PoshPath\Modules\ConvertTo-Shellcode.ps1
-        $shellcodeBytes = ConvertTo-Shellcode -File $global:newdir\payloads\$($Name)_x86.dll
-        [io.file]::WriteAllBytes("$global:newdir\payloads\$($Name)-shellcode_x86.bin", $shellcodeBytes)
-        Write-Host -Object "x86 Shellcode Written to: $global:newdir\payloads\$($Name)-shellcode_x86.bin"  -ForegroundColor Green
+    Import-Module $PoshPath\Modules\ConvertTo-Shellcode.ps1
+    $shellcodeBytes = ConvertTo-Shellcode -File $global:newdir\payloads\$($Name)_x86.dll
+    [io.file]::WriteAllBytes("$global:newdir\payloads\$($Name)-shellcode_x86.bin", $shellcodeBytes)
+    Write-Host -Object "x86 Shellcode Written to: $global:newdir\payloads\$($Name)-shellcode_x86.bin"  -ForegroundColor Green
 
-        $shellcodeBytes = ConvertTo-Shellcode -File $global:newdir\payloads\$($Name)_x64.dll
-        [io.file]::WriteAllBytes("$global:newdir\payloads\$($Name)-shellcode_x64.bin", $shellcodeBytes)
-        Write-Host -Object "x64 Shellcode Written to: $global:newdir\payloads\$($Name)-shellcode_x64.bin"  -ForegroundColor Green
-    }
+    $shellcodeBytes = ConvertTo-Shellcode -File $global:newdir\payloads\$($Name)_x64.dll
+    [io.file]::WriteAllBytes("$global:newdir\payloads\$($Name)-shellcode_x64.bin", $shellcodeBytes)
+    Write-Host -Object "x64 Shellcode Written to: $global:newdir\payloads\$($Name)-shellcode_x64.bin"  -ForegroundColor Green
+    
 }
