@@ -124,7 +124,7 @@ $header = '
             Write-Host -Object "|   |  Y Y  \  |_> >  |__/ __ \|   |  \  |  \___ \ " -ForegroundColor Green
             Write-Host -Object "|___|__|_|  /   __/|____(____  /___|  /__| /____  >" -ForegroundColor Green
             Write-Host -Object "          \/|__|             \/     \/          \/ " -ForegroundColor Green
-            Write-Host "============== v3.5 www.PoshC2.co.uk =============" -ForegroundColor Green
+            Write-Host "============== v3.6 www.PoshC2.co.uk =============" -ForegroundColor Green
             Write-Host ""
             foreach ($implant in $dbresults) 
             { 
