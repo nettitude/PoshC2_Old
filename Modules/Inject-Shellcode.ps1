@@ -44,6 +44,7 @@ if ($x86.IsPresent) {
    
 if ($ProcessPath) {
     $pst.FileName = "$ProcessPath"
+    $Process = [System.Diagnostics.Process]::Start($pst)
 } elseif ($ProcessName) {
     $Process = [System.Diagnostics.Process]::GetProcessesByName($ProcessName)
 } elseif ($ProcID){
@@ -57,6 +58,9 @@ $ProcessIDVal = $Process.ID
 $Proceed = $false
 
 if (($x86.IsPresent) -and ($ProcessX86)) {
+    echo "[+] Running against x86 process with ID: $ProcessIDVal"
+    $Proceed = $true
+} elseif (($env:PROCESSOR_ARCHITECTURE -eq "x86") -and ($ProcessX86)) {
     echo "[+] Running against x86 process with ID: $ProcessIDVal"
     $Proceed = $true
 } elseif ($ProcessX86) {

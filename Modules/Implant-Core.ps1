@@ -35,7 +35,7 @@ CheckArchitecture
 CheckVersionTwo
 Function StartAnotherImplant {
     if (($p = Get-Process | ? {$_.id -eq $pid}).name -ne "powershell") {
-        echo "Process is not powershell, try running migrate-x86 or migrate-64"
+        echo "Process is not powershell, try running migrate -x86 or migrate -x64"
     } else {
         if ($global:ImpUpgrade) {
             echo "Start-Process Upgrade via CMD"
