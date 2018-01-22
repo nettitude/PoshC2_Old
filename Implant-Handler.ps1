@@ -649,7 +649,6 @@ $header = '
     } if (($t -eq 0) -or ($t -eq 8)) {
         write-host `n "Useful Modules: " -ForegroundColor Green
         write-host "====================" -ForegroundColor Red
-        write-host " Show-ServerInfo" -ForegroundColor Green 
         write-host " Get-Screenshot" -ForegroundColor Green
         write-host " Get-ScreenshotAllWindows" -ForegroundColor Green
         write-host " Get-ScreenshotMulti -Timedelay 120 -Quantity 30" -ForegroundColor Green
@@ -657,14 +656,15 @@ $header = '
         write-host " Cred-Popper" -ForegroundColor Green 
         write-host " Get-Clipboard" -ForegroundColor Green 
         write-host " Hashdump" -ForegroundColor Green 
-        write-host ' Get-Keystrokes -LogPath "$($Env:TEMP)\key.log"' -ForegroundColor Green
+        write-host ' Get-Keystrokes' -ForegroundColor Green
         write-host " ArpScan -IPCidr 10.0.0.1/24" -ForegroundColor Green
         write-host " PortScan -IPaddress 10.0.0.1-50 -Ports `"1-65535`" -maxQueriesPS 10000 -delay 0" -ForegroundColor Green
         write-host " Invoke-Portscan -Hosts 192.168.1.1/24,10.10.10.10 -T 4 -Ports `"445,3389,22-25`" | Select Hostname,OpenPorts" -ForegroundColor Green
         write-host " Invoke-UserHunter -StopOnSuccess" -ForegroundColor Green
         write-host " Migrate" -ForegroundColor Green
-        write-host " Migrate -ProcID 444" -ForegroundColor Green
-        write-host " Migrate -ProcessPath C:\Windows\System32\cmd.exe" -ForegroundColor Green
+        write-host " Migrate -x64 -ProcID 444" -ForegroundColor Green
+        write-host " Migrate -x64 -ProcessPath C:\Windows\System32\cmd.exe" -ForegroundColor Green
+        write-host " Migrate -x86" -ForegroundColor Green
         write-host " Migrate-x64 -ProcID 4444" -ForegroundColor Green
         write-host " Migrate-x64 -ProcessPath C:\Windows\System32\cmd.exe" -ForegroundColor Green
         write-host " Migrate-x86 -ProcessPath C:\Windows\System32\cmd.exe" -ForegroundColor Green
@@ -1304,9 +1304,16 @@ $im_type = $dbresult.Pivot
 
 if ($im_arch -eq "AMD64"){
     $arch = "64"
-}
-else {
+} else {
     $arch = "86"
+}
+
+if ($params -like "*x86*"){
+    $arch = "86"
+}
+
+if ($params -like "*x64*"){
+    $arch = "64"
 }
 
 CheckModuleLoaded "Inject-Shellcode.ps1" $psrandomuri
@@ -1731,7 +1738,8 @@ param
             }
             if ($pscommand.ToLower().StartsWith('migrate'))
             {
-                $pscommand = $pscommand -replace 'migrate',''
+                $pscommand = $pscommand -replace 'migrate ',''
+                $pscommand = $pscommand -replace 'migrate',''                
                 $pscommand = IEX "migrate $psrandomuri `"$pscommand`""
             }
 
