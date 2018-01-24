@@ -109,8 +109,7 @@ try {
 
         echo "CreateRemoteThread"
         $Lasterror = [System.Runtime.InteropServices.Marshal]::GetLastWin32Error()
-        echo "[+] $e"
-        echo "[-] LastError: $Lasterror"  
+        echo "[+] $e"  
 
         if ($e -eq 0) {
             $TokenHandle = [IntPtr]::Zero

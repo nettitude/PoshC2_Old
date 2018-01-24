@@ -255,11 +255,11 @@ function PatchDll {
     param($dllBytes, $replaceString, $Arch)
 
     if ($Arch -eq 'x86') {
-        $dllOffset = 0x00012D80
+        $dllOffset = 0x00012F80
         #$dllOffset = 0x00012ED0 +8
     }
     if ($Arch -eq 'x64') {
-        $dllOffset = 0x00017100
+        $dllOffset = 0x00017300
     }
 
     # Patch DLL - replace 8000 A's
