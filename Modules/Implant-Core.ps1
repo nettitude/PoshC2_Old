@@ -396,7 +396,7 @@ function Download-File
         $randomName = Get-RandomName -Length 5
         $fileExt = [System.IO.Path]::GetExtension($fileName)
         $fileNameOnly = [System.IO.Path]::GetFileNameWithoutExtension($fileName)
-        $fullNewname = "$($fileNameOnly)_$($randomName)$($fileExt)"
+        $fullNewname = $Source
         $bufferSize = 10737418;
 
         $fs = [System.IO.File]::Open($fileName, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read, [System.IO.FileShare]::ReadWrite);        

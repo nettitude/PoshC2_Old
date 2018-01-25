@@ -38,6 +38,32 @@ $ipv4address = $null
 $randomuriarray = @()
 $taskiddb = 1 
 $exe = $false
+Add-Type -TypeDefinition @"
+using System;
+using System.Text;
+using System.Runtime.InteropServices;
+
+public class FileClass
+{
+
+[DllImport("shlwapi", EntryPoint="PathSkipRoot")]
+public static extern IntPtr PathSkipRoot(IntPtr lpszSrc);
+
+public static string GetRoot(string Src) {
+    IntPtr cpyString = Marshal.StringToHGlobalAnsi(Src);
+    IntPtr pU = PathSkipRoot(cpyString);
+    string strName;
+    if (pU == IntPtr.Zero)
+        strName = null;
+    else
+        strName = Marshal.PtrToStringAnsi(pU);
+    Marshal.FreeHGlobal(cpyString);
+    return strName;
+}
+
+}
+
+"@
 
 # used to generate random uri for each implant
 function Get-RandomURI 
@@ -1024,7 +1050,10 @@ while ($listener.IsListening)
         $endpointip = $request.RemoteEndPoint
         $cookieplaintext = Decrypt-String -key $EncKey -encryptedStringWithIV ($request.Cookies[0]).Value
 
+        
         $im_domain,$im_username,$im_computername,$im_arch,$im_pid,$im_proxy = $cookieplaintext.split(";",6)
+
+        if($im_pid -gt 0){       
 
         $c2serverresults = Invoke-SqliteQuery -DataSource $Database -Query "SELECT * FROM C2Server" -As PSObject
         $defaultbeacon = $c2serverresults.DefaultSleep
@@ -1403,7 +1432,9 @@ while($true)
     }
 }'
 $message = Encrypt-String -key $EncKey -unencryptedString $message
-
+} else { 
+   write-host "ERROR Decrypting new implant - could be replay attack"
+} 
     }
 
     $randomuriagents = Invoke-SqliteQuery -DataSource $Database -Query 'SELECT RandomURI FROM Implants' -As SingleValue
@@ -1525,9 +1556,19 @@ $message = Encrypt-String -key $EncKey -unencryptedString $message
             {
                 try {
                     $filebytes = Decrypt-Bytes $key $encryptedString
-                    $file = $cookieplaintext -replace "download-file ",""
+                    $file = $cookieplaintext -replace "download-file ",""                    
+                    $canonicalizedPath = $file.Replace("..","")
+                    $PathSkipRoot = [FileClass]::GetRoot($canonicalizedPath.ToString())
+                    if (!$PathSkipRoot) {
+                        $PathSkipRoot = $canonicalizedPath.ToString() 
+                    }
+                    $fullPath = [System.IO.Path]::GetDirectoryName($PathSkipRoot)
+                    $dirPath = "$global:newdir\downloads\$($fullPath)"
+                    if (Test-Path $dirPath) { } else {
+                    $CreatedDirs = New-Item -ItemType Directory -Path $dirPath
+                    }
                     $ramdomfilename = Get-RandomURI -Length 5
-                    $targetfile = "$global:newdir\downloads\$($file)"
+                    $targetfile = "$global:newdir\downloads\$($PathSkipRoot)"
                     [int]$chunkNumber = [System.Text.Encoding]::UTF8.GetString($filebytes[0..4])
                     [int]$totalChunks = [System.Text.Encoding]::UTF8.GetString($filebytes[5..9])
                     $filebytes = $filebytes[10..($filebytes.Length)]
