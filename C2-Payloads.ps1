@@ -235,12 +235,14 @@ End If
 }
 
 # create exe 
-function CreateStandAloneExe($Proxy, $DaisyName) 
+function CreateStandAloneExe($Proxy, $DaisyName, $Domain) 
 {
 if ($Proxy) {
     $Name = "ProxyPosh"
 } elseif ($DaisyName) {
     $Name = "DaisyPosh_$($DaisyName)"
+} elseif ($Domain) {
+    $Name = "NewPayload_$($Domain)"
 } else {
     $Name = "Posh"
 }
@@ -395,12 +397,14 @@ Write-Host -Object "JS_SCT Payload written to: $global:newdir\payloads\js_sct.xm
 
 
 # create service exe 
-function CreateServiceExe($Proxy, $DaisyName)
+function CreateServiceExe($Proxy, $DaisyName, $Domain)
 {
 if ($Proxy) {
     $Name = "ProxyPoshService"
 } elseif ($DaisyName) {
     $Name = "DaisyPoshService_$($DaisyName)"
+} elseif ($Domain) {
+    $Name = "NewPayload_$($Domain)"
 } else {
     $Name = "PoshService"
 } 
@@ -901,12 +905,14 @@ Write-Host -Object "Java Payload written to: $global:newdir\JavaPS.jar and apple
 }
 
 # create bat payloads
-function CreatePayload($Proxy, $DaisyName)
+function CreatePayload($Proxy, $DaisyName, $Domain)
 {
     if ($Proxy) {
         $Name = "ProxyPayload"
     } elseif ($DaisyName) {
         $Name = "DaisyPayload_$($DaisyName)"
+    } elseif ($Domain) {
+        $Name = "NewPayload_$($Domain)"
     } else {
         $Name = "Payload"
     } 
@@ -932,11 +938,13 @@ function CreateLink
 
     Write-Host -Object "LNK Payload written to: $DestinationPath" -ForegroundColor Green
 }
-function CreateDLL($Proxy, $DaisyName) {
+function CreateDLL($Proxy, $DaisyName, $Domain) {
     if ($Proxy) {
         $Name = "ProxyPosh"
     } elseif ($DaisyName) {
         $Name = "DaisyPosh_$($DaisyName)"
+    } elseif ($Domain) {
+        $Name = "NewPayload_$($Domain)"
     } else {
         $Name = "Posh"
     } 
