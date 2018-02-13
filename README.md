@@ -268,7 +268,7 @@ Invoke-PsExecPayload -Target <ip> -Domain <dom> -User <user> -pass '<pass>' -Has
 
 Invoke-PsExecProxyPayload -Target <ip> -Domain <dom> -User <user> -pass '<pass>' -Hash <hash-optional>
 
-Invoke-PsExecDiasyPayload -Target <ip> -Domain <dom> -User <user> -pass '<pass>' -Hash <hash-optional>
+Invoke-PsExecDaisyPayload -Target <ip> -Domain <dom> -User <user> -pass '<pass>' -Hash <hash-optional>
 
 Invoke-WMIPayload -Target <ip> -Domain <dom> -Username <user> -Password '<pass>' -Hash <hash-optional>
 
