@@ -90,7 +90,7 @@ function DisableRDP
         {
             Get-NetFirewallRule -DisplayName "Remote Desktop*" | Set-NetFirewallRule -enabled false
         } else {
-            netsh advfirewall firewall add rule name="Remote Desktop" dir=in action=allow protocol=TCP localport=3389
+            netsh advfirewall firewall del rule name="Remote Desktop" dir=in action=allow protocol=TCP localport=3389
         }
     } else {
     Write-Output "You are not elevated to Administator "
