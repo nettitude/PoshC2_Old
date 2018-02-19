@@ -1,4 +1,4 @@
-﻿function Invoke-SMBExec
+function Invoke-SMBExec
 {
 <#
 .SYNOPSIS

@@ -1,4 +1,4 @@
-﻿function Inject-Shellcode ([switch]$x86, [switch]$x64, [switch]$Force, [Parameter(Mandatory=$true)]$Shellcode, $ProcID, $ProcessPath, $ProcessName)
+function Inject-Shellcode ([switch]$x86, [switch]$x64, [switch]$Force, [Parameter(Mandatory=$true)]$Shellcode, $ProcID, $ProcessPath, $ProcessName)
 {
 <#
 .SYNOPSIS

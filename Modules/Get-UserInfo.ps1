@@ -1,4 +1,4 @@
-﻿function Get-UserInfo 
+function Get-UserInfo 
 {  
         Get-WmiObject win32_operatingsystem | select csname, @{LABEL='LastBootUpTime';EXPRESSION={$_.ConverttoDateTime($_.lastbootuptime)}}
         $arr = @()  

