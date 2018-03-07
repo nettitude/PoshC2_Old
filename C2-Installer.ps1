@@ -14,6 +14,7 @@ function Download-File
         [string]
         $To
     )
+    [Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12
     (new-object system.net.webclient).DownloadFile($From,$To)
 }
 
