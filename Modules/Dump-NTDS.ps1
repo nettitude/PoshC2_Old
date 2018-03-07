@@ -17,7 +17,7 @@ Param
     if( (Get-ChildItem $EmptyFolder | Measure-Object).Count -eq 0)
     {
         if (Test-Administrator) {
-            NTdsutil.exe "activate instance ntds" "ifm" "create full $EmptyFolder" ""q"" ""q""
+            NTdsutil.exe "activate instance ntds" "ifm" "create full $($EmptyFolder) " "q" "q"
         } else {
             Write-Output "Not running in elevated mode - must run as administrator"
         }
@@ -32,3 +32,4 @@ function Test-Administrator
     $user = [Security.Principal.WindowsIdentity]::GetCurrent();
     (New-Object Security.Principal.WindowsPrincipal $user).IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)  
 }
+
