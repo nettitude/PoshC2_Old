@@ -14,7 +14,12 @@ function Download-File
         [string]
         $To
     )
-    [Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12
+    try {
+        [Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12
+    } catch {
+        echo "This version of .NET does not support the TLS1.2 to download from github.com"
+        break
+    }
     (new-object system.net.webclient).DownloadFile($From,$To)
 }
 
