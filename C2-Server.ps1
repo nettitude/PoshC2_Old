@@ -1078,8 +1078,8 @@ $Server = "$server/'+$randomuri+'"
             Write-Host "New Direct implant connected: (uri=$randomuri, key=$key)" -ForegroundColor Green
 $connectvars = '
 $URI= "'+$randomuri+'"
-$Server = "'+$ipv4address+":"+$serverport+'/'+$randomuri+'"
-$ServerClean = "'+$ipv4address+":"+$serverport+'"
+$Server = "$S'+'/'+$randomuri+'"
+$ServerClean = "$s"
 '
         }
 
