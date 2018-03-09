@@ -17,7 +17,7 @@ Write-Host -Object " |     ___/  _ \/  ___/  |  \  /    \  \/  /  ____/ "  -Fore
 Write-Host -Object " |    |  (  <_> )___ \|   Y  \ \     \____/       \ "  -ForegroundColor Green
 Write-Host -Object " |____|   \____/____  >___|  /  \______  /\_______ \"  -ForegroundColor Green
 Write-Host -Object "                    \/     \/          \/         \/"  -ForegroundColor Green
-Write-Host "=============== v3.7 www.PoshC2.co.uk =============" -ForegroundColor Green
+Write-Host "=============== v3.8 www.PoshC2.co.uk =============" -ForegroundColor Green
 Write-Host "" -ForegroundColor Green
 
 if (!$RestartC2Server) {
@@ -1064,21 +1064,21 @@ while ($listener.IsListening)
             Write-Host "New Proxy implant connected: (uri=$randomuri, key=$key)" -ForegroundColor Green
 $connectvars = '
 $URI= "'+$randomuri+'"
-$Server = "'+$ipv4address+":"+$serverport+'/'+$randomuri+'"
-$ServerClean = "'+$ipv4address+":"+$serverport+'"
+$Server = "$s'+'/'+$randomuri+'"
+$ServerClean = "$s"
 '
         } elseif ($request.Url -match "/$($newImplantURL)\?d") {
             Write-Host "New Daisy implant connected: (uri=$randomuri, key=$key)" -ForegroundColor Green
 $connectvars = '
 $URI= "'+$randomuri+'"
-$ServerClean = $Server
-$Server = "$server/'+$randomuri+'"
+$Server = "$s'+'/'+$randomuri+'"
+$ServerClean = "$s"
 '
         } else {
             Write-Host "New Direct implant connected: (uri=$randomuri, key=$key)" -ForegroundColor Green
 $connectvars = '
 $URI= "'+$randomuri+'"
-$Server = "$S'+'/'+$randomuri+'"
+$Server = "$s'+'/'+$randomuri+'"
 $ServerClean = "$s"
 '
         }
@@ -1428,7 +1428,7 @@ while($true)
 }'
 $message = Encrypt-String -key $EncKey -unencryptedString $message
 } else { 
-   write-host "ERROR Decrypting new implant - could be replay attack"
+   #write-host "ERROR Decrypting new implant - could be replay attack"
 } 
     }
 

