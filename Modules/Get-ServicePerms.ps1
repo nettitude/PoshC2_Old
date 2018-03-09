@@ -13,7 +13,8 @@ $sploaded = $null
 Function Get-ServicePerms($path) {
 
 if (!$path){
-$path = pwd + "\"
+$path = pwd 
+$path = "$path\" 
 }
 
 if ($sploaded -ne "TRUE") {

@@ -1065,21 +1065,21 @@ while ($listener.IsListening)
 $connectvars = '
 $URI= "'+$randomuri+'"
 $Server = "$s'+'/'+$randomuri+'"
-$ServerClean = "$s"
+$ServerClean = "$sc"
 '
         } elseif ($request.Url -match "/$($newImplantURL)\?d") {
             Write-Host "New Daisy implant connected: (uri=$randomuri, key=$key)" -ForegroundColor Green
 $connectvars = '
 $URI= "'+$randomuri+'"
 $Server = "$s'+'/'+$randomuri+'"
-$ServerClean = "$s"
+$ServerClean = "$sc"
 '
         } else {
             Write-Host "New Direct implant connected: (uri=$randomuri, key=$key)" -ForegroundColor Green
 $connectvars = '
 $URI= "'+$randomuri+'"
 $Server = "$s'+'/'+$randomuri+'"
-$ServerClean = "$s"
+$ServerClean = "$sc"
 '
         }
 

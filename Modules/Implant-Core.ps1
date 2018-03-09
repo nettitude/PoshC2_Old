@@ -559,7 +559,7 @@ if (Test-Win64) {
             $processes32bit += $process
             $pobject = New-Object PSObject | Select ID, StartTime, Name, Path, Arch, Username
             $pobject.Id = $process.Id
-            $pobject.StartTime = $process.starttime
+            $pobject.StartTime = $process.StartTime
             $pobject.Name = $process.Name
 			$pobject.Path = $process.Path
             $pobject.Arch = "x86"
@@ -573,7 +573,7 @@ if (Test-Win64) {
         $processes64bit += $process
         $pobject = New-Object PSObject | Select ID, StartTime, Name, Path, Arch, UserName
         $pobject.Id = $process.Id
-        $pobject.StartTime = $process.starttime
+        $pobject.StartTime = $process.StartTime
         $pobject.Name = $process.Name
 		$pobject.Path = $process.Path
         $pobject.Arch = "x64"
@@ -587,7 +587,7 @@ foreach($process in get-process) {
     $processes32bit += $process
     $pobject = New-Object PSObject | Select ID, StartTime, Name, Path, Arch, Username
     $pobject.Id = $process.Id
-    $pobject.StartTime = $process.starttime
+    $pobject.StartTime = $process.StartTime
     $pobject.Name = $process.Name
 	$pobject.Path = $process.Path
     $pobject.Arch = "x86"
@@ -604,7 +604,7 @@ elseif ((Test-Win32) -and (Test-Wow64)) {
             $processes32bit += $process
             $pobject = New-Object PSObject | Select ID, StartTime, Name, Path, Arch, Username
             $pobject.Id = $process.Id
-            $pobject.StartTime = $process.starttime
+            $pobject.StartTime = $process.StartTime
             $pobject.Name = $process.Name
 			$pobject.Path = $process.Path
             $pobject.Arch = "x86"
@@ -618,7 +618,7 @@ elseif ((Test-Win32) -and (Test-Wow64)) {
         $processes64bit += $process
         $pobject = New-Object PSObject | Select ID, StartTime, Name, Path, Arch, UserName
         $pobject.Id = $process.Id
-        $pobject.StartTime = $process.starttime
+        $pobject.StartTime = $process.StartTime
         $pobject.Name = $process.Name
 		$pobject.Path = $process.Path
         $pobject.Arch = "x64"
