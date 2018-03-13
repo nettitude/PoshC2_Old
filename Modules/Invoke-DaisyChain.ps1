@@ -166,6 +166,8 @@ $t = Invoke-Netstat| ? {$_.ListeningPort -eq $port}
 $global:kill = [HashTable]::Synchronized(@{})
 $kill.log = "1"
 
+$fwcmd|iex
+
 if (!$t) { 
     if (Test-Administrator) { 
         $Runspace = [RunspaceFactory]::CreateRunspace()

