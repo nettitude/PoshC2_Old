@@ -2090,11 +2090,7 @@ param
                     write-host "Need to run Invoke-DaisyChain first"
                     $pscommand = $null
                 }
-            }
-            if ($pscommand.ToLower().StartsWith('get-proxy')) 
-            {
-                $pscommand = 'Get-ItemProperty -Path "Registry::HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings"'
-            }
+            }           
             if ($pscommand.ToLower().StartsWith('createmacropayload')) 
             {
                 $pscommand|Invoke-Expression

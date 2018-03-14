@@ -23,6 +23,9 @@ Function CheckArchitecture
         Write-Output "Unknown Architecture Detected"
     }
 }
+Function Get-Proxy {
+    Get-ItemProperty -Path "Registry::HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings"
+}
 Function CheckVersionTwo 
 {
     $psver = $PSVersionTable.psversion.Major
