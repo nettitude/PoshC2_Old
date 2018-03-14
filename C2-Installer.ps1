@@ -22,7 +22,7 @@ function Download-File
         $Assembly = [System.Reflection.Assembly]::Load($DllBytes)
     }
     
-    $r = [PoshWebRequest]::MakeRequest("$From", "Web Request", "");
+    $r = [PoshWebRequest]::MakeRequest("$From", "Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko", "");
     [System.IO.File]::WriteAllBytes($To, $r.data)
 }
 
