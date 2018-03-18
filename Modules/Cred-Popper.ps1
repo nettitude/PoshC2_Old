@@ -28,6 +28,6 @@ echo ""
 
 function Get-Creds {
     echo ""
-    "[+] Keylog data:"
+    "[+] Cred-Popper data:"
     echo $sessionstate.log
 }

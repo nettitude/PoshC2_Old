@@ -2151,29 +2151,6 @@ param
                     RandomURI = $psrandomuri
                 } | Out-Null
             }
-            if (($pscommand.ToLower().StartsWith('turtle')) -or ($pscommand.ToLower().StartsWith('start-sleep'))) 
-            {
-                $pscommand = $pscommand -replace 'start-sleep ', ''
-                $pscommand = $pscommand -replace 'turtle ', ''
-                $sleeptime = $pscommand
-                if ($sleeptime.ToLower().Contains('m')) { 
-                    $sleeptime = $sleeptime -replace 'm', ''
-                    [int]$newsleep = $sleeptime 
-                    [int]$newsleep = $newsleep * 60
-                }
-                elseif ($sleeptime.ToLower().Contains('h')) { 
-                    $sleeptime = $sleeptime -replace 'h', ''
-                    [int]$newsleep1 = $sleeptime 
-                    [int]$newsleep2 = $newsleep1 * 60
-                    [int]$newsleep = $newsleep2 * 60
-                }
-                elseif ($sleeptime.ToLower().Contains('s')) { 
-                    $newsleep = $sleeptime -replace 's', ''
-                } else {
-                    $newsleep = $sleeptime
-                }
-                $pscommand = 'Start-Sleep '+$newsleep
-            }
             if ($pscommand -eq 'invoke-ms16-032')
             { 
                 CheckModuleLoaded "NamedPipe.ps1" $psrandomuri
