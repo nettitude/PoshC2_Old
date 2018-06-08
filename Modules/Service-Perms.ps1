@@ -1,13 +1,18 @@
-﻿# Service Permission Checker
+﻿# Service Permission Checker && Folder Perms Checker
 # Ben Turner @benpturner
 
 <#
 .Synopsis
     Service Permission Checker
+
 .DESCRIPTION
-	Service Permission Checker
+	Permission Checker : Equivlent to:
+
+    $_.FullName | Select-Object pschildname,pspath,accesstostring} catch{}}|Export-Csv C:\temp\acl.csv -NoTypeInformation
+
 .EXAMPLE
     PS C:\> Get-ServicePerms
+    
 #>
 Function Get-ServicePerms {
 
@@ -31,6 +36,7 @@ using System.Net;
 public static class ServicePerms
 
     {
+        static List<string> folderlist;
         public static void dumpfolderperms(List<string> folderlist, DataSet ds)
         {
             //DataSet ds = new DataSet();
@@ -94,7 +100,8 @@ public static class ServicePerms
         {
             String hostName = Dns.GetHostName();
             List<string> list = new List<string>();
-            List<string> folderlist = new List<string>();
+            folderlist = new List<string>();
+            //List<string> folderlist = new List<string>();
             DataSet ds = new DataSet();
             ds.Tables.Add("services");
             ds.Tables["services"].Columns.Add("Service Name");
@@ -233,10 +240,25 @@ public static class ServicePerms
                 }
 
             }
-                dumpfolderperms(folderlist, ds);
+            DirSearch("C:\\");
+            dumpfolderperms(folderlist, ds);
 
         }
-
+        public static void DirSearch(string sDir)
+        {
+            try
+            {
+                foreach (string d in Directory.GetDirectories(sDir))
+                {
+                    folderlist.Add(d);
+                    DirSearch(d);
+                }
+            }
+            catch (System.Exception excpt)
+            {
+                Console.WriteLine(excpt.Message);
+            }
+        }
         public static string ConvertDataTableToHtml(DataTable targetTable)
         {
             if (targetTable == null)
