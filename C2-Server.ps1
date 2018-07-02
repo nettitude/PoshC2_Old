@@ -627,7 +627,7 @@ RewriteRule ^/saml/stats/update/push(.*) $uri`${SharpSocks}/saml/stats/update/pu
         $referer = ""
     }
 
-    $global:newdir = 'PoshC2-'+(get-date -Format yyy-dd-MM-HHmm)
+    $global:newdir = 'PoshC2-'+(get-date -Format yyy-MM-dd-HHmm)
     $prompt = Read-Host -Prompt "[5] Enter a new folder name for this project [$($global:newdir)]"
     $tempdir= ($global:newdir,$prompt)[[bool]$prompt]
     $RootFolder = $PoshPath.TrimEnd("PowershellC2\")
