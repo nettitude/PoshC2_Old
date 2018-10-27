@@ -1,4 +1,4 @@
-﻿Function Get-RecentFiles {
+Function Get-RecentFiles {
     $obj = New-Object -ComObject WScript.Shell
     $Path = [System.Environment]::GetFolderPath('Recent')
     $files = Get-ChildItem -Path $Path | Sort-Object LastAccessTime | Select-Object -Last 50

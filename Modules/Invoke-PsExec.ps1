@@ -887,7 +887,7 @@ if($SMB_client.Connected)
 
                     if([System.BitConverter]::ToString($SMB_client_receive[39]) -eq '0f')
                     {
-                        Write-Verbose "SMB signing is enabled"
+                        Write-Output "SMB signing is enabled"
                         $SMB_signing = $true
                         $SMB_session_key_length = 0x00,0x00
                         $SMB_negotiate_flags = 0x15,0x82,0x08,0xa0
@@ -906,7 +906,7 @@ if($SMB_client.Connected)
 
                     if([System.BitConverter]::ToString($SMB_client_receive[70]) -eq '03')
                     {
-                        Write-Verbose "SMB signing is enabled"
+                        Write-Output "SMB signing is enabled"
                         $SMB_signing = $true
                         $SMB_session_key_length = 0x00,0x00
                         $SMB_negotiate_flags = 0x15,0x82,0x08,0xa0
@@ -1119,7 +1119,7 @@ if($SMB_client.Connected)
 
         if([System.BitConverter]::ToString($SMB_client_receive[9..12]) -eq '00-00-00-00')
         {
-            Write-Verbose "$output_username successfully authenticated on $Target"
+            Write-Output "$output_username successfully authenticated on $Target"
             $login_successful = $true
         }
         else
@@ -1133,7 +1133,7 @@ if($SMB_client.Connected)
     {
         if([System.BitConverter]::ToString($SMB_client_receive[12..15]) -eq '00-00-00-00')
         {
-            Write-Verbose "$output_username successfully authenticated on $Target"
+            Write-Output "$output_username successfully authenticated on $Target"
             $login_successful = $true
         }
         else
@@ -1416,7 +1416,7 @@ if($SMB_client.Connected)
 
                             if($SMB_execute)
                             {
-                                Write-Verbose "$output_username is a local administrator on $Target"  
+                                Write-Output "$output_username is a local administrator on $Target"  
                                 $packet_SCM_data = Get-PacketSCMCreateServiceW $SMB_service_manager_context_handle $SMB_service_bytes $SMB_service_length $SMBExec_command_bytes $SMBExec_command_length_bytes
                                 $SCM_data = ConvertFrom-PacketOrderedDictionary $packet_SCM_data
 
@@ -1637,7 +1637,7 @@ if($SMB_client.Connected)
                     
                         if([System.BitConverter]::ToString($SMB_client_receive[112..115]) -eq '00-00-00-00')
                         {
-                            Write-Verbose "Service $SMB_service created on $Target"
+                            Write-Output "Service $SMB_service created on $Target"
                             $SMB_service_context_handle = $SMB_client_receive[92..111]
                             $packet_SMB_header = Get-PacketSMBHeader 0x2f 0x18 0x05,0x28 $SMB_tree_ID $process_ID_bytes $SMB_user_ID
 
@@ -1671,7 +1671,7 @@ if($SMB_client.Connected)
                             }
 
                             $SMB_client_send = $NetBIOS_session_service + $SMB_header + $SMB_data + $RPC_data + $SCM_data
-                            Write-Verbose "Trying to execute command on $Target"
+                            Write-Output "Trying to execute command on $Target"
                             $SMB_client_stream.Write($SMB_client_send,0,$SMB_client_send.Length) > $null
                             $SMB_client_stream.Flush()
                             $SMB_client_stream.Read($SMB_client_receive,0,$SMB_client_receive.Length) > $null
@@ -1747,7 +1747,7 @@ if($SMB_client.Connected)
                     {
                         if($SMB_close_service_handle_stage -eq 1)
                         {
-                            Write-Verbose "Service $SMB_service deleted on $Target"
+                            Write-Output "Service $SMB_service deleted on $Target"
                             $SMB_close_service_handle_stage++
                             $packet_SCM_data = Get-PacketSCMCloseServiceHandle $SMB_service_context_handle
                         }
@@ -2127,7 +2127,7 @@ if($SMB_client.Connected)
                             
                             if($SMB_execute -eq $true)
                             {
-                                Write-Verbose "$output_username is a local administrator on $Target"
+                                Write-Output "$output_username is a local administrator on $Target"
                                 $packet_SCM_data = Get-PacketSCMCreateServiceW $SMB_service_manager_context_handle $SMB_service_bytes $SMB_service_length $SMBExec_command_bytes $SMBExec_command_length_bytes
                                 $SCM_data = ConvertFrom-PacketOrderedDictionary $packet_SCM_data
 
@@ -2351,7 +2351,7 @@ if($SMB_client.Connected)
                     
                         if([System.BitConverter]::ToString($SMB_client_receive[132..135]) -eq '00-00-00-00')
                         {
-                            Write-Verbose "Service $SMB_service created on $Target"
+                            Write-Output "Service $SMB_service created on $Target"
                             $SMB_service_context_handle = $SMB_client_receive[112..131]
                             $SMB2_message_ID += 20
                             $packet_SMB2_header = Get-PacketSMB2Header 0x09,0x00 $SMB2_message_ID $SMB2_tree_ID $SMB_session_ID
@@ -2383,7 +2383,7 @@ if($SMB_client.Connected)
                             }
 
                             $SMB_client_send = $NetBIOS_session_service + $SMB2_header + $SMB2_data + $RPC_data + $SCM_data
-                            Write-Verbose "Trying to execute command on $Target"
+                            Write-Output "Trying to execute command on $Target"
                             $SMB_client_stream.Write($SMB_client_send,0,$SMB_client_send.Length) > $null
                             $SMB_client_stream.Flush()
                             $SMB_client_stream.Read($SMB_client_receive,0,$SMB_client_receive.Length) > $null
@@ -2458,7 +2458,7 @@ if($SMB_client.Connected)
 
                         if($SMB_close_service_handle_stage -eq 1)
                         {
-                            Write-Verbose "Service $SMB_service deleted on $Target"
+                            Write-Output "Service $SMB_service deleted on $Target"
                             $SMB2_message_ID += 20
                             $SMB_close_service_handle_stage++
                             $packet_SCM_data = Get-PacketSCMCloseServiceHandle $SMB_service_context_handle
