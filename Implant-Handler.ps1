@@ -143,13 +143,13 @@ $header = '
                 if ($pivot -eq "Proxy"){$pivotimplant = " P"}
                 if ($randomurihost) {
                     if (((get-date).AddMinutes(-10) -gt $implant.LastSeen) -and ((get-date).AddMinutes(-59) -lt $implant.LastSeen)){
-                        Write-Host "[$implantid]: Seen:$im_lastseen | PID:$im_pid | Sleep:$im_sleep | $im_domain @ $im_hostname ($im_arch)$($pivotimplant)" -ForegroundColor Yellow
+                        Write-Host "[$implantid]: Seen:$im_lastseen | PID:$im_pid | Sleep:$im_sleep | $im_user @ $im_hostname ($im_arch)$($pivotimplant)" -ForegroundColor Yellow
                     }
                     elseif ((get-date).AddMinutes(-59) -gt $implant.LastSeen){
-                        Write-Host "[$implantid]: Seen:$im_lastseen | PID:$im_pid | Sleep:$im_sleep | $im_domain @ $im_hostname ($im_arch)$($pivotimplant)" -ForegroundColor Red
+                        Write-Host "[$implantid]: Seen:$im_lastseen | PID:$im_pid | Sleep:$im_sleep | $im_user @ $im_hostname ($im_arch)$($pivotimplant)" -ForegroundColor Red
                     }
                     else {
-                        Write-Host "[$implantid]: Seen:$im_lastseen | PID:$im_pid | Sleep:$im_sleep | $im_domain @ $im_hostname ($im_arch)$($pivotimplant)" -ForegroundColor Green
+                        Write-Host "[$implantid]: Seen:$im_lastseen | PID:$im_pid | Sleep:$im_sleep | $im_user @ $im_hostname ($im_arch)$($pivotimplant)" -ForegroundColor Green
                     } 
                 }
             }

