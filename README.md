@@ -1,4 +1,4 @@
-PLEASE NOTE THIS REPO IS NOT BEING ACTIVELY UPDATED BUT IS STILL FULLY FUNCTIONAL - ALL FUTURE C2SERVER/IMPLANT WORK IS BEING CARRIED OUT ON PoshC2_Python - https://github.com/nettitude/PoshC2_Python/
+# PLEASE NOTE THIS REPO IS NOT BEING ACTIVELY UPDATED BUT IS STILL FULLY FUNCTIONAL - ALL FUTURE C2SERVER/IMPLANT WORK IS BEING CARRIED OUT ON PoshC2_Python - https://github.com/nettitude/PoshC2_Python/
 
 # PoshC2
 PoshC2 is a proxy aware C2 framework that utilises Powershell **and/or** equivalent (System.Management.Automation.dll) to aid penetration testers with red teaming, post-exploitation and lateral movement. Powershell was chosen as the base implant language as it provides all of the functionality and rich features without needing to introduce multiple third party libraries to the framework.
