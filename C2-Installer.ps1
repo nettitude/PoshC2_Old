@@ -3,7 +3,7 @@ Param($installpath)
 
 # To install or upgrade PoshC2 run the following command in PowerShell
 # 
-# powershell -exec bypass -c "iex (new-object system.net.webclient).downloadstring('https://raw.githubusercontent.com/nettitude/PoshC2/master/C2-Installer.ps1')"
+# powershell -exec bypass -c "iex (new-object system.net.webclient).downloadstring('https://raw.githubusercontent.com/nettitude/PoshC2_Old/master/C2-Installer.ps1')"
 $psdownloader = $null
 
 function Download-File 
@@ -54,7 +54,7 @@ if (!$slash) {
     $installpath = "$($installpath)\"
 }
 $poshpath = $installpath+"PowershellC2\"
-$downloadpath = "https://github.com/nettitude/PoshC2/archive/master.zip"
+$downloadpath = "https://github.com/nettitude/PoshC2_Old/archive/master.zip"
     
 $pathexists = Test-Path $installpath
 

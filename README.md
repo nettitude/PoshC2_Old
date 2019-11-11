@@ -1,4 +1,4 @@
-# PLEASE NOTE THIS REPO IS NOT BEING ACTIVELY UPDATED BUT IS STILL FULLY FUNCTIONAL - ALL FUTURE C2SERVER/IMPLANT WORK IS BEING CARRIED OUT ON PoshC2_Python - https://github.com/nettitude/PoshC2_Python/
+# PLEASE NOTE THIS REPO IS NOT BEING ACTIVELY UPDATED BUT IS STILL FULLY FUNCTIONAL - ALL FUTURE C2SERVER/IMPLANT WORK IS BEING CARRIED OUT ON THE PYTHON VERSION PoshC2 - https://github.com/nettitude/PoshC2/
 
 # PoshC2
 PoshC2 is a proxy aware C2 framework that utilises Powershell **and/or** equivalent (System.Management.Automation.dll) to aid penetration testers with red teaming, post-exploitation and lateral movement. Powershell was chosen as the base implant language as it provides all of the functionality and rich features without needing to introduce multiple third party libraries to the framework.
@@ -8,25 +8,25 @@ In addition to the Powershell implant, PoshC2 also has a basic dropper written p
 The server-side component is written in Python for cross-platform portability and speed, a Powershell server component still exists and can be installed using the 'Windows Install' as shown below but will not be maintained with future updates and releases.
 
 
-## Linux Install of [PoshC2_Python](https://github.com/nettitude/PoshC2_Python/)
+## Linux Install of [PoshC2 Python](https://github.com/nettitude/PoshC2/)
 
 Install using curl & bash
 ```
-curl -sSL https://raw.githubusercontent.com/nettitude/PoshC2_Python/master/Install.sh | bash
+curl -sSL https://raw.githubusercontent.com/nettitude/PoshC2/master/Install.sh | bash
 ```
 
 Manual install
 
 ```
-wget https://raw.githubusercontent.com/nettitude/PoshC2_Python/master/Install.sh
+wget https://raw.githubusercontent.com/nettitude/PoshC2/master/Install.sh
 chmod +x ./Install.sh
 ./Install.sh
 ```
 
-## Windows Install of [PoshC2](https://github.com/nettitude/PoshC2/)
+## Windows Install of [PoshC2](https://github.com/nettitude/PoshC2_Old/)
 
 ```
-powershell -exec bypass -c "IEX (New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/nettitude/PoshC2/master/C2-Installer.ps1')"
+powershell -exec bypass -c "IEX (New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/nettitude/PoshC2_Old/master/C2-Installer.ps1')"
 ```
 
 ## Issues / FAQs
